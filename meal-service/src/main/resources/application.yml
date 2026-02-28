@@ -1,0 +1,25 @@
+server:
+  port: 8082
+
+spring:
+  mongodb:
+    uri: mongodb+srv://meal-yummy:bIQd8G5njQmHR3LZ@meal-yummy.s6abq8j.mongodb.net/meal-service
+  application:
+    name: meal-service
+
+  # C?u hình Jackson ?? format JSON ??p và x? lý th?i gian (n?u sau này b?n thêm)
+  jackson:
+    default-property-inclusion: non_null
+    serialization:
+      indent-output: true
+
+  data:
+    web:
+      pageable:
+        serialization-mode: via_dto
+
+# C?u hình Logging ?? b?n d? debug các câu query MongoDB
+logging:
+  level:
+    org.springframework.data.mongodb.core.MongoTemplate: DEBUG
+    mealyummy.mealservice: DEBUG
