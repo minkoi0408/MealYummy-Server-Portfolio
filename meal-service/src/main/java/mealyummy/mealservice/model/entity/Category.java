@@ -35,4 +35,10 @@ public class Category {
                 .active(this.getActive())
                 .build();
     }
+    public CategoryDTO convertForMeal() {
+        return CategoryDTO.builder()
+                .id(this.getId())
+                .name(this.getName())
+                .build();
+    }
 }

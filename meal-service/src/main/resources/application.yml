@@ -7,7 +7,7 @@ spring:
   application:
     name: meal-service
 
-  # C?u hình Jackson ?? format JSON ??p và x? lý th?i gian (n?u sau này b?n thêm)
+  # C?u hï¿½nh Jackson ?? format JSON ??p vï¿½ x? lï¿½ th?i gian (n?u sau nï¿½y b?n thï¿½m)
   jackson:
     default-property-inclusion: non_null
     serialization:
@@ -18,8 +18,17 @@ spring:
       pageable:
         serialization-mode: via_dto
 
-# C?u hình Logging ?? b?n d? debug các câu query MongoDB
+# C?u hï¿½nh Logging ?? b?n d? debug cï¿½c cï¿½u query MongoDB
 logging:
   level:
     org.springframework.data.mongodb.core.MongoTemplate: DEBUG
     mealyummy.mealservice: DEBUG
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: alpha
+    tagsSorter: alpha
+  api-docs:
+    path: /api-docs
+  packagesToScan: mealyummy.mealservice.controller

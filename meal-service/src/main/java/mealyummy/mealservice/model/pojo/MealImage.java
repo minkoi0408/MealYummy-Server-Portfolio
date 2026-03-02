@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Meal_Image {
+public class MealImage {
     private String url;
     private Boolean isThumbnail;
 }
