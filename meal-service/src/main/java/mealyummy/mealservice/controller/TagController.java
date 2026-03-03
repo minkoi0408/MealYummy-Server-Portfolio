@@ -1,5 +1,6 @@
 package mealyummy.mealservice.controller;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import lombok.RequiredArgsConstructor;
 import mealyummy.mealservice.core.base.BaseApiResponse;
 import mealyummy.mealservice.service.tag.dto.TagDTO;

@@ -153,6 +153,7 @@ public class MealServiceImpl implements MealService {
                 .ingredients(mealIngredients)
                 .build();
 
+        mealRepository.save(meal);
         return convertMealToMealResponseDTO(meal);
     }
 

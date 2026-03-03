@@ -1,0 +1,598 @@
+[ {
+  "id" : "69a6bdb7105d13d8ec6d14f8",
+  "name" : "Muối"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d14f9",
+  "name" : "Đường"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d14fa",
+  "name" : "Bột ngọt"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d14fb",
+  "name" : "Hạt nêm"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d14fc",
+  "name" : "Tiêu đen"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d14fd",
+  "name" : "Tiêu sọ"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d14fe",
+  "name" : "Tiêu xanh"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d14ff",
+  "name" : "Nước mắm"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1500",
+  "name" : "Nước tương"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1501",
+  "name" : "Dầu hào"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1502",
+  "name" : "Dầu mè"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1503",
+  "name" : "Dầu ăn"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1504",
+  "name" : "Dầu oliu"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1505",
+  "name" : "Tương ớt"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1506",
+  "name" : "Tương cà"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1507",
+  "name" : "Tương đen"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1508",
+  "name" : "Giấm gạo"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1509",
+  "name" : "Giấm táo"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d150a",
+  "name" : "Mẻ"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d150b",
+  "name" : "Mắm tôm"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d150c",
+  "name" : "Mắm nêm"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d150d",
+  "name" : "Mắm ruốc"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d150e",
+  "name" : "Chao"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d150f",
+  "name" : "Ngũ vị hương"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1510",
+  "name" : "Bột nghệ"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1511",
+  "name" : "Bột cà ri"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1512",
+  "name" : "Bột ớt"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1513",
+  "name" : "Mù tạt"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1514",
+  "name" : "Mayonnaise"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1515",
+  "name" : "Bơ lạt"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1516",
+  "name" : "Mật ong"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1517",
+  "name" : "Hành lá"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1518",
+  "name" : "Hành tím"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1519",
+  "name" : "Hành tây"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d151a",
+  "name" : "Tỏi"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d151b",
+  "name" : "Gừng"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d151c",
+  "name" : "Sả"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d151d",
+  "name" : "Ớt hiểm"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d151e",
+  "name" : "Ớt sừng"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d151f",
+  "name" : "Ớt chuông"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1520",
+  "name" : "Chanh"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1521",
+  "name" : "Tắc"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1522",
+  "name" : "Rau ngò rí"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1523",
+  "name" : "Rau răm"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1524",
+  "name" : "Rau húng quế"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1525",
+  "name" : "Rau húng lủi"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1526",
+  "name" : "Tía tô"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1527",
+  "name" : "Kinh giới"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1528",
+  "name" : "Lá lốt"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1529",
+  "name" : "Lá chanh"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d152a",
+  "name" : "Thì là"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d152b",
+  "name" : "Cà chua"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d152c",
+  "name" : "Cà rốt"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d152d",
+  "name" : "Khoai tây"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d152e",
+  "name" : "Khoai lang"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d152f",
+  "name" : "Khoai môn"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1530",
+  "name" : "Củ sắn"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1531",
+  "name" : "Củ cải trắng"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1532",
+  "name" : "Củ cải muối"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1533",
+  "name" : "Bí đỏ"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1534",
+  "name" : "Bí xanh"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1535",
+  "name" : "Bầu"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1536",
+  "name" : "Mướp"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1537",
+  "name" : "Mướp đắng"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1538",
+  "name" : "Dưa leo"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1539",
+  "name" : "Rau muống"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d153a",
+  "name" : "Rau mồng tơi"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d153b",
+  "name" : "Rau dền"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d153c",
+  "name" : "Rau ngót"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d153d",
+  "name" : "Cải ngọt"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d153e",
+  "name" : "Cải thìa"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d153f",
+  "name" : "Cải bắp"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1540",
+  "name" : "Cải thảo"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1541",
+  "name" : "Cải xoong"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1542",
+  "name" : "Súp lơ xanh"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1543",
+  "name" : "Súp lơ trắng"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1544",
+  "name" : "Xà lách"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1545",
+  "name" : "Giá đỗ"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1546",
+  "name" : "Măng tây"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1547",
+  "name" : "Măng chua"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1548",
+  "name" : "Măng khô"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1549",
+  "name" : "Nấm rơm"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d154a",
+  "name" : "Nấm đùi gà"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d154b",
+  "name" : "Nấm kim châm"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d154c",
+  "name" : "Nấm hương"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d154d",
+  "name" : "Nấm bào ngư"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d154e",
+  "name" : "Mộc nhĩ"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d154f",
+  "name" : "Thịt heo"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1550",
+  "name" : "Thịt ba chỉ"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1551",
+  "name" : "Sườn non"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1552",
+  "name" : "Sườn cốt lết"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1553",
+  "name" : "Thịt băm"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1554",
+  "name" : "Móng giò"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1555",
+  "name" : "Tai heo"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1556",
+  "name" : "Thịt bò"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1557",
+  "name" : "Bắp bò"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1558",
+  "name" : "Thăn bò"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1559",
+  "name" : "Gân bò"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d155a",
+  "name" : "Đuôi bò"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d155b",
+  "name" : "Thịt gà"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d155c",
+  "name" : "Đùi gà"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d155d",
+  "name" : "Ức gà"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d155e",
+  "name" : "Cánh gà"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d155f",
+  "name" : "Chân gà"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1560",
+  "name" : "Thịt vịt"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1561",
+  "name" : "Thịt ngan"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1562",
+  "name" : "Thịt chim cút"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1563",
+  "name" : "Thịt ếch"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1564",
+  "name" : "Thịt dê"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1565",
+  "name" : "Tôm sú"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1566",
+  "name" : "Tôm đất"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1567",
+  "name" : "Tôm hùm"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1568",
+  "name" : "Tôm khô"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1569",
+  "name" : "Cua biển"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d156a",
+  "name" : "Cua đồng"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d156b",
+  "name" : "Ghẹ xanh"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d156c",
+  "name" : "Mực ống"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d156d",
+  "name" : "Mực lá"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d156e",
+  "name" : "Mực trứng"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d156f",
+  "name" : "Mực khô"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1570",
+  "name" : "Bạch tuộc"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1571",
+  "name" : "Nghêu"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1572",
+  "name" : "Sò huyết"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1573",
+  "name" : "Sò điệp"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1574",
+  "name" : "Ốc hương"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1575",
+  "name" : "Ốc móng tay"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1576",
+  "name" : "Ốc bươu"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1577",
+  "name" : "Cá lóc"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1578",
+  "name" : "Cá hồi"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1579",
+  "name" : "Cá thu"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d157a",
+  "name" : "Cá ngừ"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d157b",
+  "name" : "Cá diêu hồng"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d157c",
+  "name" : "Cá chép"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d157d",
+  "name" : "Cá basa"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d157e",
+  "name" : "Cá kèo"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d157f",
+  "name" : "Cá thác lác"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1580",
+  "name" : "Gạo tẻ"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1581",
+  "name" : "Gạo nếp"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1582",
+  "name" : "Gạo lứt"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1583",
+  "name" : "Bún tươi"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1584",
+  "name" : "Bún khô"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1585",
+  "name" : "Phở tươi"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1586",
+  "name" : "Phở khô"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1587",
+  "name" : "Mì trứng"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1588",
+  "name" : "Mì gói"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1589",
+  "name" : "Mì ý"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d158a",
+  "name" : "Nui"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d158b",
+  "name" : "Miến dong"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d158c",
+  "name" : "Bánh tráng"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d158d",
+  "name" : "Bánh phở"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d158e",
+  "name" : "Bột mì"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d158f",
+  "name" : "Bột năng"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1590",
+  "name" : "Bột gạo"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1591",
+  "name" : "Bột nếp"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1592",
+  "name" : "Bột bắp"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1593",
+  "name" : "Bột chiên giòn"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1594",
+  "name" : "Bột chiên xù"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1595",
+  "name" : "Đậu hũ non"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1596",
+  "name" : "Đậu hũ chiên"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1597",
+  "name" : "Đậu xanh"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1598",
+  "name" : "Đậu đen"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d1599",
+  "name" : "Đậu đỏ"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d159a",
+  "name" : "Đậu nành"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d159b",
+  "name" : "Đậu phộng"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d159c",
+  "name" : "Mè đen"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d159d",
+  "name" : "Mè trắng"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d159e",
+  "name" : "Hạt điều"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d159f",
+  "name" : "Hạt sen"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d15a0",
+  "name" : "Hạt chia"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d15a1",
+  "name" : "Trứng gà"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d15a2",
+  "name" : "Trứng vịt"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d15a3",
+  "name" : "Trứng cút"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d15a4",
+  "name" : "Trứng vịt lộn"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d15a5",
+  "name" : "Trứng muối"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d15a6",
+  "name" : "Trứng bắc thảo"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d15a7",
+  "name" : "Sữa tươi"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d15a8",
+  "name" : "Sữa đặc"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d15a9",
+  "name" : "Sữa chua"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d15aa",
+  "name" : "Phô mai"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d15ab",
+  "name" : "Nước cốt dừa"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d15ac",
+  "name" : "Kem tươi"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d15ad",
+  "name" : "Chả lụa"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d15ae",
+  "name" : "Chả bò"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d15af",
+  "name" : "Chả cá"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d15b0",
+  "name" : "Giò sống"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d15b1",
+  "name" : "Nem chua"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d15b2",
+  "name" : "Xúc xích"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d15b3",
+  "name" : "Lạp xưởng"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d15b4",
+  "name" : "Pate"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d15b5",
+  "name" : "Thơm"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d15b6",
+  "name" : "Xoài chín"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d15b7",
+  "name" : "Xoài xanh"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d15b8",
+  "name" : "Đu đủ xanh"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d15b9",
+  "name" : "Chuối sáp"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d15ba",
+  "name" : "Chuối chát"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d15bb",
+  "name" : "Khế chua"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d15bc",
+  "name" : "Me chua"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d15bd",
+  "name" : "Dưa chua"
+}, {
+  "id" : "69a6bdb7105d13d8ec6d15be",
+  "name" : "Cải chua"
+} ]

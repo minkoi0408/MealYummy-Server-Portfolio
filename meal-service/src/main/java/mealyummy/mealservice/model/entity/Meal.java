@@ -2,6 +2,7 @@ package mealyummy.mealservice.model.entity;
 
 import mealyummy.mealservice.model.pojo.MealImage;
 import mealyummy.mealservice.model.pojo.MealIngredient;
+import mealyummy.mealservice.model.pojo.Nutrition;
 import mealyummy.mealservice.model.pojo.Price;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -32,6 +33,7 @@ public class Meal {
     private String description;
     private Price price;
     private List<MealImage> images;
+    private Nutrition nutrition;
 
     @DocumentReference(lazy = true)
     private List<Category> categories;

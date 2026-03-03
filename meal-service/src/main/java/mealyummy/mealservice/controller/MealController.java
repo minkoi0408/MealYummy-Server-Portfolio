@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/meals")
 @RequiredArgsConstructor
-@Tag(name = "Meal", description = "API quản lý Món ăn")
 public class MealController {
 
     private final MealService mealService;

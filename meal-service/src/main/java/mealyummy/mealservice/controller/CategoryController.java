@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import mealyummy.mealservice.core.base.BaseApiResponse;
 import mealyummy.mealservice.service.category.CategoryService;
 import mealyummy.mealservice.service.category.dto.CategoryDTO;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,7 +12,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/categories")
-@RequiredArgsConstructor(onConstructor_ = {@Autowired})
+@RequiredArgsConstructor
 public class CategoryController {
 
     private final CategoryService categoryService;
@@ -56,5 +55,17 @@ public class CategoryController {
                 .status(HttpStatus.OK)
                 .body(BaseApiResponse.ok(msg, null)
                 );
+    }
+
+    @PostMapping("/nested-bulk")
+    public ResponseEntity<BaseApiResponse<List<CategoryDTO>>> addNestedCategoriesBulk(@RequestBody List<CategoryDTO> requests) {
+
+        List<CategoryDTO> response = categoryService.createNestedBulk(requests);
+
+        String msg = "Khởi tạo thành công cấu trúc danh mục nhiều tầng";
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(BaseApiResponse.ok(msg, response));
     }
 }

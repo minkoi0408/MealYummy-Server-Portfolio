@@ -1,0 +1,280 @@
+[ {
+  "id" : "69a6af53aec7281e643d70d8",
+  "name" : "Bánh mì"
+}, {
+  "id" : "69a6af53aec7281e643d70d9",
+  "name" : "Bánh mì mặn"
+}, {
+  "id" : "69a6af54aec7281e643d70da",
+  "name" : "Bánh mì chay"
+}, {
+  "id" : "69a6af54aec7281e643d70db",
+  "name" : "Bánh mì ngọt"
+}, {
+  "id" : "69a6af54aec7281e643d70dc",
+  "name" : "Đồ ngọt"
+}, {
+  "id" : "69a6af54aec7281e643d70dd",
+  "name" : "Chè"
+}, {
+  "id" : "69a6af54aec7281e643d70de",
+  "name" : "Rau câu"
+}, {
+  "id" : "69a6af54aec7281e643d70df",
+  "name" : "Bánh flan"
+}, {
+  "id" : "69a6af54aec7281e643d70e0",
+  "name" : "Kem"
+}, {
+  "id" : "69a6af54aec7281e643d70e1",
+  "name" : "Thức uống"
+}, {
+  "id" : "69a6af54aec7281e643d70e2",
+  "name" : "Cà phê"
+}, {
+  "id" : "69a6af54aec7281e643d70e3",
+  "name" : "Cà phê pha máy"
+}, {
+  "id" : "69a6af55aec7281e643d70e4",
+  "name" : "Cà phê pha phin"
+}, {
+  "id" : "69a6af55aec7281e643d70e5",
+  "name" : "Cà phê túi lọc"
+}, {
+  "id" : "69a6af55aec7281e643d70e6",
+  "name" : "Trà"
+}, {
+  "id" : "69a6af55aec7281e643d70e7",
+  "name" : "Trà trái cây"
+}, {
+  "id" : "69a6af55aec7281e643d70e8",
+  "name" : "Trà thảo mộc"
+}, {
+  "id" : "69a6af55aec7281e643d70e9",
+  "name" : "Trà nguyên bản"
+}, {
+  "id" : "69a6af55aec7281e643d70ea",
+  "name" : "Trà sữa"
+}, {
+  "id" : "69a6af55aec7281e643d70eb",
+  "name" : "Sinh tố"
+}, {
+  "id" : "69a6af55aec7281e643d70ec",
+  "name" : "Nước ép"
+}, {
+  "id" : "69a6af56aec7281e643d70ed",
+  "name" : "Đồ uống có cồn"
+}, {
+  "id" : "69a6af56aec7281e643d70ee",
+  "name" : "Cocktail"
+}, {
+  "id" : "69a6af56aec7281e643d70ef",
+  "name" : "Mocktail"
+}, {
+  "id" : "69a6af56aec7281e643d70f0",
+  "name" : "Bia"
+}, {
+  "id" : "69a6af56aec7281e643d70f1",
+  "name" : "Rượu vang"
+}, {
+  "id" : "69a6af56aec7281e643d70f2",
+  "name" : "Rượu mạnh"
+}, {
+  "id" : "69a6af56aec7281e643d70f3",
+  "name" : "Món cơm"
+}, {
+  "id" : "69a6af56aec7281e643d70f4",
+  "name" : "Cơm đĩa"
+}, {
+  "id" : "69a6af56aec7281e643d70f5",
+  "name" : "Cơm chiên"
+}, {
+  "id" : "69a6af56aec7281e643d70f6",
+  "name" : "Cơm niêu"
+}, {
+  "id" : "69a6af57aec7281e643d70f7",
+  "name" : "Cơm thố"
+}, {
+  "id" : "69a6af57aec7281e643d70f8",
+  "name" : "Món xôi"
+}, {
+  "id" : "69a6af57aec7281e643d70f9",
+  "name" : "Xôi mặn"
+}, {
+  "id" : "69a6af57aec7281e643d70fa",
+  "name" : "Xôi ngọt"
+}, {
+  "id" : "69a6af57aec7281e643d70fb",
+  "name" : "Món bún"
+}, {
+  "id" : "69a6af57aec7281e643d70fc",
+  "name" : "Bún nước"
+}, {
+  "id" : "69a6af57aec7281e643d70fd",
+  "name" : "Bún khô"
+}, {
+  "id" : "69a6af57aec7281e643d70fe",
+  "name" : "Bún trộn"
+}, {
+  "id" : "69a6af57aec7281e643d70ff",
+  "name" : "Món phở"
+}, {
+  "id" : "69a6af58aec7281e643d7100",
+  "name" : "Phở nước"
+}, {
+  "id" : "69a6af58aec7281e643d7101",
+  "name" : "Phở trộn"
+}, {
+  "id" : "69a6af58aec7281e643d7102",
+  "name" : "Phở cuốn"
+}, {
+  "id" : "69a6af58aec7281e643d7103",
+  "name" : "Món mì"
+}, {
+  "id" : "69a6af58aec7281e643d7104",
+  "name" : "Mì nước"
+}, {
+  "id" : "69a6af58aec7281e643d7105",
+  "name" : "Mì xào"
+}, {
+  "id" : "69a6af59aec7281e643d7106",
+  "name" : "Mì trộn"
+}, {
+  "id" : "69a6af59aec7281e643d7107",
+  "name" : "Món cháo"
+}, {
+  "id" : "69a6af59aec7281e643d7108",
+  "name" : "Món súp"
+}, {
+  "id" : "69a6af59aec7281e643d7109",
+  "name" : "Món canh"
+}, {
+  "id" : "69a6af59aec7281e643d710a",
+  "name" : "Món lẩu"
+}, {
+  "id" : "69a6af59aec7281e643d710b",
+  "name" : "Món nướng"
+}, {
+  "id" : "69a6af59aec7281e643d710c",
+  "name" : "Món chiên"
+}, {
+  "id" : "69a6af59aec7281e643d710d",
+  "name" : "Món xào"
+}, {
+  "id" : "69a6af59aec7281e643d710e",
+  "name" : "Món hấp"
+}, {
+  "id" : "69a6af5aaec7281e643d710f",
+  "name" : "Món luộc"
+}, {
+  "id" : "69a6af5aaec7281e643d7110",
+  "name" : "Món kho"
+}, {
+  "id" : "69a6af5aaec7281e643d7111",
+  "name" : "Món rim"
+}, {
+  "id" : "69a6af5aaec7281e643d7112",
+  "name" : "Món gỏi"
+}, {
+  "id" : "69a6af5aaec7281e643d7113",
+  "name" : "Món cuốn"
+}, {
+  "id" : "69a6af5aaec7281e643d7114",
+  "name" : "Món hầm"
+}, {
+  "id" : "69a6af5baec7281e643d7115",
+  "name" : "Món tiềm"
+}, {
+  "id" : "69a6af5baec7281e643d7116",
+  "name" : "Hải sản"
+}, {
+  "id" : "69a6af5baec7281e643d7117",
+  "name" : "Cá"
+}, {
+  "id" : "69a6af5baec7281e643d7118",
+  "name" : "Tôm"
+}, {
+  "id" : "69a6af5baec7281e643d7119",
+  "name" : "Cua"
+}, {
+  "id" : "69a6af5caec7281e643d711a",
+  "name" : "Ghẹ"
+}, {
+  "id" : "69a6af5caec7281e643d711b",
+  "name" : "Mực"
+}, {
+  "id" : "69a6af5caec7281e643d711c",
+  "name" : "Bạch tuộc"
+}, {
+  "id" : "69a6af5caec7281e643d711d",
+  "name" : "Ốc"
+}, {
+  "id" : "69a6af5caec7281e643d711e",
+  "name" : "Nghêu"
+}, {
+  "id" : "69a6af5caec7281e643d711f",
+  "name" : "Sò"
+}, {
+  "id" : "69a6af5caec7281e643d7120",
+  "name" : "Món từ thịt"
+}, {
+  "id" : "69a6af5caec7281e643d7121",
+  "name" : "Thịt heo"
+}, {
+  "id" : "69a6af5caec7281e643d7122",
+  "name" : "Thịt bò"
+}, {
+  "id" : "69a6af5daec7281e643d7123",
+  "name" : "Thịt dê"
+}, {
+  "id" : "69a6af5daec7281e643d7124",
+  "name" : "Thịt cừu"
+}, {
+  "id" : "69a6af5daec7281e643d7125",
+  "name" : "Thịt ếch"
+}, {
+  "id" : "69a6af5daec7281e643d7126",
+  "name" : "Món từ gia cầm"
+}, {
+  "id" : "69a6af5eaec7281e643d7127",
+  "name" : "Món từ rau củ quả"
+}, {
+  "id" : "69a6af5eaec7281e643d7128",
+  "name" : "Salad"
+}, {
+  "id" : "69a6af5eaec7281e643d7129",
+  "name" : "Món nấm"
+}, {
+  "id" : "69a6af5eaec7281e643d712a",
+  "name" : "Món rau xanh"
+}, {
+  "id" : "69a6af5eaec7281e643d712b",
+  "name" : "Món củ quả"
+}, {
+  "id" : "69a6af5eaec7281e643d712c",
+  "name" : "Món từ trứng"
+}, {
+  "id" : "69a6af5eaec7281e643d712d",
+  "name" : "Thức ăn nhanh"
+}, {
+  "id" : "69a6af5faec7281e643d712e",
+  "name" : "Đồ ăn vặt đường phố"
+}, {
+  "id" : "69a6af5faec7281e643d712f",
+  "name" : "Đồ hộp"
+}, {
+  "id" : "69a6af5faec7281e643d7130",
+  "name" : "Thực phẩm chế biến sẵn"
+}, {
+  "id" : "69a6af5faec7281e643d7131",
+  "name" : "Nước chấm"
+}, {
+  "id" : "69a6af5faec7281e643d7132",
+  "name" : "Nước sốt"
+}, {
+  "id" : "69a6af5faec7281e643d7133",
+  "name" : "Bánh mặn"
+}, {
+  "id" : "69a6af60aec7281e643d7134",
+  "name" : "Bánh ngọt"
+} ]

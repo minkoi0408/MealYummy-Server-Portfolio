@@ -9,4 +9,5 @@ public interface CategoryService {
     List<CategoryDTO> getAll();
     String changeState(String id);
     CategoryDTO get(String id);
+    List<CategoryDTO> createNestedBulk(List<CategoryDTO> requests);
 }
