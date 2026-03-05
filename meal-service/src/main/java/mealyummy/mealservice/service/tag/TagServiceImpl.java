@@ -47,7 +47,7 @@ public class TagServiceImpl implements TagService {
         List<Tag> tags = tagRepository.findAllByActiveTrue();
 
         return tags.stream()
-                .map(Tag::convert)
+                .map(Tag::convertForMeal)
                 .collect(Collectors.toList());
     }
 
