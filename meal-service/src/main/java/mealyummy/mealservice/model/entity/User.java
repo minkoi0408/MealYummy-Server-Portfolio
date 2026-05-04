@@ -34,6 +34,9 @@ public class User {
     @Builder.Default
     private UserStatus status = UserStatus.PENDING;
 
+    private String otpCode;
+    private Instant otpExpiration;
+
     @CreatedDate
     private Instant createdAt;
 }

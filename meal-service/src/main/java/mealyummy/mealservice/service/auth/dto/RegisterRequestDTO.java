@@ -40,4 +40,6 @@ public class RegisterRequestDTO {
             message = "Số điện thoại phải bắt đầu bằng 0 (10 số) hoặc +84 (9 số sau)"
     )
     private String phone;
+
+    private String otp;
 }

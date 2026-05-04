@@ -108,4 +108,49 @@ public class AuthController {
                 .status(HttpStatus.OK)
                 .body(BaseApiResponse.ok("Đăng xuất thành công", null));
     }
+
+    /**
+     * Đăng nhập bằng Google
+     * POST /api/v1/auth/google
+     */
+    @PostMapping("/google")
+    public ResponseEntity<BaseApiResponse<AuthResponseDTO>> loginWithGoogle(
+            @Valid @RequestBody GoogleTokenRequestDTO request) {
+
+        AuthResponseDTO response = authService.loginWithGoogle(request);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(BaseApiResponse.ok("Đăng nhập bằng Google thành công", response));
+    }
+
+    /**
+     * Gửi OTP để đăng ký (trước khi tạo user)
+     */
+    @PostMapping("/send-otp-register")
+    public ResponseEntity<BaseApiResponse<String>> sendOtpRegister(
+            @RequestParam String email) {
+        
+        String message = authService.sendOtpForRegistration(email);
+        return ResponseEntity.ok(BaseApiResponse.ok(message, null));
+    }
+    /**
+     * Quên mật khẩu - Gửi OTP
+     */
+    @PostMapping("/forgot-password")
+    public ResponseEntity<BaseApiResponse<String>> forgotPassword(
+            @RequestParam String email) {
+        String message = authService.forgotPassword(email);
+        return ResponseEntity.ok(BaseApiResponse.ok(message, null));
+    }
+
+    /**
+     * Đặt lại mật khẩu mới
+     */
+    @PostMapping("/reset-password")
+    public ResponseEntity<BaseApiResponse<String>> resetPassword(
+            @Valid @RequestBody ResetPasswordDTO request) {
+        String message = authService.resetPassword(request);
+        return ResponseEntity.ok(BaseApiResponse.ok(message, null));
+    }
 }
