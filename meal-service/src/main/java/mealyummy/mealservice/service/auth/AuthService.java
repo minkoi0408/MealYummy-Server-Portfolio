@@ -4,7 +4,9 @@ import mealyummy.mealservice.service.auth.dto.*;
 
 public interface AuthService {
     String register(RegisterRequestDTO request);
-    AuthResponseDTO login(LoginRequestDTO request);
+    String login(LoginRequestDTO request);
+    String sendLoginOtp(String email);
+    AuthResponseDTO verifyLoginMfa(VerifyLoginDTO request);
     String verifyOtp(OtpVerifyDTO request);
     String resendOtp(String email);
     AuthResponseDTO refreshToken(String refreshToken);
@@ -13,4 +15,6 @@ public interface AuthService {
     void logout(String accessToken);
     String forgotPassword(String email);
     String resetPassword(ResetPasswordDTO request);
+    String setupTotp(String username) throws Exception;
+    String verifyAndEnableTotp(String username, String code);
 }

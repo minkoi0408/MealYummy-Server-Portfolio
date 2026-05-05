@@ -37,6 +37,11 @@ public class User {
     private String otpCode;
     private Instant otpExpiration;
 
+    // TOTP (Google Authenticator) fields
+    private String totpSecret;
+    @Builder.Default
+    private boolean isTotpEnabled = false;
+
     @CreatedDate
     private Instant createdAt;
 }

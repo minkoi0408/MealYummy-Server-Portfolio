@@ -32,9 +32,13 @@ public class AuthServiceImpl implements AuthService {
     private final JwtUtil jwtUtil;
     private final OtpService otpService;
     private final TokenService tokenService;
+    private final TotpService totpService;
 
     @Value("${GOOGLE_CLIENT_ID:}")
     private String googleClientId;
+
+    @Value("${app.otp.expiration-minutes:1}")
+    private long otpExpirationMinutes;
 
     /**
      * Đăng ký tài khoản mới:
@@ -91,7 +95,7 @@ public class AuthServiceImpl implements AuthService {
         
         String otp = generateRandomOtp();
         user.setOtpCode(otp);
-        user.setOtpExpiration(Instant.now().plusSeconds(300));
+        user.setOtpExpiration(Instant.now().plusSeconds(otpExpirationMinutes * 60));
         userRepository.save(user);
         otpService.sendOtpEmail(user.getEmail(), otp);
 
@@ -126,15 +130,8 @@ public class AuthServiceImpl implements AuthService {
         return "Xác thực thành công! Bạn có thể đăng nhập ngay bây giờ.";
     }
 
-    /**
-     * Đăng nhập:
-     * 1. Tìm user theo username
-     * 2. Kiểm tra mật khẩu
-     * 3. Kiểm tra trạng thái tài khoản
-     * 4. Tạo Access Token + Refresh Token và lưu vào Redis
-     */
     @Override
-    public AuthResponseDTO login(LoginRequestDTO request) {
+    public String login(LoginRequestDTO request) {
         // Tìm user theo username hoặc email
         User user = userRepository.findByUsername(request.getUsername())
                 .or(() -> userRepository.findByEmail(request.getUsername()))
@@ -154,6 +151,56 @@ public class AuthServiceImpl implements AuthService {
             throw new AppException(ErrorCode.ACCOUNT_BANNED);
         }
 
+        // Luôn luôn gửi Email OTP làm mặc định
+        otpService.generateAndSendOtp(user.getEmail());
+        log.info("Yêu cầu xác thực Email OTP cho user: {}", user.getUsername());
+
+        // Kiểm tra xem User có bật Google Authenticator không để báo cho Frontend
+        if (user.isTotpEnabled()) {
+            return "Vui lòng kiểm tra email để nhận mã OTP.|TOTP_ENABLED";
+        }
+
+        return "Vui lòng kiểm tra email để nhận mã OTP đăng nhập.";
+    }
+
+    @Override
+    public String sendLoginOtp(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        otpService.generateAndSendOtp(user.getEmail());
+        log.info("Yêu cầu xác thực Email OTP (thủ công) cho user: {}", user.getUsername());
+        return "Mã OTP đã được gửi tới email của bạn.";
+    }
+
+    @Override
+    public AuthResponseDTO verifyLoginMfa(VerifyLoginDTO request) {
+        // Tìm user theo username hoặc email
+        User user = userRepository.findByUsername(request.getUsername())
+                .or(() -> userRepository.findByEmail(request.getUsername()))
+                .orElseThrow(() -> new AppException(ErrorCode.INVALID_CREDENTIALS));
+
+        boolean isValid = false;
+
+        // Kiểm tra xem User dùng TOTP hay Email OTP
+        if (user.isTotpEnabled()) {
+            if (totpService.verifyCode(user.getTotpSecret(), request.getOtp())) {
+                isValid = true;
+            } else if (otpService.verifyOtp(user.getEmail(), request.getOtp())) {
+                // Cho phép fallback về Email OTP nếu nhập đúng
+                isValid = true;
+            }
+        } else {
+            // Kiểm tra OTP từ Redis
+            if (otpService.verifyOtp(user.getEmail(), request.getOtp())) {
+                isValid = true;
+            }
+        }
+
+        if (!isValid) {
+            throw new AppException(ErrorCode.OTP_INVALID);
+        }
+
         // Tạo cặp token
         String accessToken = jwtUtil.generateAccessToken(user.getUsername());
         String refreshToken = jwtUtil.generateRefreshToken(user.getUsername());
@@ -162,7 +209,7 @@ public class AuthServiceImpl implements AuthService {
         tokenService.storeAccessToken(user.getUsername(), accessToken);
         tokenService.storeRefreshToken(user.getUsername(), refreshToken);
 
-        log.info("Đăng nhập thành công cho user: {}", user.getUsername());
+        log.info("Đăng nhập thành công (đã qua MFA) cho user: {}", user.getUsername());
 
         return AuthResponseDTO.builder()
                 .username(user.getUsername())
@@ -241,7 +288,7 @@ public class AuthServiceImpl implements AuthService {
 
         String otp = generateRandomOtp();
         user.setOtpCode(otp);
-        user.setOtpExpiration(Instant.now().plusSeconds(300));
+        user.setOtpExpiration(Instant.now().plusSeconds(otpExpirationMinutes * 60));
         userRepository.save(user);
 
         otpService.sendOtpEmail(email, otp);
@@ -328,6 +375,10 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
+        if (user.isTotpEnabled()) {
+            return "Vui lòng nhập mã Google Authenticator để đặt lại mật khẩu.";
+        }
+
         // Gửi OTP qua OtpService (Lưu vào Redis)
         otpService.generateAndSendOtp(email);
         log.info("Gửi OTP quên mật khẩu vào Redis cho email: {}", email);
@@ -339,16 +390,59 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-        // Kiểm tra OTP từ Redis
-        if (!otpService.verifyOtp(request.getEmail(), request.getOtp())) {
-            throw new AppException(ErrorCode.OTP_INVALID);
+        if (user.isTotpEnabled()) {
+            if (!totpService.verifyCode(user.getTotpSecret(), request.getOtp())) {
+                throw new AppException(ErrorCode.OTP_INVALID);
+            }
+        } else {
+            // Kiểm tra OTP từ Redis
+            if (!otpService.verifyOtp(request.getEmail(), request.getOtp())) {
+                throw new AppException(ErrorCode.OTP_INVALID);
+            }
         }
 
         // Đổi mật khẩu
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
 
-        log.info("Đặt lại mật khẩu thành công (Redis) cho user: {}", user.getUsername());
+        log.info("Đặt lại mật khẩu thành công cho user: {}", user.getUsername());
         return "Mật khẩu của bạn đã được thay đổi thành công.";
+    }
+
+    @Override
+    public String setupTotp(String username) throws Exception {
+        User user = userRepository.findByUsername(username)
+                .or(() -> userRepository.findByEmail(username))
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        String secret = totpService.generateSecret();
+        user.setTotpSecret(secret);
+        userRepository.save(user);
+
+        return totpService.getQrCodeImageUri(secret, user.getEmail());
+    }
+
+    @Override
+    public String verifyAndEnableTotp(String username, String code) {
+        User user = userRepository.findByUsername(username)
+                .or(() -> userRepository.findByEmail(username))
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        if (user.getTotpSecret() == null) {
+            throw new AppException(ErrorCode.OTP_INVALID);
+        }
+
+        if (!totpService.verifyCode(user.getTotpSecret(), code)) {
+            throw new AppException(ErrorCode.OTP_INVALID);
+        }
+
+        user.setTotpEnabled(true);
+        userRepository.save(user);
+
+        return "Google Authenticator đã được kích hoạt thành công!";
+    }
+
+    private String generateRandomOtp() {
+        return String.valueOf(100000 + new java.security.SecureRandom().nextInt(900000));
     }
 }

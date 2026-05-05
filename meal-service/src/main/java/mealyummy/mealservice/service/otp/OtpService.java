@@ -22,10 +22,9 @@ public class OtpService {
     private final JavaMailSender mailSender;
     private final StringRedisTemplate redisTemplate;
 
-    // Prefix cho key trong Redis
-    private static final String OTP_KEY_PREFIX = "otp:";
-    // Thời gian hết hạn OTP: 5 phút
-    private static final long OTP_EXPIRATION_MINUTES = 5;
+    // Lấy thời gian hết hạn OTP từ application.yml
+    @org.springframework.beans.factory.annotation.Value("${app.otp.expiration-minutes:1}")
+    private long otpExpirationMinutes;
 
     /**
      * Gửi mã OTP qua email với định dạng HTML
@@ -53,7 +52,7 @@ public class OtpService {
                             %s
                         </div>
                         
-                        <p style="color: #8c947c; font-size: 13px;">Mã xác thực có hiệu lực trong 5 phút.</p>
+                        <p style="color: #8c947c; font-size: 13px;">Mã xác thực có hiệu lực trong %d phút.</p>
                     </div>
                     
                     <div style="margin-top: 30px; text-align: center; border-top: 1px solid #32362a; padding-top: 20px;">
@@ -64,7 +63,7 @@ public class OtpService {
                         </p>
                     </div>
                 </div>
-            """.formatted(otp);
+            """.formatted(otp, otpExpirationMinutes);
 
             helper.setText(htmlContent, true);
             mailSender.send(message);
@@ -81,9 +80,9 @@ public class OtpService {
     public void generateAndSendOtp(String email) {
         String otp = generateOtp();
         redisTemplate.opsForValue().set(
-                OTP_KEY_PREFIX + email, 
+                "otp:" + email, 
                 otp, 
-                Duration.ofMinutes(OTP_EXPIRATION_MINUTES)
+                Duration.ofMinutes(otpExpirationMinutes)
         );
         sendOtpEmail(email, otp);
     }
@@ -92,7 +91,7 @@ public class OtpService {
      * Xác thực mã OTP từ Redis
      */
     public boolean verifyOtp(String email, String otp) {
-        String key = OTP_KEY_PREFIX + email;
+        String key = "otp:" + email;
         String savedOtp = redisTemplate.opsForValue().get(key);
 
         if (savedOtp != null && savedOtp.equals(otp)) {
