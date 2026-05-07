@@ -30,6 +30,8 @@ public class User {
     private String email;
 
     private String phone;
+    
+    private String avatarUrl;
 
     @Builder.Default
     private UserStatus status = UserStatus.PENDING;

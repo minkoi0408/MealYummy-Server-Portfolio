@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 public class AuthResponseDTO {
     private String username;
     private String email;
+    private String avatarUrl;
     private String accessToken;
     private String refreshToken;
 }

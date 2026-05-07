@@ -214,6 +214,7 @@ public class AuthServiceImpl implements AuthService {
         return AuthResponseDTO.builder()
                 .username(user.getUsername())
                 .email(user.getEmail())
+                .avatarUrl(user.getAvatarUrl())
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();
@@ -257,6 +258,7 @@ public class AuthServiceImpl implements AuthService {
         return AuthResponseDTO.builder()
                 .username(user.getUsername())
                 .email(user.getEmail())
+                .avatarUrl(user.getAvatarUrl())
                 .accessToken(newAccessToken)
                 .refreshToken(refreshToken) // Giữ nguyên refresh token cũ
                 .build();
@@ -349,6 +351,7 @@ public class AuthServiceImpl implements AuthService {
             return AuthResponseDTO.builder()
                     .username(user.getUsername())
                     .email(user.getEmail())
+                    .avatarUrl(user.getAvatarUrl())
                     .accessToken(accessToken)
                     .refreshToken(refreshToken)
                     .build();
