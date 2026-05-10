@@ -41,6 +41,5 @@ public class Meal {
     @DocumentReference(lazy = true)
     private List<Tag> tags;
 
-    @DocumentReference(lazy = true)
     private List<MealIngredient> ingredients;
 }
