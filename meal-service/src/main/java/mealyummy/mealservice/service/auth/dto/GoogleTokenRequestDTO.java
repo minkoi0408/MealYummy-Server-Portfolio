@@ -1,5 +1,6 @@
 package mealyummy.mealservice.service.auth.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,10 +10,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AuthResponseDTO {
-    private String username;
-    private String email;
-    private String avatarUrl;
-    private String accessToken;
-    private String refreshToken;
+public class GoogleTokenRequestDTO {
+    @NotBlank(message = "Token không được để trống")
+    private String token;
 }

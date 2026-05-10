@@ -30,9 +30,19 @@ public class User {
     private String email;
 
     private String phone;
+    
+    private String avatarUrl;
 
     @Builder.Default
     private UserStatus status = UserStatus.PENDING;
+
+    private String otpCode;
+    private Instant otpExpiration;
+
+    // TOTP (Google Authenticator) fields
+    private String totpSecret;
+    @Builder.Default
+    private boolean isTotpEnabled = false;
 
     @CreatedDate
     private Instant createdAt;

@@ -30,4 +30,13 @@ public class MealController {
                 .status(HttpStatus.CREATED)
                 .body(BaseApiResponse.ok(msg, response));
     }
+
+    @GetMapping("/import/healthy-meals")
+    public ResponseEntity<BaseApiResponse<java.util.List<MealResponseDTO>>> initHealthyMealsDatabase() {
+        java.util.List<MealResponseDTO> response = mealService.initHealthyMealsData();
+        String msg = "Khởi tạo thành công " + response.size() + " món ăn Healthy & Gym Focus!";
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(BaseApiResponse.ok(msg, response));
+    }
 }

@@ -62,18 +62,43 @@ public class AuthController {
     }
 
     /**
-     * Đăng nhập - trả về Access Token (5 phút) + Refresh Token (1 tuần)
+     * Đăng nhập (MFA) - Yêu cầu xác thực OTP
      * POST /api/v1/auth/login
      */
     @PostMapping("/login")
-    public ResponseEntity<BaseApiResponse<AuthResponseDTO>> login(
+    public ResponseEntity<BaseApiResponse<String>> login(
             @Valid @RequestBody LoginRequestDTO request) {
 
-        AuthResponseDTO response = authService.login(request);
+        String message = authService.login(request);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(BaseApiResponse.ok(message, null));
+    }
+
+    /**
+     * Xác thực OTP (MFA) để nhận Token
+     * POST /api/v1/auth/verify-mfa-login
+     */
+    @PostMapping("/verify-mfa-login")
+    public ResponseEntity<BaseApiResponse<AuthResponseDTO>> verifyMfaLogin(
+            @Valid @RequestBody VerifyLoginDTO request) {
+
+        AuthResponseDTO response = authService.verifyLoginMfa(request);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(BaseApiResponse.ok("Đăng nhập thành công", response));
+    }
+
+    /**
+     * Gửi Email OTP cho màn hình MFA đăng nhập
+     */
+    @PostMapping("/send-login-otp")
+    public ResponseEntity<BaseApiResponse<String>> sendLoginOtp(
+            @RequestParam String email) {
+        String message = authService.sendLoginOtp(email);
+        return ResponseEntity.ok(BaseApiResponse.ok(message, null));
     }
 
     /**
@@ -107,5 +132,71 @@ public class AuthController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(BaseApiResponse.ok("Đăng xuất thành công", null));
+    }
+
+    /**
+     * Đăng nhập bằng Google
+     * POST /api/v1/auth/google
+     */
+    @PostMapping("/google")
+    public ResponseEntity<BaseApiResponse<AuthResponseDTO>> loginWithGoogle(
+            @Valid @RequestBody GoogleTokenRequestDTO request) {
+
+        AuthResponseDTO response = authService.loginWithGoogle(request);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(BaseApiResponse.ok("Đăng nhập bằng Google thành công", response));
+    }
+
+    /**
+     * Gửi OTP để đăng ký (trước khi tạo user)
+     */
+    @PostMapping("/send-otp-register")
+    public ResponseEntity<BaseApiResponse<String>> sendOtpRegister(
+            @RequestParam String email) {
+        
+        String message = authService.sendOtpForRegistration(email);
+        return ResponseEntity.ok(BaseApiResponse.ok(message, null));
+    }
+    /**
+     * Quên mật khẩu - Gửi OTP
+     */
+    @PostMapping("/forgot-password")
+    public ResponseEntity<BaseApiResponse<String>> forgotPassword(
+            @RequestParam String email) {
+        String message = authService.forgotPassword(email);
+        return ResponseEntity.ok(BaseApiResponse.ok(message, null));
+    }
+
+    /**
+     * Đặt lại mật khẩu mới
+     */
+    @PostMapping("/reset-password")
+    public ResponseEntity<BaseApiResponse<String>> resetPassword(
+            @Valid @RequestBody ResetPasswordDTO request) {
+        String message = authService.resetPassword(request);
+        return ResponseEntity.ok(BaseApiResponse.ok(message, null));
+    }
+    /**
+     * Cài đặt TOTP (Google Authenticator)
+     * Trả về URI hình ảnh QR code
+     */
+    @PostMapping("/setup-totp")
+    public ResponseEntity<BaseApiResponse<String>> setupTotp(
+            @RequestParam String username) throws Exception {
+        String qrCodeUri = authService.setupTotp(username);
+        return ResponseEntity.ok(BaseApiResponse.ok("Quét mã QR sau bằng Google Authenticator", qrCodeUri));
+    }
+
+    /**
+     * Xác thực mã TOTP đầu tiên để bật TOTP
+     */
+    @PostMapping("/verify-totp-setup")
+    public ResponseEntity<BaseApiResponse<String>> verifyTotpSetup(
+            @RequestParam String username,
+            @RequestParam String code) {
+        String message = authService.verifyAndEnableTotp(username, code);
+        return ResponseEntity.ok(BaseApiResponse.ok(message, null));
     }
 }

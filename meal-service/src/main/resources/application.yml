@@ -49,3 +49,15 @@ jwt:
   secret: ${JWT_SECRET}
   access-token-expiration-ms: ${JWT_ACCESS_EXPIRATION}
   refresh-token-expiration-ms: ${JWT_REFRESH_EXPIRATION}
+
+# OTP Configuration
+app:
+  otp:
+    expiration-minutes: ${OTP_EXPIRATION_MINUTES:1}
+
+cloudinary:
+  cloud-name: ${CLOUDINARY_CLOUD_NAME}
+  api-key: ${CLOUDINARY_API_KEY}
+  api-secret: ${CLOUDINARY_API_SECRET}
+
+
