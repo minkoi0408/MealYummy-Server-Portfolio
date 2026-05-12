@@ -173,25 +173,25 @@ public class MealServiceImpl implements MealService {
                 throw new AppException(ErrorCode.INGREDIENT_NOT_FOUND);
             }
 
-            String[] healthyNames = {
-                    "Salad Ức Gà Áp Chảo", "Cơm Gạo Lứt Bò Lúc Lắc", "Cá Hồi Nướng Măng Tây",
-                    "Mì Ý Nguyên Cám Sốt Bò Bằm", "Ức Gà Luộc Xé Phay", "Salad Cá Ngừ",
-                    "Khoai Lang Luộc Trộn Sữa Chua", "Sinh Tố Chuối Bơ Đậu Phộng",
-                    "Cơm Trắng Thịt Bò Xào Cần Tây", "Yến Mạch Ngâm Qua Đêm Trái Cây",
-                    "Cháo Yến Mạch Tôm Thịt", "Bò Bít Tết (Kèm Salad)", "Gà Xào Xả Ớt Ăn Kiêng",
-                    "Cá Basa Áp Chảo", "Đậu Hũ Tứ Xuyên Phiên Bản Ít Dầu"
-            };
+            Map<String, String> nameToImageMap = Map.ofEntries(
+                Map.entry("Salad Ức Gà Áp Chảo", "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&q=80"),
+                Map.entry("Cơm Gạo Lứt Bò Lúc Lắc", "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&q=80"),
+                Map.entry("Cá Hồi Nướng Măng Tây", "https://images.unsplash.com/photo-1543339308-43e59d6b73a6?w=800&q=80"),
+                Map.entry("Mì Ý Nguyên Cám Sốt Bò Bằm", "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=800&q=80"),
+                Map.entry("Ức Gà Luộc Xé Phay", "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&q=80"),
+                Map.entry("Salad Cá Ngừ", "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&q=80"),
+                Map.entry("Khoai Lang Luộc Trộn Sữa Chua", "https://images.unsplash.com/photo-1504630083234-14187a9df0f5?w=800&q=80"),
+                Map.entry("Sinh Tố Chuối Bơ Đậu Phộng", "https://images.unsplash.com/photo-1484723091791-0fee59cb0c47?w=800&q=80"),
+                Map.entry("Cơm Trắng Thịt Bò Xào Cần Tây", "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&q=80"),
+                Map.entry("Yến Mạch Ngâm Qua Đêm Trái Cây", "https://images.unsplash.com/photo-1504630083234-14187a9df0f5?w=800&q=80"),
+                Map.entry("Cháo Yến Mạch Tôm Thịt", "https://images.unsplash.com/photo-1504630083234-14187a9df0f5?w=800&q=80"),
+                Map.entry("Bò Bít Tết (Kèm Salad)", "https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=800&q=80"),
+                Map.entry("Gà Xào Xả Ớt Ăn Kiêng", "https://images.unsplash.com/photo-1588123190131-1c3fac394f4b?w=800&q=80"),
+                Map.entry("Cá Basa Áp Chảo", "https://images.unsplash.com/photo-1543339308-43e59d6b73a6?w=800&q=80"),
+                Map.entry("Đậu Hũ Tứ Xuyên Phiên Bản Ít Dầu", "https://images.unsplash.com/photo-1588123190131-1c3fac394f4b?w=800&q=80")
+            );
 
-            String[] healthyImages = {
-                    "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&q=80",
-                    "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&q=80",
-                    "https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=800&q=80",
-                    "https://images.unsplash.com/photo-1543339308-43e59d6b73a6?w=800&q=80",
-                    "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=800&q=80",
-                    "https://images.unsplash.com/photo-1484723091791-0fee59cb0c47?w=800&q=80",
-                    "https://images.unsplash.com/photo-1504630083234-14187a9df0f5?w=800&q=80",
-                    "https://images.unsplash.com/photo-1588123190131-1c3fac394f4b?w=800&q=80"
-            };
+            String[] healthyNames = nameToImageMap.keySet().toArray(new String[0]);
 
             List<Meal> meals = new java.util.ArrayList<>();
             java.util.Random rand = new java.util.Random();
@@ -241,7 +241,7 @@ public class MealServiceImpl implements MealService {
                 // Images
                 List<mealyummy.mealservice.model.pojo.MealImage> mealImages = new java.util.ArrayList<>();
                 mealImages.add(mealyummy.mealservice.model.pojo.MealImage.builder()
-                        .url(healthyImages[rand.nextInt(healthyImages.length)])
+                        .url(nameToImageMap.get(baseName))
                         .isThumbnail(true)
                         .build());
 

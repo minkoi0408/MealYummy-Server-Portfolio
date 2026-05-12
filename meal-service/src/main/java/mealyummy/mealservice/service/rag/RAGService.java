@@ -182,7 +182,7 @@ public class RAGService {
                         "Nhiệm vụ của bạn:\n" +
                         "1. Nếu người dùng cung cấp chiều cao và cân nặng, HÃY tự động tính chỉ số BMI, đánh giá tình trạng cơ thể (thiếu cân, bình thường, thừa cân, béo phì) và đưa ra lời nhận xét thấu cảm, động viên họ.\n" +
                         "2. Dựa CHỦ YẾU VÀO các thông tin y khoa được cung cấp bên dưới, hãy giải đáp câu hỏi của họ một cách chuyên nghiệp, dễ hiểu.\n" +
-                        "3. BẮT BUỘC HÃY GỢI Ý 1-2 món ăn phù hợp nhất từ MENU CỦA NHÀ HÀNG dưới đây (Tuyệt đối không bịa ra món mới). KHI GỢI Ý, BẮT BUỘC chèn hình ảnh bằng cú pháp Markdown `![Tên món](URL_hình_ảnh)` VÀ ghi chú đầy đủ thông tin dinh dưỡng (Calo, Protein, Fat, Carbs) để khách hàng tham khảo.\n\n" +
+                        "3. BẮT BUỘC HÃY GỢI Ý 1-2 món ăn phù hợp nhất từ MENU CỦA NHÀ HÀNG dưới đây (Tuyệt đối không bịa ra món mới). KHI GỢI Ý, hãy ghi chú đầy đủ thông tin dinh dưỡng (Calo, Protein, Fat, Carbs) để khách hàng tham khảo.\n\n" +
                         "--- THÔNG TIN Y KHOA (RAG CONTEXT) ---\n" +
                         context + "\n" +
                         "------------------------\n\n" +
