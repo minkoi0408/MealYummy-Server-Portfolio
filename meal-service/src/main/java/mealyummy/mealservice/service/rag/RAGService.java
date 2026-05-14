@@ -1,6 +1,13 @@
 package mealyummy.mealservice.service.rag;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import mealyummy.mealservice.model.entity.Meal;
+import mealyummy.mealservice.model.entity.AiChatSession;
+import mealyummy.mealservice.model.repository.MealRepository;
+import mealyummy.mealservice.model.repository.AiChatSessionRepository;
+import org.bson.Document;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.http.HttpEntity;
@@ -8,78 +15,78 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import mealyummy.mealservice.model.entity.Meal;
-import mealyummy.mealservice.model.repository.MealRepository;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
-import org.bson.Document;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class RAGService {
 
     private final MongoTemplate mongoTemplate;
-    private final MealRepository mealRepository;
     private final RestTemplate restTemplate = new RestTemplate();
+    private final MealRepository mealRepository;
+    private final AiChatSessionRepository aiChatSessionRepository;
 
-    @Value("${GEMINI_API_KEY:}")
+    @Value("${gemini.api.key}")
     private String geminiApiKey;
+
+    public List<mealyummy.mealservice.service.rag.dto.ChatRequestDTO.ChatMessageDTO> getChatHistory(String username) {
+        return aiChatSessionRepository.findById(username)
+                .map(session -> session.getMessages().stream()
+                        .map(msg -> {
+                            mealyummy.mealservice.service.rag.dto.ChatRequestDTO.ChatMessageDTO dto = new mealyummy.mealservice.service.rag.dto.ChatRequestDTO.ChatMessageDTO();
+                            dto.setRole(msg.getRole());
+                            dto.setContent(msg.getContent());
+                            return dto;
+                        })
+                        .toList())
+                .orElse(new ArrayList<>());
+    }
+
+    public void clearChatHistory(String username) {
+        aiChatSessionRepository.deleteById(username);
+    }
 
     public String ingestMedicalKnowledge(MultipartFile file) {
         try {
-            // Xóa sạch dữ liệu cũ nhưng GIỮ LẠI Collection và Index
-            mongoTemplate.remove(new org.springframework.data.mongodb.core.query.Query(), "vector_store");
-
-            // 1. Đọc nội dung file Text
             String content = new String(file.getBytes(), StandardCharsets.UTF_8);
+            String[] chunks = content.split("\n\n"); 
+            List<Document> documents = new ArrayList<>();
 
-            // 2. Băm nhỏ văn bản (Mỗi đoạn khoảng 500 ký tự)
-            List<String> chunks = chunkText(content, 500);
-
-            // 3. Gọi Gemini API để lấy Vector (Embedding) và lưu vào MongoDB
-            int savedCount = 0;
             for (String chunk : chunks) {
                 if (chunk.trim().isEmpty()) continue;
-                
-                List<Double> embedding = getEmbedding(chunk);
-                
-                if (embedding != null && !embedding.isEmpty()) {
-                    // Tạo Document để lưu vào collection "vector_store"
-                    Document doc = new Document("_id", UUID.randomUUID().toString())
-                            .append("text", chunk)
-                            .append("embedding", embedding)
-                            .append("source", file.getOriginalFilename());
-                            
-                    mongoTemplate.getCollection("vector_store").insertOne(doc);
-                    savedCount++;
+                List<Double> embedding = getEmbedding(chunk.trim());
+                if (embedding != null) {
+                    Document doc = new Document("text", chunk.trim())
+                            .append("embedding", embedding);
+                    documents.add(doc);
                 }
             }
 
-            return "Đã nạp thành công " + savedCount + " đoạn kiến thức y khoa vào Không gian Vector (MongoDB)!";
+            if (!documents.isEmpty()) {
+                mongoTemplate.getCollection("vector_store").insertMany(documents);
+                return "Đã nạp " + documents.size() + " đoạn kiến thức y khoa thành công!";
+            }
+            return "File không có nội dung hợp lệ.";
         } catch (Exception e) {
-            throw new RuntimeException("Lỗi khi nạp tài liệu: " + e.getMessage());
+            e.printStackTrace();
+            return "Lỗi khi xử lý file: " + e.getMessage();
         }
     }
 
-    /**
-     * Hàm gọi API Gemini thủ công để lấy Vector
-     */
     private List<Double> getEmbedding(String text) {
         String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent?key=" + geminiApiKey;
-
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        // Body request theo chuẩn của Gemini Embedding
-        String requestBody = "{\"model\": \"models/gemini-embedding-001\", \"content\": {\"parts\": [{\"text\": \"" 
-                             + text.replace("\"", "\\\"").replace("\n", " ") + "\"}]}}";
+        String safeText = text.replace("\"", "\\\"").replace("\n", "\\n");
+        String requestBody = "{\"model\": \"models/gemini-embedding-001\", \"content\": {\"parts\": [{\"text\": \"" + safeText + "\"}]}, \"outputDimensionality\": 768}";
 
         HttpEntity<String> request = new HttpEntity<>(requestBody, headers);
 
@@ -87,43 +94,23 @@ public class RAGService {
             ResponseEntity<Map> response = restTemplate.postForEntity(url, request, Map.class);
             Map<String, Object> body = response.getBody();
             if (body != null && body.containsKey("embedding")) {
-                Map<String, Object> embeddingObj = (Map<String, Object>) body.get("embedding");
-                List<Double> values = (List<Double>) embeddingObj.get("values");
-                // Cắt vector xuống đúng 768 chiều để khớp với Index của MongoDB Atlas
-                if (values.size() > 768) {
-                    return new ArrayList<>(values.subList(0, 768));
-                }
-                return values;
+                Map<String, Object> embeddingNode = (Map<String, Object>) body.get("embedding");
+                return (List<Double>) embeddingNode.get("values");
             }
         } catch (Exception e) {
             System.err.println("Lỗi khi gọi Gemini Embedding API: " + e.getMessage());
         }
-        return new ArrayList<>();
+        return null;
     }
 
-    /**
-     * Hàm chia nhỏ văn bản đơn giản
-     */
-    private List<String> chunkText(String text, int chunkSize) {
-        List<String> chunks = new ArrayList<>();
-        int length = text.length();
-        for (int i = 0; i < length; i += chunkSize) {
-            chunks.add(text.substring(i, Math.min(length, i + chunkSize)));
-        }
-        return chunks;
-    }
-
-    /**
-     * TÌM KIẾM VECTOR & TRẢ LỜI CÂU HỎI BẰNG GEMINI CHAT
-     */
-    public String askQuestion(String question) {
-        // Bước 1: Biến câu hỏi thành Vector
+    public String askQuestion(mealyummy.mealservice.service.rag.dto.ChatRequestDTO request, String username) {
+        String question = request.getQuestion();
+        
         List<Double> questionEmbedding = getEmbedding(question);
         if (questionEmbedding == null || questionEmbedding.isEmpty()) {
             return "Xin lỗi, hệ thống AI đang gặp sự cố khi xử lý câu hỏi của bạn.";
         }
 
-        // Bước 2: Tìm kiếm Vector tương đồng trong MongoDB
         List<Document> pipeline = List.of(
             new Document("$vectorSearch",
                 new Document("index", "vector_index")
@@ -146,7 +133,7 @@ public class RAGService {
             }
         } catch (Exception e) {
             System.err.println("Lỗi khi tìm kiếm Vector trong MongoDB: " + e.getMessage());
-            return "Hệ thống cơ sở dữ liệu y khoa đang bảo trì, vui lòng thử lại sau.";
+            return "Xin lỗi, hệ thống cơ sở dữ liệu y khoa đang bảo trì, vui lòng thử lại sau.";
         }
 
         String context = contextBuilder.toString().trim();
@@ -154,9 +141,7 @@ public class RAGService {
             return "Xin lỗi, tôi chưa được học kiến thức nào liên quan đến vấn đề này. Hãy cung cấp thêm thông tin.";
         }
 
-        // Bước 3: Lấy danh sách món ăn từ Menu để AI gợi ý
         List<Meal> meals = mealRepository.findAll();
-        // Lấy ngẫu nhiên khoảng 10 món để tránh vượt quá giới hạn độ dài Prompt
         if (meals.size() > 10) {
             java.util.Collections.shuffle(meals);
             meals = meals.subList(0, 10);
@@ -177,8 +162,7 @@ public class RAGService {
             }
         }
 
-        // Bước 4: Tạo Prompt siêu to khổng lồ
-        String prompt = "Bạn là Bác sĩ Dinh dưỡng AI cực kỳ thông minh, thân thiện và tận tâm của nhà hàng MealYummy.\n" +
+        String systemInstruction = "Bạn là Bác sĩ Dinh dưỡng AI cực kỳ thông minh, thân thiện và tận tâm của nhà hàng MealYummy.\n" +
                         "Nhiệm vụ của bạn:\n" +
                         "1. Nếu người dùng cung cấp chiều cao và cân nặng, HÃY tự động tính chỉ số BMI, đánh giá tình trạng cơ thể (thiếu cân, bình thường, thừa cân, béo phì) và đưa ra lời nhận xét thấu cảm, động viên họ.\n" +
                         "2. Dựa CHỦ YẾU VÀO các thông tin y khoa được cung cấp bên dưới, hãy giải đáp câu hỏi của họ một cách chuyên nghiệp, dễ hiểu.\n" +
@@ -187,24 +171,58 @@ public class RAGService {
                         context + "\n" +
                         "------------------------\n\n" +
                         "--- MENU NHÀ HÀNG MEALYUMMY ---\n" +
-                        menuBuilder.toString() + "\n" +
-                        "------------------------\n\n" +
-                        "CÂU HỎI CỦA NGƯỜI DÙNG: " + question;
+                        menuBuilder.toString();
 
-        // Bước 5: Gửi cho Gemini Chat API
-        return generateChatResponse(prompt);
+        String answer = generateChatResponse(systemInstruction, request.getHistory(), question);
+
+        if (username != null && !answer.contains("quá tải hoặc không phản hồi") && !answer.contains("Xin lỗi")) {
+            AiChatSession session = aiChatSessionRepository.findById(username).orElse(new AiChatSession(username, new ArrayList<>(), Instant.now()));
+            List<AiChatSession.ChatMessage> history = new ArrayList<>();
+            if (request.getHistory() != null) {
+                for (var dto : request.getHistory()) {
+                    history.add(new AiChatSession.ChatMessage(dto.getRole(), dto.getContent()));
+                }
+            }
+            history.add(new AiChatSession.ChatMessage("user", question));
+            history.add(new AiChatSession.ChatMessage("model", answer));
+            
+            session.setMessages(history);
+            session.setUpdatedAt(Instant.now());
+            aiChatSessionRepository.save(session);
+        }
+
+        return answer;
     }
 
-    /**
-     * Gọi Gemini Chat API thủ công (GenerateContent)
-     */
-    private String generateChatResponse(String prompt) {
-        String url = "https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=" + geminiApiKey;
+    private String generateChatResponse(String systemInstruction, List<mealyummy.mealservice.service.rag.dto.ChatRequestDTO.ChatMessageDTO> history, String currentQuestion) {
+        String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + geminiApiKey;
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        String safePrompt = prompt.replace("\"", "\\\"").replace("\n", "\\n");
-        String requestBody = "{\"contents\": [{\"parts\": [{\"text\": \"" + safePrompt + "\"}]}]}";
+        StringBuilder contentsBuilder = new StringBuilder();
+        contentsBuilder.append("[");
+        
+        if (history != null) {
+            for (int i = 0; i < history.size(); i++) {
+                mealyummy.mealservice.service.rag.dto.ChatRequestDTO.ChatMessageDTO msg = history.get(i);
+                String role = "user".equals(msg.getRole()) ? "user" : "model";
+                String safeContent = msg.getContent().replace("\"", "\\\"").replace("\n", "\\n");
+                contentsBuilder.append("{\"role\": \"").append(role).append("\", \"parts\": [{\"text\": \"").append(safeContent).append("\"}]}");
+                if (i < history.size() - 1) contentsBuilder.append(",");
+            }
+        }
+        
+        if (history != null && !history.isEmpty()) contentsBuilder.append(",");
+        String safeCurrentQuestion = currentQuestion.replace("\"", "\\\"").replace("\n", "\\n");
+        contentsBuilder.append("{\"role\": \"user\", \"parts\": [{\"text\": \"").append(safeCurrentQuestion).append("\"}]}");
+        contentsBuilder.append("]");
+
+        String safeSystemInstruction = systemInstruction.replace("\"", "\\\"").replace("\n", "\\n");
+
+        String requestBody = "{" +
+                             "\"system_instruction\": {\"parts\": [{\"text\": \"" + safeSystemInstruction + "\"}]}," +
+                             "\"contents\": " + contentsBuilder.toString() +
+                             "}";
         
         HttpEntity<String> request = new HttpEntity<>(requestBody, headers);
         try {
