@@ -1,4 +1,4 @@
-package mealyummy.mealservice.service.auth.dto;
+package mealyummy.mealservice.service.iam.authentication.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

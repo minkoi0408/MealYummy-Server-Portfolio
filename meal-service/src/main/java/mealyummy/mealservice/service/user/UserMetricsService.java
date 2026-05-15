@@ -4,16 +4,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import mealyummy.mealservice.core.exception.AppException;
 import mealyummy.mealservice.core.exception.ErrorCode;
-import mealyummy.mealservice.model.entity.User;
-import mealyummy.mealservice.model.entity.UserMetrics;
+import mealyummy.mealservice.model.entity.auth.User;
+import mealyummy.mealservice.model.entity.profile.UserMetrics;
 import mealyummy.mealservice.model.repository.UserMetricsRepository;
 import mealyummy.mealservice.model.repository.UserRepository;
 import mealyummy.mealservice.service.user.dto.UserMetricsDTO;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.List;
 import java.util.stream.Collectors;
 

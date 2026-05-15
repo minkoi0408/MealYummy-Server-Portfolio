@@ -2,7 +2,7 @@ package mealyummy.mealservice.service.mealplan;
 
 import lombok.RequiredArgsConstructor;
 import mealyummy.mealservice.model.entity.MealPlanItem;
-import mealyummy.mealservice.model.entity.User;
+import mealyummy.mealservice.model.entity.auth.User;
 import mealyummy.mealservice.model.repository.MealPlanRepository;
 import mealyummy.mealservice.model.repository.UserRepository;
 import mealyummy.mealservice.service.mealplan.dto.AddMealPlanRequest;

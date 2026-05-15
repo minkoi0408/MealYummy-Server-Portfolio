@@ -1,14 +1,15 @@
-package mealyummy.mealservice.model.entity;
+package mealyummy.mealservice.model.entity.auth;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import mealyummy.mealservice.model.enums.UserStatus;
+import mealyummy.mealservice.model.enums.AuthProvider;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.DocumentReference;
 
 import java.time.Instant;
 
@@ -34,16 +35,21 @@ public class User {
     private String avatarUrl;
 
     @Builder.Default
-    private UserStatus status = UserStatus.PENDING;
-
-    private String otpCode;
-    private Instant otpExpiration;
+    private boolean isActive = true;
 
     // TOTP (Google Authenticator) fields
     private String totpSecret;
     @Builder.Default
     private boolean isTotpEnabled = false;
 
+    @Builder.Default
+    private AuthProvider authProvider = AuthProvider.LOCAL;
+
+    private String providerId;
+
     @CreatedDate
     private Instant createdAt;
+
+    @DocumentReference(lazy = true)
+    private Role role;
 }

@@ -61,6 +61,7 @@ public class SecurityConfig {
                         // Các endpoint công khai (không cần đăng nhập)
                         .requestMatchers(
                                 "/api/v1/auth/**",
+                                "/api/v1/notification/**",
                                 "/api/v1/data/**",
                                 "/api/v1/categories/**",
                                 "/api/v1/tags/**",

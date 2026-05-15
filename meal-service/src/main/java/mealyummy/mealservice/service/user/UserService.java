@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import mealyummy.mealservice.core.exception.AppException;
 import mealyummy.mealservice.core.exception.ErrorCode;
-import mealyummy.mealservice.model.entity.User;
+import mealyummy.mealservice.model.entity.auth.User;
 import mealyummy.mealservice.model.repository.UserRepository;
 import mealyummy.mealservice.service.cloudinary.CloudinaryService;
 import org.springframework.stereotype.Service;

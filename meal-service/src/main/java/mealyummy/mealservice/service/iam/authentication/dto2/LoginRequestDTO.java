@@ -1,4 +1,4 @@
-package mealyummy.mealservice.service.auth.dto;
+package mealyummy.mealservice.service.iam.authentication.dto2;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
