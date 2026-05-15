@@ -49,7 +49,7 @@ public class SecurityConfig {
         http
                 .cors(cors -> cors.configurationSource(request -> {
                     var corsConfiguration = new org.springframework.web.cors.CorsConfiguration();
-                    corsConfiguration.setAllowedOrigins(java.util.List.of("http://localhost:5173"));
+                    corsConfiguration.setAllowedOriginPatterns(java.util.List.of("*"));
                     corsConfiguration.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                     corsConfiguration.setAllowedHeaders(java.util.List.of("*"));
                     corsConfiguration.setAllowCredentials(true);
@@ -67,6 +67,7 @@ public class SecurityConfig {
                                 "/api/v1/ingredients/**",
                                 "/api/v1/meals/**",
                                 "/api/v1/ai/**",
+                                "/api/v1/map/**",
                                 "/swagger-ui/**",
                                 "/api-docs/**",
                                 "/swagger-ui.html")

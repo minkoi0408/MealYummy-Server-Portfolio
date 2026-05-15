@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import mealyummy.mealservice.service.rag.dto.ChatRequestDTO;
 
 @RestController
 @RequestMapping("/api/v1/ai/knowledge")
@@ -24,10 +25,26 @@ public class RAGController {
     }
 
     @PostMapping("/chat")
-    public ResponseEntity<BaseApiResponse<String>> chatWithAI(@RequestParam("question") String question) {
-        String answer = ragService.askQuestion(question);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(BaseApiResponse.ok("Thành công", answer));
+    public ResponseEntity<BaseApiResponse<String>> chatWithAI(@RequestBody ChatRequestDTO request, java.security.Principal principal) {
+        String username = principal != null ? principal.getName() : null;
+        String answer = ragService.askQuestion(request, username);
+        return ResponseEntity.ok(BaseApiResponse.ok("Thành công", answer));
+    }
+
+    @GetMapping("/chat/history")
+    public ResponseEntity<BaseApiResponse<java.util.List<ChatRequestDTO.ChatMessageDTO>>> getChatHistory(java.security.Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.ok(BaseApiResponse.ok("Guest", new java.util.ArrayList<>()));
+        }
+        java.util.List<ChatRequestDTO.ChatMessageDTO> history = ragService.getChatHistory(principal.getName());
+        return ResponseEntity.ok(BaseApiResponse.ok("Thành công", history));
+    }
+
+    @DeleteMapping("/chat/history")
+    public ResponseEntity<BaseApiResponse<String>> clearChatHistory(java.security.Principal principal) {
+        if (principal != null) {
+            ragService.clearChatHistory(principal.getName());
+        }
+        return ResponseEntity.ok(BaseApiResponse.ok("Thành công", "Đã xóa lịch sử"));
     }
 }
