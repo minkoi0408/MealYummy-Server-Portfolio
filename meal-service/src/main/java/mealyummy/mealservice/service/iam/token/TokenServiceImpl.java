@@ -1,4 +1,4 @@
-package mealyummy.mealservice.service.token;
+package mealyummy.mealservice.service.iam.token;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -6,25 +6,13 @@ import mealyummy.mealservice.core.security.JwtUtil;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Service quản lý token thông qua Redis.
- *
- * Cách hoạt động:
- * - Khi login: lưu Access Token và Refresh Token vào Redis với TTL tương ứng
- * - Khi gọi API: kiểm tra Access Token có tồn tại trong Redis không
- * - Khi refresh: xóa Access Token cũ, tạo Access Token mới
- * - Khi logout: xóa cả Access Token và Refresh Token khỏi Redis
- *
- * Redis Key Format:
- * - Access Token: "access:{username}:{tokenId}"
- * - Refresh Token: "refresh:{username}:{tokenId}"
- */
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class TokenService {
+public class TokenServiceImpl implements TokenService {
 
     private final StringRedisTemplate redisTemplate;
     private final JwtUtil jwtUtil;
@@ -35,27 +23,25 @@ public class TokenService {
     /**
      * Lưu Access Token vào Redis (TTL: 5 phút)
      */
-    public void storeAccessToken(String username, String token) {
+    public void storeToken(String username, String token, String prefix, long expiration) {
+        // 1. Lấy ID và tạo Key duy nhất
         String tokenId = jwtUtil.getTokenId(token);
-        String key = ACCESS_PREFIX + username + ":" + tokenId;
+        String key = prefix + username + ":" + tokenId;
 
-        redisTemplate.opsForValue().set(key, token,
-                jwtUtil.getAccessTokenExpirationMs(), TimeUnit.MILLISECONDS);
+//        // 3. (Optional) Xóa các token cũ nếu bạn muốn duy trì Single Session
+//        Set<String> oldKeys = redisTemplate.keys(prefix + username + ":*");
+//        if (oldKeys != null && !oldKeys.isEmpty()) {
+//            redisTemplate.delete(oldKeys);
+//        }
 
-        log.debug("Lưu Access Token vào Redis: {}", key);
-    }
+        // 4. Lưu vào Redis
+        redisTemplate.opsForValue().set(
+                key,
+                token,
+                expiration,
+                TimeUnit.MILLISECONDS);
 
-    /**
-     * Lưu Refresh Token vào Redis (TTL: 1 tuần)
-     */
-    public void storeRefreshToken(String username, String token) {
-        String tokenId = jwtUtil.getTokenId(token);
-        String key = REFRESH_PREFIX + username + ":" + tokenId;
-
-        redisTemplate.opsForValue().set(key, token,
-                jwtUtil.getRefreshTokenExpirationMs(), TimeUnit.MILLISECONDS);
-
-        log.debug("Lưu Refresh Token vào Redis: {}", key);
+        log.debug("Đã lưu {} vào Redis cho user: {}", prefix, username);
     }
 
     /**
@@ -87,25 +73,6 @@ public class TokenService {
         return token.equals(storedToken);
     }
 
-    /**
-     * Xóa một Access Token cụ thể
-     */
-    public void removeAccessToken(String username, String token) {
-        String tokenId = jwtUtil.getTokenId(token);
-        String key = ACCESS_PREFIX + username + ":" + tokenId;
-        redisTemplate.delete(key);
-        log.debug("Xóa Access Token khỏi Redis: {}", key);
-    }
-
-    /**
-     * Xóa một Refresh Token cụ thể
-     */
-    public void removeRefreshToken(String username, String token) {
-        String tokenId = jwtUtil.getTokenId(token);
-        String key = REFRESH_PREFIX + username + ":" + tokenId;
-        redisTemplate.delete(key);
-        log.debug("Xóa Refresh Token khỏi Redis: {}", key);
-    }
 
     /**
      * Xóa TẤT CẢ token của user (dùng khi logout toàn bộ thiết bị)

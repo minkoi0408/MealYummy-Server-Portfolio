@@ -1,4 +1,4 @@
-package mealyummy.mealservice.model.entity;
+package mealyummy.mealservice.model.entity.profile;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

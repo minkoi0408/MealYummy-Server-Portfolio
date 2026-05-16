@@ -28,11 +28,11 @@ public enum ErrorCode {
     USER_NOT_FOUND("Không tìm thấy tài khoản", HttpStatus.NOT_FOUND),
     INVALID_CREDENTIALS("Tên đăng nhập hoặc mật khẩu không đúng", HttpStatus.UNAUTHORIZED),
     PASSWORD_MISMATCH("Mật khẩu xác nhận không khớp", HttpStatus.BAD_REQUEST),
-    ACCOUNT_NOT_VERIFIED("Tài khoản chưa được xác thực. Vui lòng kiểm tra OTP", HttpStatus.FORBIDDEN),
-    ACCOUNT_BANNED("Tài khoản đã bị khóa", HttpStatus.FORBIDDEN),
+    ACCOUNT_INACTIVE("Tài khoản bị vô hiệu hóa", HttpStatus.FORBIDDEN),
     OTP_INVALID("Mã OTP không đúng hoặc đã hết hạn", HttpStatus.BAD_REQUEST),
     OTP_EXPIRED("Mã OTP đã hết hạn. Vui lòng yêu cầu mã mới", HttpStatus.BAD_REQUEST),
     INVALID_TOKEN("Token không hợp lệ hoặc đã hết hạn", HttpStatus.UNAUTHORIZED),
+    ROLE_NOT_FOUDN("Không tìm thấy role phù hợp", HttpStatus.NOT_FOUND),
     ;
     ErrorCode(String message, HttpStatus statusCode) {
         this.message = message;

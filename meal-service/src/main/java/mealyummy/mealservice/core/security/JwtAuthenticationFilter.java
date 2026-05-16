@@ -5,7 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import mealyummy.mealservice.service.token.TokenService;
+import mealyummy.mealservice.service.iam.token.TokenServiceImpl;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -25,7 +25,7 @@ import java.util.Collections;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
-    private final TokenService tokenService;
+    private final TokenServiceImpl tokenServiceImpl;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -44,7 +44,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 // Chỉ chấp nhận Access Token cho các request API
                 // Phải tồn tại trong Redis (chưa bị revoke/logout)
                 boolean isValid = "ACCESS".equals(tokenType)
-                        && tokenService.isAccessTokenValid(username, token);
+                        && tokenServiceImpl.isAccessTokenValid(username, token);
 
                 if (isValid) {
                     UsernamePasswordAuthenticationToken authentication =

@@ -1,4 +1,4 @@
-package mealyummy.mealservice.service.auth.dto;
+package mealyummy.mealservice.service.iam.authentication.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -14,7 +14,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RegisterRequestDTO {
-
     @NotBlank(message = "Tên đăng nhập không được để trống")
     @Size(min = 4, max = 30, message = "Tên đăng nhập phải từ 4 đến 30 ký tự")
     private String username;
@@ -33,13 +32,5 @@ public class RegisterRequestDTO {
     @NotBlank(message = "Email không được để trống")
     @Email(message = "Email không đúng định dạng")
     private String email;
-
-    @NotBlank(message = "Số điện thoại không được để trống")
-    @Pattern(
-            regexp = "^(0\\d{9}|\\+84\\d{9})$",
-            message = "Số điện thoại phải bắt đầu bằng 0 (10 số) hoặc +84 (9 số sau)"
-    )
-    private String phone;
-
     private String otp;
 }

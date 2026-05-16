@@ -1,5 +1,5 @@
 server:
-  port: ${SERVER_PORT:8082}
+  port: ${SERVER_PORT}
 
 spring:
   mongodb:
@@ -19,6 +19,8 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
+    mongodb:
+      auto-index-creation: true
 
   mail:
     host: smtp.gmail.com
@@ -53,7 +55,7 @@ jwt:
 # OTP Configuration
 app:
   otp:
-    expiration-minutes: ${OTP_EXPIRATION_MINUTES:1}
+    expiration-minutes: ${OTP_EXPIRATION_MINUTES}
 
 cloudinary:
   cloud-name: ${CLOUDINARY_CLOUD_NAME}
