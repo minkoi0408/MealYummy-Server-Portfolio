@@ -5,8 +5,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import mealyummy.mealservice.core.exception.AppException;
 import mealyummy.mealservice.core.exception.ErrorCode;
+import mealyummy.mealservice.model.entity.auth.User;
 import mealyummy.mealservice.model.enums.OtpType;
 import mealyummy.mealservice.model.repository.UserRepository;
+import mealyummy.mealservice.service.iam.authentication.AuthService;
+import mealyummy.mealservice.service.iam.authentication.dto.LoginRequestDTO;
 import mealyummy.mealservice.service.iam.notification.dto.SendOtpToEmailRequestDTO;
 import mealyummy.mealservice.service.iam.otp.OtpService;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,11 +30,11 @@ public class NotificationServiceImpl implements NotificationService {
     private long otpExpirationMinutes;
 
     private final OtpService otpService;
+    private final AuthService authService;
     private final UserRepository userRepository;
 
     @Override
-    public String sendOtpToEmail(SendOtpToEmailRequestDTO request, OtpType otpType, String subJect, String htmlContent) {
-        String email = request.getEmail();
+    public void sendOtpToEmail(String email, OtpType otpType, String subJect, String htmlContent) {
         String otp = otpService.generateAndSaveOtp(email, otpType);
         try {
             MimeMessage message = mailSender.createMimeMessage();
@@ -47,7 +50,6 @@ public class NotificationServiceImpl implements NotificationService {
             log.error("Lỗi gửi email HTML OTP tới {}: {}", email, e.getMessage());
             log.info("=== [DEV] OTP cho {}: {} ===", email, otp);
         }
-        return "Đã gởi otp đến gmail. Vui lòng kiểm tra email để nhận otp!";
     }
 
     @Override
@@ -56,7 +58,7 @@ public class NotificationServiceImpl implements NotificationService {
             throw new AppException(ErrorCode.EMAIL_ALREADY_EXISTS);
         }
         sendOtpToEmail(
-                request,
+                request.getEmail(),
                 OtpType.REGISTRATION,
                 "MealYummy - Xác thực Bio-Fuel của bạn",
                 sendOtpInRegister);
@@ -69,9 +71,20 @@ public class NotificationServiceImpl implements NotificationService {
             throw new AppException(ErrorCode.USER_NOT_FOUND);
         }
         sendOtpToEmail(
-                request,
+                request.getEmail(),
                 OtpType.FORGOT_PASSWORD,
-                "MealYummy - Xác thực Quên mật khẩu tài khoản của bạn",
+                "MealYummy - Xác thực OTP quên mật khẩu tài khoản của bạn",
+                sendOtpInForgotPassword);
+        return "Đã gởi otp đến gmail. Vui lòng kiểm tra email để nhận otp!";
+    }
+
+    @Override
+    public String sendOtpLogin(LoginRequestDTO request) {
+        User user = authService.getUserLogin(request);
+        sendOtpToEmail(
+                user.getEmail(),
+                OtpType.LOGIN,
+                "MealYummy - Xác thực OTP đăng nhập tài khoản của bạn",
                 sendOtpInForgotPassword);
         return "Đã gởi otp đến gmail. Vui lòng kiểm tra email để nhận otp!";
     }

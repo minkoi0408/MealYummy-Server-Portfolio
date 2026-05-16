@@ -3,6 +3,7 @@ package mealyummy.mealservice.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import mealyummy.mealservice.core.base.BaseApiResponse;
+import mealyummy.mealservice.service.iam.authentication.dto.LoginRequestDTO;
 import mealyummy.mealservice.service.iam.notification.NotificationService;
 import mealyummy.mealservice.service.iam.notification.dto.SendOtpToEmailRequestDTO;
 import org.springframework.http.HttpStatus;
@@ -34,6 +35,17 @@ public class NotificationController {
             @Valid @RequestBody SendOtpToEmailRequestDTO request) {
 
         String message = notificationService.sendOtpForgotPassword(request);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(BaseApiResponse.ok(message, null));
+    }
+
+    @PostMapping("/otp-login")
+    public ResponseEntity<BaseApiResponse<String>> sendOtpLogin(
+            @Valid @RequestBody LoginRequestDTO request) {
+
+        String message = notificationService.sendOtpLogin(request);
 
         return ResponseEntity
                 .status(HttpStatus.OK)

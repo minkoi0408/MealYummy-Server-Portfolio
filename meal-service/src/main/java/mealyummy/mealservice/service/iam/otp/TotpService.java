@@ -1,4 +1,4 @@
-package mealyummy.mealservice.service.iam;
+package mealyummy.mealservice.service.iam.otp;
 
 import dev.samstevens.totp.code.CodeGenerator;
 import dev.samstevens.totp.code.DefaultCodeGenerator;

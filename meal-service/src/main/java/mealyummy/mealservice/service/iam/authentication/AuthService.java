@@ -1,20 +1,16 @@
-//package mealyummy.mealservice.service.iam.authentication;
-//
-//import mealyummy.mealservice.service.iam.authentication.dto.*;
-//
-//public interface AuthService {
-//    String register(RegisterRequestDTO request);
-//    String login(LoginRequestDTO request);
-//    String sendLoginOtp(String email);
-//    AuthResponseDTO verifyLoginMfa(VerifyLoginDTO request);
-//    String verifyOtp(OtpVerifyDTO request);
-//    String resendOtp(String email);
-//    AuthResponseDTO refreshToken(String refreshToken);
-//    AuthResponseDTO loginWithGoogle(GoogleTokenRequestDTO request);
-//    String sendOtpForRegistration(String email);
-//    void logout(String accessToken);
-//    String forgotPassword(String email);
-//    String resetPassword(ResetPasswordDTO request);
-//    String setupTotp(String username) throws Exception;
-//    String verifyAndEnableTotp(String username, String code);
-//}
+package mealyummy.mealservice.service.iam.authentication;
+
+import mealyummy.mealservice.model.entity.auth.User;
+import mealyummy.mealservice.service.iam.authentication.dto.*;
+
+public interface AuthService {
+    String registerLocal(RegisterRequestDTO request);
+    User getUserLogin(LoginRequestDTO request);
+    AuthResponseDTO login(VerifyLoginDTO request);
+    void logout(String accessToken);
+    String resetPassword(ResetPasswordDTO request);
+    AuthResponseDTO loginWithGoogle(GoogleTokenRequestDTO request);
+    String setupTotp(String username) throws Exception;
+    String verifyAndEnableTotp(String username, String code) ;
+    AuthResponseDTO refreshToken(String refreshToken);
+}
