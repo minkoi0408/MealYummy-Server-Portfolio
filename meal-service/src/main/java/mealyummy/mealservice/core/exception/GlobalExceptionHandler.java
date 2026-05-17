@@ -77,4 +77,15 @@ public class GlobalExceptionHandler extends RuntimeException {
         return ResponseEntity.badRequest()
                 .body(BaseApiResponse.error(msg, null));
     }
+
+    // Bắt mọi lỗi chưa được xử lý (tránh lỗi 500 im lặng)
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<BaseApiResponse<Object>> handleGeneralException(Exception exception, HttpServletRequest request) {
+        String msg = "Đã xảy ra lỗi hệ thống: " + exception.getMessage();
+        // In log ra terminal của Backend để bạn theo dõi
+        exception.printStackTrace(); 
+        
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(BaseApiResponse.error(msg, null));
+    }
 }

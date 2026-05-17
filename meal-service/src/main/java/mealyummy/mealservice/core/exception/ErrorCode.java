@@ -21,6 +21,18 @@ public enum ErrorCode {
     MEAL_NOT_FOUND("Không tìm thấy món ăn", HttpStatus.CONFLICT),
     MEAL_ALREADY_EXISTS("Tên món ăn này đã tồn tại", HttpStatus.CONFLICT),
     MEAL_INVALID_PRICE("Giá tối đa không được nhỏ hơn giá tối thiểu", HttpStatus.UNPROCESSABLE_CONTENT),
+
+    // Auth errors
+    USER_ALREADY_EXISTS("Tên đăng nhập đã tồn tại", HttpStatus.CONFLICT),
+    EMAIL_ALREADY_EXISTS("Email đã được sử dụng", HttpStatus.CONFLICT),
+    USER_NOT_FOUND("Không tìm thấy tài khoản", HttpStatus.NOT_FOUND),
+    INVALID_CREDENTIALS("Tên đăng nhập hoặc mật khẩu không đúng", HttpStatus.UNAUTHORIZED),
+    PASSWORD_MISMATCH("Mật khẩu xác nhận không khớp", HttpStatus.BAD_REQUEST),
+    ACCOUNT_INACTIVE("Tài khoản bị vô hiệu hóa", HttpStatus.FORBIDDEN),
+    OTP_INVALID("Mã OTP không đúng hoặc đã hết hạn", HttpStatus.BAD_REQUEST),
+    OTP_EXPIRED("Mã OTP đã hết hạn. Vui lòng yêu cầu mã mới", HttpStatus.BAD_REQUEST),
+    INVALID_TOKEN("Token không hợp lệ hoặc đã hết hạn", HttpStatus.UNAUTHORIZED),
+    ROLE_NOT_FOUDN("Không tìm thấy role phù hợp", HttpStatus.NOT_FOUND),
     ;
     ErrorCode(String message, HttpStatus statusCode) {
         this.message = message;

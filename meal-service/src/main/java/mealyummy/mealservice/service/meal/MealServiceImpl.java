@@ -33,12 +33,11 @@ public class MealServiceImpl implements MealService {
     private final TagRepository tagRepository;
     private final IngredientRepository ingredientRepository;
 
-
     public MealResponseDTO convertMealToMealResponseDTO(Meal meal) {
         PriceDTO price = meal.getPrice().convert();
         List<CategoryDTO> categories = meal.getCategories().stream().map(Category::convertForMeal).toList();
         List<TagDTO> tags = meal.getTags().stream().map(Tag::convertForMeal).toList();
-        List<MealIngredientDTO> ingredients= meal.getIngredients().stream().map(MealIngredient::convert).toList();
+        List<MealIngredientDTO> ingredients = meal.getIngredients().stream().map(MealIngredient::convert).toList();
 
         return MealResponseDTO.builder()
                 .name(meal.getName())
@@ -73,7 +72,8 @@ public class MealServiceImpl implements MealService {
             throw new AppException(ErrorCode.MEAL_INVALID_PRICE);
         }
 
-        // 5. (Tùy chọn cực xịn): Giới hạn mức giá trần để tránh spam DB (Ví dụ: Max 100 triệu VND)
+        // 5. (Tùy chọn cực xịn): Giới hạn mức giá trần để tránh spam DB (Ví dụ: Max 100
+        // triệu VND)
         if (maxPrice > 100_000_000f) {
             // Bạn có thể thêm mã lỗi MEAL_PRICE_TOO_HIGH vào ErrorCode
             throw new AppException(ErrorCode.MEAL_INVALID_PRICE);
@@ -96,7 +96,8 @@ public class MealServiceImpl implements MealService {
         formattedName = formattedName.substring(0, 1).toUpperCase() + formattedName.substring(1).toLowerCase();
 
         // Kiểm tra trùng tên món
-         if (mealRepository.existsByName(formattedName)) throw new AppException(ErrorCode.MEAL_ALREADY_EXISTS);
+        if (mealRepository.existsByName(formattedName))
+            throw new AppException(ErrorCode.MEAL_ALREADY_EXISTS);
 
         // 1. Tìm Categories (Chỉ lấy những cái đang active)
         List<Category> categories = categoryRepository.findAllById(request.getCategoryIds())
@@ -129,7 +130,8 @@ public class MealServiceImpl implements MealService {
                 .filter(Ingredient::getActive)
                 .collect(Collectors.toMap(Ingredient::getId, i -> i));
 
-        // 3.4. Duyệt qua request, lấy thông tin value/unit và "đắp" thêm Tên (Name) từ Map vào
+        // 3.4. Duyệt qua request, lấy thông tin value/unit và "đắp" thêm Tên (Name) từ
+        // Map vào
         List<MealIngredient> mealIngredients = request.getIngredients().stream().map(reqIng -> {
             Ingredient dbIngredient = ingredientMap.get(reqIng.getIngredientId());
             if (dbIngredient == null) {
@@ -157,5 +159,113 @@ public class MealServiceImpl implements MealService {
         return convertMealToMealResponseDTO(meal);
     }
 
+    @Override
+    @Transactional
+    public List<MealResponseDTO> initHealthyMealsData() {
+        try {
+            mealRepository.deleteAll();
 
+            List<Ingredient> allIngredients = ingredientRepository.findAll();
+            List<Tag> allTags = tagRepository.findAll();
+            List<Category> allCategories = categoryRepository.findAll();
+
+            if (allIngredients.isEmpty()) {
+                throw new AppException(ErrorCode.INGREDIENT_NOT_FOUND);
+            }
+
+            Map<String, String> nameToImageMap = Map.ofEntries(
+                Map.entry("Salad Ức Gà Áp Chảo", "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&q=80"),
+                Map.entry("Cơm Gạo Lứt Bò Lúc Lắc", "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&q=80"),
+                Map.entry("Cá Hồi Nướng Măng Tây", "https://images.unsplash.com/photo-1543339308-43e59d6b73a6?w=800&q=80"),
+                Map.entry("Mì Ý Nguyên Cám Sốt Bò Bằm", "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=800&q=80"),
+                Map.entry("Ức Gà Luộc Xé Phay", "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&q=80"),
+                Map.entry("Salad Cá Ngừ", "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&q=80"),
+                Map.entry("Khoai Lang Luộc Trộn Sữa Chua", "https://images.unsplash.com/photo-1504630083234-14187a9df0f5?w=800&q=80"),
+                Map.entry("Sinh Tố Chuối Bơ Đậu Phộng", "https://images.unsplash.com/photo-1484723091791-0fee59cb0c47?w=800&q=80"),
+                Map.entry("Cơm Trắng Thịt Bò Xào Cần Tây", "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&q=80"),
+                Map.entry("Yến Mạch Ngâm Qua Đêm Trái Cây", "https://images.unsplash.com/photo-1504630083234-14187a9df0f5?w=800&q=80"),
+                Map.entry("Cháo Yến Mạch Tôm Thịt", "https://images.unsplash.com/photo-1504630083234-14187a9df0f5?w=800&q=80"),
+                Map.entry("Bò Bít Tết (Kèm Salad)", "https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=800&q=80"),
+                Map.entry("Gà Xào Xả Ớt Ăn Kiêng", "https://images.unsplash.com/photo-1588123190131-1c3fac394f4b?w=800&q=80"),
+                Map.entry("Cá Basa Áp Chảo", "https://images.unsplash.com/photo-1543339308-43e59d6b73a6?w=800&q=80"),
+                Map.entry("Đậu Hũ Tứ Xuyên Phiên Bản Ít Dầu", "https://images.unsplash.com/photo-1588123190131-1c3fac394f4b?w=800&q=80")
+            );
+
+            String[] healthyNames = nameToImageMap.keySet().toArray(new String[0]);
+
+            List<Meal> meals = new java.util.ArrayList<>();
+            java.util.Random rand = new java.util.Random();
+
+            for (int i = 1; i <= 50; i++) {
+                String baseName = healthyNames[rand.nextInt(healthyNames.length)];
+
+                mealyummy.mealservice.model.pojo.Nutrition nutrition = mealyummy.mealservice.model.pojo.Nutrition
+                        .builder()
+                        .calories(300.0 + rand.nextInt(350)) // 300 - 650 kcal
+                        .protein(25.0 + rand.nextInt(35)) // 25 - 60g protein (Gym focus)
+                        .fat(5.0 + rand.nextInt(15)) // 5 - 20g fat
+                        .carbs(20.0 + rand.nextInt(50)) // 20 - 70g carbs
+                        .build();
+
+                mealyummy.mealservice.model.pojo.Price price = mealyummy.mealservice.model.pojo.Price.builder()
+                        .minPrice(45000.0f + rand.nextInt(20000))
+                        .maxPrice(80000.0f + rand.nextInt(45000))
+                        .build();
+
+                // Random 3-5 ingredients
+                List<MealIngredient> mealIngredients = new java.util.ArrayList<>();
+                int numIng = 3 + rand.nextInt(3);
+                for (int j = 0; j < numIng; j++) {
+                    Ingredient randomIng = allIngredients.get(rand.nextInt(allIngredients.size()));
+                    mealIngredients.add(MealIngredient.builder()
+                            .ingredientId(randomIng.getId())
+                            .name(randomIng.getName())
+                            .value(50.0 + rand.nextInt(150))
+                            .unit(mealyummy.mealservice.model.enums.IngredientUnit.G)
+                            .build());
+                }
+
+                // Random 1-2 tags
+                List<Tag> mealTags = new java.util.ArrayList<>();
+                if (!allTags.isEmpty()) {
+                    mealTags.add(allTags.get(rand.nextInt(allTags.size())));
+                    mealTags.add(allTags.get(rand.nextInt(allTags.size())));
+                }
+
+                // Random category
+                List<Category> mealCategories = new java.util.ArrayList<>();
+                if (!allCategories.isEmpty()) {
+                    mealCategories.add(allCategories.get(rand.nextInt(allCategories.size())));
+                }
+
+                // Images
+                List<mealyummy.mealservice.model.pojo.MealImage> mealImages = new java.util.ArrayList<>();
+                mealImages.add(mealyummy.mealservice.model.pojo.MealImage.builder()
+                        .url(nameToImageMap.get(baseName))
+                        .isThumbnail(true)
+                        .build());
+
+                Meal meal = Meal.builder()
+                        .name(baseName + " (Combo " + i + ")")
+                        .description("Bữa ăn Healthy thiết kế đặc biệt cho dân Gym, cân bằng dinh dưỡng, giàu đạm.")
+                        .price(price)
+                        .nutrition(nutrition)
+                        .ingredients(mealIngredients)
+                        .tags(mealTags)
+                        .categories(mealCategories)
+                        .images(mealImages)
+                        .build();
+
+                meals.add(meal);
+            }
+
+            mealRepository.saveAll(meals);
+            return meals.stream().map(this::convertMealToMealResponseDTO).toList();
+        } catch (AppException e) {
+            throw e;
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Lỗi khi tạo Meals: " + e.getMessage());
+        }
+    }
 }

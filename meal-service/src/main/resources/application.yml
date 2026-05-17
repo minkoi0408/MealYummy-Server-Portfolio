@@ -1,9 +1,9 @@
 server:
-  port: 8082
+  port: ${SERVER_PORT}
 
 spring:
   mongodb:
-    uri: mongodb+srv://meal-yummy:bIQd8G5njQmHR3LZ@meal-yummy.s6abq8j.mongodb.net/meal-service
+    uri: ${MONGODB_URI}
   application:
     name: meal-service
 
@@ -16,6 +16,20 @@ spring:
     web:
       pageable:
         serialization-mode: via_dto
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+    mongodb:
+      auto-index-creation: true
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
 
 logging:
   level:
@@ -31,3 +45,21 @@ springdoc:
   api-docs:
     path: /api-docs
   packagesToScan: mealyummy.mealservice.controller
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET}
+  access-token-expiration-ms: ${JWT_ACCESS_EXPIRATION}
+  refresh-token-expiration-ms: ${JWT_REFRESH_EXPIRATION}
+
+# OTP Configuration
+app:
+  otp:
+    expiration-minutes: ${OTP_EXPIRATION_MINUTES}
+
+cloudinary:
+  cloud-name: ${CLOUDINARY_CLOUD_NAME}
+  api-key: ${CLOUDINARY_API_KEY}
+  api-secret: ${CLOUDINARY_API_SECRET}
+
+
