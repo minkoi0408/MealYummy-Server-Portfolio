@@ -32,7 +32,10 @@ public enum ErrorCode {
     OTP_INVALID("Mã OTP không đúng hoặc đã hết hạn", HttpStatus.BAD_REQUEST),
     OTP_EXPIRED("Mã OTP đã hết hạn. Vui lòng yêu cầu mã mới", HttpStatus.BAD_REQUEST),
     INVALID_TOKEN("Token không hợp lệ hoặc đã hết hạn", HttpStatus.UNAUTHORIZED),
-    ROLE_NOT_FOUDN("Không tìm thấy role phù hợp", HttpStatus.NOT_FOUND),
+    ROLE_NOT_FOUND("Không tìm thấy role phù hợp", HttpStatus.NOT_FOUND),
+    PERMISSION_NOT_FOUND("Không tìm thấy quyền phù hợp", HttpStatus.NOT_FOUND),
+    ROLE_HAS_NO_PERMISSION("Quyền muốn xóa không tồn tại trong Role này", HttpStatus.NOT_FOUND),
+    CANNOT_DELETE_ASSIGN_PERMISSION("Không thể xóa đi quyền thêm quyền cho role", HttpStatus.FORBIDDEN),
     ;
     ErrorCode(String message, HttpStatus statusCode) {
         this.message = message;

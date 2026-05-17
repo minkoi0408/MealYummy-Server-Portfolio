@@ -11,7 +11,6 @@ import mealyummy.mealservice.core.exception.ErrorCode;
 import mealyummy.mealservice.core.security.JwtUtil;
 import mealyummy.mealservice.model.entity.auth.Role;
 import mealyummy.mealservice.model.entity.auth.User;
-import mealyummy.mealservice.model.enums.AuthProvider;
 import mealyummy.mealservice.model.enums.OtpType;
 import mealyummy.mealservice.model.enums.TokenType;
 import mealyummy.mealservice.model.repository.RoleRepository;
@@ -69,7 +68,7 @@ public class AuthServiceImpl implements AuthService {
 
         // Set Role
         Role userRole = roleRepository.findByRoleCode("ROLE_FREE")
-                .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUDN));
+                .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
 
         // Build User
         User user = User.builder()
@@ -77,7 +76,6 @@ public class AuthServiceImpl implements AuthService {
                 .password(passwordEncoder.encode(request.getPassword()))
                 .email(request.getEmail().trim().toLowerCase())
                 .role(userRole)
-                .authProvider(AuthProvider.LOCAL)
                 .build();
 
         log.info("Registering user: {}", request.getUsername());
@@ -124,7 +122,8 @@ public class AuthServiceImpl implements AuthService {
             throw new AppException(ErrorCode.OTP_INVALID);
         }
 
-        String accessToken = jwtUtil.generateAccessToken(user.getUsername());
+        Role userRole = user.getRole();
+        String accessToken = jwtUtil.generateAccessToken(user.getUsername(), userRole.getRoleCode(), userRole.getPermissions());
         String refreshToken = jwtUtil.generateRefreshToken(user.getUsername());
 
         tokenService.storeToken(user.getUsername(), accessToken, TokenType.ACCESS.getPrefix(), jwtUtil.getAccessTokenExpirationMs());
@@ -211,7 +210,8 @@ public class AuthServiceImpl implements AuthService {
             });
 
             // Tạo cặp token
-            String accessToken = jwtUtil.generateAccessToken(user.getUsername());
+            Role userRole = user.getRole();
+            String accessToken = jwtUtil.generateAccessToken(user.getUsername(), userRole.getRoleCode(), userRole.getPermissions());
             String refreshToken = jwtUtil.generateRefreshToken(user.getUsername());
 
             tokenService.storeToken(user.getUsername(), accessToken, TokenType.ACCESS.getPrefix(), jwtUtil.getAccessTokenExpirationMs());
@@ -288,12 +288,12 @@ public class AuthServiceImpl implements AuthService {
             throw new AppException(ErrorCode.INVALID_TOKEN);
         }
 
-        // Tạo Access Token mới
-        String newAccessToken = jwtUtil.generateAccessToken(username);
-        tokenService.storeToken(username, newAccessToken, TokenType.ACCESS.getPrefix(), jwtUtil.getAccessTokenExpirationMs());
-
         User user = userRepository.findByUsername(username)
+                .or(() -> userRepository.findByEmail(username))
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        Role userRole = user.getRole();
+        String newAccessToken = jwtUtil.generateAccessToken(user.getUsername(), userRole.getRoleCode(), userRole.getPermissions());
+        tokenService.storeToken(username, newAccessToken, TokenType.ACCESS.getPrefix(), jwtUtil.getAccessTokenExpirationMs());
 
         log.info("Refresh token thành công cho user: {}", username);
 
