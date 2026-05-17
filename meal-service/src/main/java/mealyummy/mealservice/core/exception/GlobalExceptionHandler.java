@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestControllerAdvice
-public class GlobalExceptionHandler extends RuntimeException {
+public class GlobalExceptionHandler{
 //  @ExceptionHandler(BadCredentialsException.class)
 //  public ResponseEntity<BaseApiResponse> handleBadCredentials(HttpServletRequest request) {
 //    return ResponseEntity
@@ -86,6 +86,19 @@ public class GlobalExceptionHandler extends RuntimeException {
         exception.printStackTrace(); 
         
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(BaseApiResponse.error(msg, null));
+    }
+
+    // Bắt lỗi khi User không đủ quyền truy cập API (403 Forbidden)
+    @ExceptionHandler(org.springframework.security.authorization.AuthorizationDeniedException.class)
+    public ResponseEntity<BaseApiResponse<Object>> handleAuthorizationDeniedException(
+            org.springframework.security.authorization.AuthorizationDeniedException exception,
+            HttpServletRequest request) {
+
+        String msg = "Bạn không có quyền thực hiện chức năng này.";
+
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN) // Trả về mã 403 thay vì 500
                 .body(BaseApiResponse.error(msg, null));
     }
 }
