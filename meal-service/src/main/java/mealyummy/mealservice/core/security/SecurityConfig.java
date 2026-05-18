@@ -62,6 +62,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Các endpoint công khai (không cần đăng nhập)
                         .requestMatchers(
+                                "/api/v1/bundles/**",
+                                "/api/v1/subscriptions/**",
                                 "/api/v1/auth/**",
                                 "/api/v1/notification/**",
                                 "/api/v1/categories/**",

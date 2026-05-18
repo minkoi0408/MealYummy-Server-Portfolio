@@ -36,6 +36,10 @@ public enum ErrorCode {
     PERMISSION_NOT_FOUND("Không tìm thấy quyền phù hợp", HttpStatus.NOT_FOUND),
     ROLE_HAS_NO_PERMISSION("Quyền muốn xóa không tồn tại trong Role này", HttpStatus.NOT_FOUND),
     CANNOT_DELETE_ASSIGN_PERMISSION("Không thể xóa đi quyền thêm quyền cho role", HttpStatus.FORBIDDEN),
+
+    // Subscription errors
+    BUNDLE_NOT_FOUND("Không tìm thấy gói dịch vụ hoặc gói dịch vụ đã bị vô hiệu hóa", HttpStatus.NOT_FOUND),
+    DURATION_INVALID("Thời hạn gói không hợp lệ", HttpStatus.BAD_REQUEST),
     ;
     ErrorCode(String message, HttpStatus statusCode) {
         this.message = message;

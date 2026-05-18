@@ -62,4 +62,18 @@ cloudinary:
   api-key: ${CLOUDINARY_API_KEY}
   api-secret: ${CLOUDINARY_API_SECRET}
 
+# Payment Gateway Configurations
+payment:
+  vnpay:
+    tmn-code: ${VNPAY_TMN_CODE:PLACEHOLDER}
+    hash-secret: ${VNPAY_HASH_SECRET:PLACEHOLDER}
+    url: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
+    return-url: ${APP_URL:http://localhost:8080}/api/v1/payments/vnpay-return
+  momo:
+    partner-code: ${MOMO_PARTNER_CODE:PLACEHOLDER}
+    access-key: ${MOMO_ACCESS_KEY:PLACEHOLDER}
+    secret-key: ${MOMO_SECRET_KEY:PLACEHOLDER}
+    endpoint: https://test-payment.momo.vn/v2/gateway/api/create
+    return-url: ${APP_URL:http://localhost:8080}/api/v1/payments/momo-return
+    notify-url: ${APP_URL:http://localhost:8080}/api/v1/payments/momo-ipn
 
