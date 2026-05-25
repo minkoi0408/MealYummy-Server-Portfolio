@@ -11,8 +11,11 @@ import mealyummy.mealservice.service.subscription.dto.PaymentCreateResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.util.Map;
+
+import mealyummy.mealservice.model.repository.UserRepository;
 
 @RestController
 @RequestMapping("/api/v1/payments")
@@ -22,12 +25,25 @@ public class PaymentController {
     private final PaymentService paymentService;
     private final VnpayService vnpayService;
     private final MomoService momoService;
+    private final UserRepository userRepository;
+
+    @Value("${app.client-url}")
+    private String clientUrl;
 
     @PostMapping("/create")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<BaseApiResponse<PaymentCreateResponse>> createPayment(
             @RequestBody PaymentCreateRequest request,
-            HttpServletRequest httpRequest) {
+            HttpServletRequest httpRequest,
+            org.springframework.security.core.Authentication authentication) {
+        
+        // Tự lấy userId từ JWT (an toàn, không tin vào client)
+        String username = authentication.getName();
+        mealyummy.mealservice.model.entity.auth.User currentUser = userRepository.findByUsername(username)
+                .or(() -> userRepository.findByEmail(username))
+                .orElseThrow(() -> new mealyummy.mealservice.core.exception.AppException(mealyummy.mealservice.core.exception.ErrorCode.USER_NOT_FOUND));
+        request.setUserId(currentUser.getId());
+        System.out.println("✅ [CREATE_PAYMENT] userId: " + currentUser.getId() + " | bundle: " + request.getBundleId());
         
         PaymentCreateResponse response = paymentService.createPaymentUrl(request, httpRequest);
         return ResponseEntity.ok(BaseApiResponse.ok("Tạo URL thanh toán thành công", response));
@@ -36,21 +52,25 @@ public class PaymentController {
     // --- VNPay Webhooks ---
 
     @GetMapping("/vnpay-return")
-    public ResponseEntity<String> vnpayReturn(@RequestParam Map<String, String> params) {
-        // Here you would normally redirect the user to a frontend success/failure page
-        // e.g., return ResponseEntity.status(HttpStatus.FOUND).location(URI.create("http://frontend/success")).build();
-        
+    public ResponseEntity<Void> vnpayReturn(@RequestParam Map<String, String> params) {
         boolean isValid = vnpayService.verifyIpn(params);
-        if (!isValid) {
-            return ResponseEntity.badRequest().body("Giao dịch không hợp lệ (Sai chữ ký)");
-        }
-        
+        String orderId = params.get("vnp_TxnRef");
         String responseCode = params.get("vnp_ResponseCode");
-        if ("00".equals(responseCode)) {
-            return ResponseEntity.ok("Thanh toán thành công! Bạn có thể quay lại ứng dụng.");
-        } else {
-            return ResponseEntity.ok("Thanh toán thất bại hoặc đã bị hủy.");
+        boolean isSuccess = isValid && "00".equals(responseCode);
+
+        if (isValid) {
+            try {
+                paymentService.processPaymentWebhook(orderId, isSuccess);
+            } catch (Exception e) {
+                System.err.println("❌ [VNPAY_RETURN] Lỗi khi xử lý webhook VNPay: " + e.getMessage());
+                e.printStackTrace();
+            }
         }
+
+        String redirectUrl = clientUrl + "/membership?payment=" + (isSuccess ? "success" : "failed");
+        return ResponseEntity.status(org.springframework.http.HttpStatus.FOUND)
+                .location(java.net.URI.create(redirectUrl))
+                .build();
     }
 
     @GetMapping("/vnpay-ipn")
@@ -75,13 +95,22 @@ public class PaymentController {
     // --- MoMo Webhooks ---
 
     @GetMapping("/momo-return")
-    public ResponseEntity<String> momoReturn(@RequestParam Map<String, String> params) {
+    public ResponseEntity<Void> momoReturn(@RequestParam Map<String, String> params) {
         String resultCode = params.get("resultCode");
-        if ("0".equals(resultCode)) {
-            return ResponseEntity.ok("Thanh toán MoMo thành công! Bạn có thể quay lại ứng dụng.");
-        } else {
-            return ResponseEntity.ok("Thanh toán MoMo thất bại hoặc đã bị hủy.");
+        String orderId = params.get("orderId");
+        boolean isSuccess = "0".equals(resultCode);
+
+        try {
+            paymentService.processPaymentWebhook(orderId, isSuccess);
+        } catch (Exception e) {
+            System.err.println("❌ [MOMO_RETURN] Lỗi khi xử lý webhook MoMo: " + e.getMessage());
+            e.printStackTrace();
         }
+
+        String redirectUrl = clientUrl + "/membership?payment=" + (isSuccess ? "success" : "failed");
+        return ResponseEntity.status(org.springframework.http.HttpStatus.FOUND)
+                .location(java.net.URI.create(redirectUrl))
+                .build();
     }
 
     @PostMapping("/momo-ipn")

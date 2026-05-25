@@ -73,18 +73,20 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public void processPaymentWebhook(String transactionId, boolean isSuccess) {
-        PaymentHistory payment = paymentHistoryRepository.findAll().stream()
-                .filter(p -> p.getTransactionId().equals(transactionId))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("Transaction ID not found"));
+        System.out.println("✅ [WEBHOOK] Xử lý transactionId: " + transactionId + ", success: " + isSuccess);
+        
+        PaymentHistory payment = paymentHistoryRepository.findByTransactionId(transactionId)
+                .orElseThrow(() -> new RuntimeException("❌ Không tìm thấy Payment với transactionId: " + transactionId));
 
         if (payment.getPaymentStatus() == PaymentStatus.SUCCESS) {
+            System.out.println("⚡ [WEBHOOK] Payment đã xử lý rồi (idempotent), bỏ qua.");
             return; // Idempotent check
         }
 
         if (isSuccess) {
             payment.setPaymentStatus(PaymentStatus.SUCCESS);
             payment.setPaidAt(Instant.now());
+            System.out.println("🎉 [WEBHOOK] Thanh toán thành công, nâng cấp userId: " + payment.getUserId());
             // Upgrade subscription
             subscriptionService.processSuccessfulPayment(payment.getUserId(), payment.getBundleId(), payment.getDurationCode());
         } else {
