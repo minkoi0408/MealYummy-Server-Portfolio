@@ -1,5 +1,6 @@
-package mealyummy.mealservice.model.entity;
+package mealyummy.mealservice.model.entity.food;
 
+import mealyummy.mealservice.model.entity.Category;
 import mealyummy.mealservice.model.pojo.MealImage;
 import mealyummy.mealservice.model.pojo.MealIngredient;
 import mealyummy.mealservice.model.pojo.Nutrition;

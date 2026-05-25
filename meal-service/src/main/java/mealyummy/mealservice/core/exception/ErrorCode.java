@@ -40,6 +40,8 @@ public enum ErrorCode {
     // Subscription errors
     BUNDLE_NOT_FOUND("Không tìm thấy gói dịch vụ hoặc gói dịch vụ đã bị vô hiệu hóa", HttpStatus.NOT_FOUND),
     DURATION_INVALID("Thời hạn gói không hợp lệ", HttpStatus.BAD_REQUEST),
+    SUBSCRIPTION_NOT_FOUND("Không tìm thấy đăng ký gói dịch vụ", HttpStatus.NOT_FOUND),
+    PAYMENT_HISTORY_NOT_FOUND("Không tìm thấy lịch sử giao dịch", HttpStatus.NOT_FOUND),
     ;
     ErrorCode(String message, HttpStatus statusCode) {
         this.message = message;

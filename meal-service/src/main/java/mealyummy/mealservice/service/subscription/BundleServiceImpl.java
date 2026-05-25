@@ -33,4 +33,41 @@ public class BundleServiceImpl implements BundleService {
     public Bundle createBundle(Bundle bundle) {
         return bundleRepository.save(bundle);
     }
+
+    @Override
+    public org.springframework.data.domain.Page<Bundle> getAllBundles(org.springframework.data.domain.Pageable pageable) {
+        return bundleRepository.findAll(pageable);
+    }
+
+    @Override
+    public Bundle updateBundle(String id, Bundle bundle) {
+        Bundle existingBundle = bundleRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.BUNDLE_NOT_FOUND));
+
+        existingBundle.setName(bundle.getName());
+        existingBundle.setDescription(bundle.getDescription());
+        existingBundle.setDurations(bundle.getDurations());
+        existingBundle.setFeatures(bundle.getFeatures());
+        existingBundle.setActive(bundle.isActive());
+
+        return bundleRepository.save(existingBundle);
+    }
+
+    @Override
+    public String changeState(String id) {
+        Bundle bundle = bundleRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.BUNDLE_NOT_FOUND));
+
+        String msg = "Gói " + bundle.getName();
+        if (bundle.isActive()) {
+            bundle.setActive(false);
+            msg += " đã được ngừng kích hoạt.";
+        } else {
+            bundle.setActive(true);
+            msg += " đã được kích hoạt.";
+        }
+
+        bundleRepository.save(bundle);
+        return msg;
+    }
 }
