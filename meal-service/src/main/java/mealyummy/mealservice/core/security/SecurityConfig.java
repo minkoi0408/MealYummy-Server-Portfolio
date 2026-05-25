@@ -60,8 +60,12 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // Cho phép OPTIONS requests (dùng cho CORS preflight)
+                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                         // Các endpoint công khai (không cần đăng nhập)
                         .requestMatchers(
+                                "/api/v1/bundles/**",
+                                "/api/v1/subscriptions/**",
                                 "/api/v1/auth/**",
                                 "/api/v1/notification/**",
                                 "/api/v1/categories/**",
@@ -70,6 +74,10 @@ public class SecurityConfig {
                                 "/api/v1/meals/**",
                                 "/api/v1/ai/**",
                                 "/api/v1/map/**",
+                                "/api/v1/payments/momo-ipn",
+                                "/api/v1/payments/momo-return",
+                                "/api/v1/payments/vnpay-ipn",
+                                "/api/v1/payments/vnpay-return",
                                 "/swagger-ui/**",
                                 "/api-docs/**",
                                 "/swagger-ui.html")
