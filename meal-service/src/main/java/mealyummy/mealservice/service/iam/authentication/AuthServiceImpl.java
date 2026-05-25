@@ -201,10 +201,13 @@ public class AuthServiceImpl implements AuthService {
                 // Ưu tiên lấy tên từ Google làm Username cho đẹp
                 String preferredUsername = (name != null && !name.isBlank()) ? name : email;
 
+                Role userRole = roleRepository.findByRoleCode("ROLE_FREE")
+                        .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
                 User newUser = User.builder()
                         .username(preferredUsername)
                         .email(email)
                         .password(passwordEncoder.encode(UUID.randomUUID().toString()))
+                        .role(userRole)
                         .build();
                 return userRepository.save(newUser);
             });
