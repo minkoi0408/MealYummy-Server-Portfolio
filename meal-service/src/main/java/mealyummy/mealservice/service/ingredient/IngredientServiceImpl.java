@@ -36,6 +36,7 @@ public class IngredientServiceImpl implements IngredientService {
 
         Ingredient ingredient = Ingredient.builder()
                 .name(formattedName)
+                .description(request.getDescription())
                 .active(true)
                 .build();
 
@@ -70,6 +71,10 @@ public class IngredientServiceImpl implements IngredientService {
                 throw new AppException(ErrorCode.INGREDIENT_ALREADY_EXISTS);
             }
             ingredient.setName(formattedName);
+        }
+
+        if (request.getDescription() != null) {
+            ingredient.setDescription(request.getDescription());
         }
 
         ingredientRepository.save(ingredient);
@@ -147,12 +152,22 @@ public class IngredientServiceImpl implements IngredientService {
                 .map(Ingredient::getName)
                 .collect(Collectors.toSet());
 
-        List<Ingredient> newIngredients = formattedNames.stream()
-                .filter(name -> !existingNames.contains(name))
-                .map(name -> Ingredient.builder()
-                        .name(name)
+        List<Ingredient> newIngredients = requests.stream()
+                .filter(req -> req.getName() != null && !req.getName().trim().isEmpty())
+                .filter(req -> {
+                    String trimmed = req.getName().trim();
+                    String formatted = trimmed.substring(0, 1).toUpperCase() + trimmed.substring(1).toLowerCase();
+                    return !existingNames.contains(formatted);
+                })
+                .map(req -> {
+                    String trimmed = req.getName().trim();
+                    String formatted = trimmed.substring(0, 1).toUpperCase() + trimmed.substring(1).toLowerCase();
+                    return Ingredient.builder()
+                        .name(formatted)
+                        .description(req.getDescription())
                         .active(true)
-                        .build())
+                        .build();
+                })
                 .toList();
 
         if (newIngredients.isEmpty()) {

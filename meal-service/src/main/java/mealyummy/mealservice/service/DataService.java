@@ -1,7 +1,7 @@
 package mealyummy.mealservice.service;
 
 import lombok.RequiredArgsConstructor;
-import mealyummy.mealservice.model.entity.Category;
+import mealyummy.mealservice.model.entity.food.Category;
 import mealyummy.mealservice.model.entity.food.Ingredient;
 import mealyummy.mealservice.model.entity.food.Tag;
 import mealyummy.mealservice.service.category.CategoryService;

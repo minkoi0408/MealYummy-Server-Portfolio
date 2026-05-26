@@ -36,6 +36,7 @@ public class TagServiceImpl implements TagService {
 
         Tag tag = Tag.builder()
                 .name(formattedName)
+                .description(request.getDescription())
                 .active(true)
                 .build();
 
@@ -70,6 +71,10 @@ public class TagServiceImpl implements TagService {
                 throw new AppException(ErrorCode.TAG_ALREADY_EXISTS);
             }
             tag.setName(formattedName);
+        }
+
+        if (request.getDescription() != null) {
+            tag.setDescription(request.getDescription());
         }
 
         tagRepository.save(tag);
@@ -147,12 +152,22 @@ public class TagServiceImpl implements TagService {
                 .map(Tag::getName)
                 .collect(Collectors.toSet());
 
-        List<Tag> newTags = formattedNames.stream()
-                .filter(name -> !existingNames.contains(name))
-                .map(name -> Tag.builder()
-                        .name(name)
+        List<Tag> newTags = requests.stream()
+                .filter(req -> req.getName() != null && !req.getName().trim().isEmpty())
+                .filter(req -> {
+                    String trimmed = req.getName().trim();
+                    String formatted = trimmed.substring(0, 1).toUpperCase() + trimmed.substring(1).toLowerCase();
+                    return !existingNames.contains(formatted);
+                })
+                .map(req -> {
+                    String trimmed = req.getName().trim();
+                    String formatted = trimmed.substring(0, 1).toUpperCase() + trimmed.substring(1).toLowerCase();
+                    return Tag.builder()
+                        .name(formatted)
+                        .description(req.getDescription())
                         .active(true)
-                        .build())
+                        .build();
+                })
                 .toList();
 
         if (newTags.isEmpty()) {

@@ -3,7 +3,7 @@ package mealyummy.mealservice.service.category;
 import lombok.RequiredArgsConstructor;
 import mealyummy.mealservice.core.exception.AppException;
 import mealyummy.mealservice.core.exception.ErrorCode;
-import mealyummy.mealservice.model.entity.Category;
+import mealyummy.mealservice.model.entity.food.Category;
 import mealyummy.mealservice.model.repository.CategoryRepository;
 import mealyummy.mealservice.service.category.dto.CategoryDTO;
 import org.springframework.data.domain.Page;
@@ -40,16 +40,17 @@ public class CategoryServiceImpl implements CategoryService {
 
         Category category = Category.builder()
                 .name(name)
+                .description(request.getDescription())
                 .parentId(request.getParentId())
                 .build();
         categoryRepository.save(category);
-        return category.convert();
+        return enrichDto(category.convert());
     }
 
     @Override
     public Page<CategoryDTO> getAll(org.springframework.data.domain.Pageable pageable) {
         Page<Category> categories = categoryRepository.findAll(pageable);
-        return categories.map(Category::convert);
+        return categories.map(category -> enrichDto(category.convert()));
     }
 
     @Override
@@ -79,7 +80,7 @@ public class CategoryServiceImpl implements CategoryService {
         return mapToDtoWithChildren(category);
     }
     private CategoryDTO mapToDtoWithChildren(Category entity) {
-        CategoryDTO dto = entity.convert();
+        CategoryDTO dto = enrichDto(entity.convert());
         List<Category> childrenEntities = categoryRepository.findAllByParentIdAndActiveTrue(entity.getId());
         if (!childrenEntities.isEmpty()) {
             List<CategoryDTO> childrenDtos = childrenEntities.stream()
@@ -113,8 +114,20 @@ public class CategoryServiceImpl implements CategoryService {
             category.setParentId(request.getParentId());
         }
 
+        if (request.getDescription() != null) {
+            category.setDescription(request.getDescription());
+        }
+
         categoryRepository.save(category);
-        return category.convert();
+        return enrichDto(category.convert());
+    }
+
+    private CategoryDTO enrichDto(CategoryDTO dto) {
+        if (dto.getParentId() != null && !dto.getParentId().isEmpty()) {
+            categoryRepository.findById(dto.getParentId())
+                    .ifPresent(parent -> dto.setParentName(parent.getName()));
+        }
+        return dto;
     }
 
     @Override
@@ -203,6 +216,7 @@ public class CategoryServiceImpl implements CategoryService {
                 // Nếu chưa có thì tạo mới
                 category = Category.builder()
                         .name(formattedName)
+                        .description(dto.getDescription())
                         .parentId(parentId) // Gắn ID của Cha truyền từ tham số vào đây
                         .active(true)
                         .build();
@@ -210,7 +224,7 @@ public class CategoryServiceImpl implements CategoryService {
             }
 
             // Chuyển sang DTO để trả về
-            CategoryDTO savedDto = category.convert();
+            CategoryDTO savedDto = enrichDto(category.convert());
 
             // 4. BƯỚC ĂN TIỀN (ĐỆ QUY): Nếu có mảng children, tiếp tục đào sâu xuống
             if (dto.getChildren() != null && !dto.getChildren().isEmpty()) {

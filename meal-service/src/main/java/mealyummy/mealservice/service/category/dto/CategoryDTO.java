@@ -21,9 +21,15 @@ public class CategoryDTO {
     @Schema(description = "Tên danh mục", example = "")
     private String name;
 
+    @Schema(description = "Mô tả danh mục", example = "")
+    private String description;
+
     @JsonView(View.Detail.class)
     @Schema(description = "ID của danh mục cha (Để trống null nếu đây là danh mục gốc)", example = "")
     private String parentId;
+
+    @Schema(description = "Tên của danh mục cha", example = "")
+    private String parentName;
 
     @Schema(description = "Thời gian tạo danh mục", accessMode = Schema.AccessMode.READ_ONLY)
     private String createdAt;
