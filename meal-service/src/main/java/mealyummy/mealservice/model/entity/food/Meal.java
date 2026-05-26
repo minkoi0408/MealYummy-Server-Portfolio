@@ -1,4 +1,4 @@
-package mealyummy.mealservice.model.entity;
+package mealyummy.mealservice.model.entity.food;
 
 import mealyummy.mealservice.model.pojo.MealImage;
 import mealyummy.mealservice.model.pojo.MealIngredient;
@@ -14,7 +14,8 @@ import lombok.AllArgsConstructor;
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
 
 import java.util.List;
-
+import java.time.Instant;
+import org.springframework.data.annotation.CreatedDate;
 /**
  * @author Nonoru
  * @version v1
@@ -42,4 +43,10 @@ public class Meal {
     private List<Tag> tags;
 
     private List<MealIngredient> ingredients;
+
+    @CreatedDate
+    private Instant createdAt;
+
+    @Builder.Default
+    private Boolean active = true;
 }

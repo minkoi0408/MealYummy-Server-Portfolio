@@ -1,4 +1,4 @@
-package mealyummy.mealservice.controller;
+package mealyummy.mealservice.controller.client;
 
 import lombok.RequiredArgsConstructor;
 import mealyummy.mealservice.core.base.BaseApiResponse;

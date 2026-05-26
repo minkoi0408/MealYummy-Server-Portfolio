@@ -9,6 +9,10 @@ import java.util.Set;
 
 public interface RoleService {
     List<RoleResponse> getAllRoles();
+    RoleResponse getRole(String id);
+    RoleResponse createRole(mealyummy.mealservice.service.iam.role.dto.RoleRequestDTO request);
+    RoleResponse updateRole(String id, mealyummy.mealservice.service.iam.role.dto.RoleRequestDTO request);
+    void deleteRole(String id);
     Role addPermissionsToRole(RolePermissionDTO request);
     Role deletePermissionsFromRole(RolePermissionDTO request);
 }

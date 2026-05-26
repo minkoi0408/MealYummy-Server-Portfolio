@@ -129,4 +129,15 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         user.setRole(role);
         userRepository.save(user);
     }
+
+    @Override
+    public org.springframework.data.domain.Page<UserSubscription> getAllSubscriptions(org.springframework.data.domain.Pageable pageable) {
+        return userSubscriptionRepository.findAll(pageable);
+    }
+
+    @Override
+    public UserSubscription getSubscriptionById(String id) {
+        return userSubscriptionRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.SUBSCRIPTION_NOT_FOUND));
+    }
 }

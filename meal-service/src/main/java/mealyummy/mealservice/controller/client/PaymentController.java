@@ -1,4 +1,4 @@
-package mealyummy.mealservice.controller;
+package mealyummy.mealservice.controller.client;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;

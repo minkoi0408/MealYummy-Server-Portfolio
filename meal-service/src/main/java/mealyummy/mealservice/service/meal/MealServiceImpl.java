@@ -3,7 +3,10 @@ package mealyummy.mealservice.service.meal;
 import lombok.RequiredArgsConstructor;
 import mealyummy.mealservice.core.exception.AppException;
 import mealyummy.mealservice.core.exception.ErrorCode;
-import mealyummy.mealservice.model.entity.*;
+import mealyummy.mealservice.model.entity.food.Ingredient;
+import mealyummy.mealservice.model.entity.food.Meal;
+import mealyummy.mealservice.model.entity.food.Tag;
+import mealyummy.mealservice.model.entity.food.Category;
 import mealyummy.mealservice.model.pojo.MealIngredient;
 import mealyummy.mealservice.model.pojo.Price;
 import mealyummy.mealservice.model.repository.CategoryRepository;
@@ -267,5 +270,110 @@ public class MealServiceImpl implements MealService {
             e.printStackTrace();
             throw new RuntimeException("Lỗi khi tạo Meals: " + e.getMessage());
         }
+    }
+
+    @Override
+    public org.springframework.data.domain.Page<MealResponseDTO> getAll(org.springframework.data.domain.Pageable pageable) {
+        org.springframework.data.domain.Page<Meal> meals = mealRepository.findAll(pageable);
+        return meals.map(this::convertMealToMealResponseDTO);
+    }
+
+    @Override
+    public MealResponseDTO get(String id) {
+        Meal meal = mealRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.MEAL_NOT_FOUND));
+        return convertMealToMealResponseDTO(meal);
+    }
+
+    @Override
+    @Transactional
+    public MealResponseDTO update(String id, MealRequestDTO request) {
+        Meal meal = mealRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.MEAL_NOT_FOUND));
+
+        String formattedName = request.getName().trim();
+        formattedName = formattedName.substring(0, 1).toUpperCase() + formattedName.substring(1).toLowerCase();
+
+        if (!meal.getName().equals(formattedName) && mealRepository.existsByName(formattedName)) {
+            throw new AppException(ErrorCode.MEAL_ALREADY_EXISTS);
+        }
+
+        Price mealPrice = returnPriceValid(request.getPrice());
+
+        List<Category> categories = categoryRepository.findAllById(request.getCategoryIds())
+                .stream().filter(Category::getActive).toList();
+        if (categories.isEmpty() || categories.size() != request.getCategoryIds().size()) {
+            throw new AppException(ErrorCode.CATEGORY_NOT_FOUND);
+        }
+
+        List<Tag> tags = List.of();
+        if (request.getTagIds() != null && !request.getTagIds().isEmpty()) {
+            tags = tagRepository.findAllById(request.getTagIds())
+                    .stream().filter(Tag::getActive).toList();
+            if (tags.size() != request.getTagIds().size()) {
+                throw new AppException(ErrorCode.TAG_NOT_FOUND);
+            }
+        }
+
+        Set<String> ingredientIds = request.getIngredients().stream()
+                .map(MealIngredientDTO::getIngredientId)
+                .collect(Collectors.toSet());
+        List<Ingredient> validIngredients = (List<Ingredient>) ingredientRepository.findAllById(ingredientIds);
+        Map<String, Ingredient> ingredientMap = validIngredients.stream()
+                .filter(Ingredient::getActive)
+                .collect(Collectors.toMap(Ingredient::getId, i -> i));
+
+        List<MealIngredient> mealIngredients = request.getIngredients().stream().map(reqIng -> {
+            Ingredient dbIngredient = ingredientMap.get(reqIng.getIngredientId());
+            if (dbIngredient == null) {
+                throw new AppException(ErrorCode.INGREDIENT_NOT_FOUND);
+            }
+
+            return MealIngredient.builder()
+                    .ingredientId(dbIngredient.getId())
+                    .name(dbIngredient.getName())
+                    .value(reqIng.getValue())
+                    .unit(reqIng.getUnit())
+                    .build();
+        }).toList();
+
+        meal.setName(formattedName);
+        meal.setDescription(request.getDescription());
+        meal.setPrice(mealPrice);
+        meal.setCategories(categories);
+        meal.setTags(tags);
+        meal.setIngredients(mealIngredients);
+
+        mealRepository.save(meal);
+        return convertMealToMealResponseDTO(meal);
+    }
+
+    @Override
+    @Transactional
+    public void delete(String id) {
+        Meal meal = mealRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.MEAL_NOT_FOUND));
+        mealRepository.delete(meal);
+    }
+
+    @Override
+    @Transactional
+    public void deleteBulk(List<String> ids) {
+        if (ids == null || ids.isEmpty()) return;
+        List<Meal> meals = mealRepository.findAllById(ids);
+        mealRepository.deleteAll(meals);
+    }
+
+    @Override
+    @Transactional
+    public List<MealResponseDTO> createBulk(List<MealRequestDTO> requests) {
+        if (requests == null || requests.isEmpty()) {
+            throw new AppException(ErrorCode.MEAL_NOT_FOUND);
+        }
+        List<MealResponseDTO> responses = new java.util.ArrayList<>();
+        for (MealRequestDTO req : requests) {
+            responses.add(create(req));
+        }
+        return responses;
     }
 }

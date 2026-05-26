@@ -1,4 +1,4 @@
-package mealyummy.mealservice.controller;
+package mealyummy.mealservice.controller.client;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

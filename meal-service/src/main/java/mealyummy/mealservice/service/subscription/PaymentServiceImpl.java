@@ -94,5 +94,16 @@ public class PaymentServiceImpl implements PaymentService {
         }
         paymentHistoryRepository.save(payment);
     }
+
+    @Override
+    public org.springframework.data.domain.Page<PaymentHistory> getAllPaymentHistories(org.springframework.data.domain.Pageable pageable) {
+        return paymentHistoryRepository.findAll(pageable);
+    }
+
+    @Override
+    public PaymentHistory getPaymentHistoryById(String id) {
+        return paymentHistoryRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.PAYMENT_HISTORY_NOT_FOUND));
+    }
 }
 

@@ -1,38 +1,46 @@
-package mealyummy.mealservice.model.entity;
+package mealyummy.mealservice.model.entity.food;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import mealyummy.mealservice.core.util.DateTimeFormat;
-import mealyummy.mealservice.service.ingredient.dto.IngredientDTO;
+import mealyummy.mealservice.service.category.dto.CategoryDTO;
 import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
 
 @Data
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(collection = "ingredients")
-public class Ingredient {
-    @Id
+@Document(collection = "categories")
+@Builder
+public class Category {
     private String id;
     private String name;
+    private String description;
+    private String parentId;
+
     @CreatedDate
     private Instant createdAt;
 
     @Builder.Default
     private Boolean active = true;
-
-    public IngredientDTO convert() {
-        return IngredientDTO.builder()
+    public CategoryDTO convert() {
+        return CategoryDTO.builder()
                 .id(this.getId())
                 .name(this.getName())
+                .description(this.getDescription())
+                .parentId(this.getParentId())
                 .createdAt(DateTimeFormat.formatInstantCustom(this.getCreatedAt()))
                 .active(this.getActive())
+                .build();
+    }
+    public CategoryDTO convertForMeal() {
+        return CategoryDTO.builder()
+                .id(this.getId())
+                .name(this.getName())
                 .build();
     }
 }

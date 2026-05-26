@@ -68,46 +68,65 @@ public class DataInitializer implements CommandLineRunner {
     }
 
 private void initPermission() {
-    if (permissionRepository.count() > 0) {
+    if (permissionRepository.count() >= 30) {
         return;
     }
+    
+    // Xóa data cũ để force tạo lại list mới đầy đủ
+    permissionRepository.deleteAll();
 
-    // Tạo danh sách các permission bằng Builder pattern mẫu
     List<Permission> permissions = List.of(
-            Permission.builder()
-                    .permissionCode("ROLE_VIEW")
-                    .permissionName("Xem danh sách vai trò")
-                    .type("ROLE")
-                    .description("Cho phép xem thông tin cấu hình và danh sách các vai trò (Roles) trong hệ thống")
-                    .createdAt(Instant.now())
-                    .build(),
+            // Role & Permission
+            Permission.builder().permissionCode("ROLE_VIEW").permissionName("Xem danh sách vai trò").type("ROLE").description("Cho phép xem thông tin cấu hình và danh sách các vai trò (Roles) trong hệ thống").createdAt(Instant.now()).build(),
+            Permission.builder().permissionCode("ROLE_ASSIGN_PERMISSION").permissionName("Gán quyền cho vai trò").type("ROLE").description("Cho phép tích chọn và bổ sung thêm các quyền hạn (Permissions) vào một vai trò").createdAt(Instant.now()).build(),
+            Permission.builder().permissionCode("ROLE_REVOKE_PERMISSION").permissionName("Tước bỏ quyền của vai trò").type("ROLE").description("Cho phép xóa hoặc hạ cấp các quyền hạn đang có ra khỏi một vai trò").createdAt(Instant.now()).build(),
+            Permission.builder().permissionCode("PERMISSION_VIEW").permissionName("Xem danh sách tất cả các quyền").type("PERMISSION").description("Cho phép xem toàn bộ danh sách các quyền chức năng tĩnh đang có trên hệ thống").createdAt(Instant.now()).build(),
 
-            Permission.builder()
-                    .permissionCode("ROLE_ASSIGN_PERMISSION")
-                    .permissionName("Gán quyền cho vai trò")
-                    .type("ROLE")
-                    .description("Cho phép tích chọn và bổ sung thêm các quyền hạn (Permissions) vào một vai trò")
-                    .createdAt(Instant.now())
-                    .build(),
+            // Category
+            Permission.builder().permissionCode("VIEW_ALL_CATEGORY").permissionName("Xem danh sách danh mục").type("CATEGORY").description("Cho phép xem danh sách các danh mục món ăn").createdAt(Instant.now()).build(),
+            Permission.builder().permissionCode("CREATE_CATEGORY").permissionName("Tạo danh mục mới").type("CATEGORY").description("Cho phép tạo mới một danh mục món ăn").createdAt(Instant.now()).build(),
+            Permission.builder().permissionCode("UPDATE_CATEGORY").permissionName("Cập nhật danh mục").type("CATEGORY").description("Cho phép chỉnh sửa thông tin danh mục").createdAt(Instant.now()).build(),
+            Permission.builder().permissionCode("UPDATE_STATE_CATEGORY").permissionName("Thay đổi trạng thái danh mục").type("CATEGORY").description("Cho phép ẩn/hiện danh mục").createdAt(Instant.now()).build(),
+            Permission.builder().permissionCode("DELETE_CATEGORY").permissionName("Xóa danh mục").type("CATEGORY").description("Cho phép xóa danh mục").createdAt(Instant.now()).build(),
 
-            Permission.builder()
-                    .permissionCode("ROLE_REVOKE_PERMISSION")
-                    .permissionName("Tước bỏ quyền của vai trò")
-                    .type("ROLE")
-                    .description("Cho phép xóa hoặc hạ cấp các quyền hạn đang có ra khỏi một vai trò")
-                    .createdAt(Instant.now())
-                    .build(),
+            // Tag
+            Permission.builder().permissionCode("VIEW_ALL_TAG").permissionName("Xem danh sách thẻ").type("TAG").description("Cho phép xem danh sách các thẻ món ăn").createdAt(Instant.now()).build(),
+            Permission.builder().permissionCode("CREATE_TAG").permissionName("Tạo thẻ mới").type("TAG").description("Cho phép tạo thẻ món ăn mới").createdAt(Instant.now()).build(),
+            Permission.builder().permissionCode("UPDATE_TAG").permissionName("Cập nhật thẻ").type("TAG").description("Cho phép chỉnh sửa thông tin thẻ").createdAt(Instant.now()).build(),
+            Permission.builder().permissionCode("UPDATE_STATE_TAG").permissionName("Thay đổi trạng thái thẻ").type("TAG").description("Cho phép ẩn/hiện thẻ").createdAt(Instant.now()).build(),
+            Permission.builder().permissionCode("DELETE_TAG").permissionName("Xóa thẻ").type("TAG").description("Cho phép xóa thẻ").createdAt(Instant.now()).build(),
 
-            Permission.builder()
-                    .permissionCode("PERMISSION_VIEW")
-                    .permissionName("Xem danh sách tất cả các quyền")
-                    .type("PERMISSION")
-                    .description("Cho phép xem toàn bộ danh sách các quyền chức năng tĩnh đang có trên hệ thống")
-                    .createdAt(Instant.now())
-                    .build()
+            // Ingredient
+            Permission.builder().permissionCode("VIEW_ALL_INGREDIENT").permissionName("Xem danh sách nguyên liệu").type("INGREDIENT").description("Cho phép xem danh sách nguyên liệu").createdAt(Instant.now()).build(),
+            Permission.builder().permissionCode("CREATE_INGREDIENT").permissionName("Tạo nguyên liệu mới").type("INGREDIENT").description("Cho phép tạo nguyên liệu mới").createdAt(Instant.now()).build(),
+            Permission.builder().permissionCode("UPDATE_INGREDIENT").permissionName("Cập nhật nguyên liệu").type("INGREDIENT").description("Cho phép chỉnh sửa nguyên liệu").createdAt(Instant.now()).build(),
+            Permission.builder().permissionCode("UPDATE_STATE_INGREDIENT").permissionName("Thay đổi trạng thái nguyên liệu").type("INGREDIENT").description("Cho phép ẩn/hiện nguyên liệu").createdAt(Instant.now()).build(),
+            Permission.builder().permissionCode("DELETE_INGREDIENT").permissionName("Xóa nguyên liệu").type("INGREDIENT").description("Cho phép xóa nguyên liệu").createdAt(Instant.now()).build(),
+
+            // Meal
+            Permission.builder().permissionCode("VIEW_ALL_MEAL").permissionName("Xem danh sách món ăn").type("MEAL").description("Cho phép xem danh sách món ăn").createdAt(Instant.now()).build(),
+            Permission.builder().permissionCode("CREATE_MEAL").permissionName("Tạo món ăn mới").type("MEAL").description("Cho phép tạo món ăn mới").createdAt(Instant.now()).build(),
+            Permission.builder().permissionCode("UPDATE_MEAL").permissionName("Cập nhật món ăn").type("MEAL").description("Cho phép chỉnh sửa món ăn").createdAt(Instant.now()).build(),
+            Permission.builder().permissionCode("UPDATE_STATE_MEAL").permissionName("Thay đổi trạng thái món ăn").type("MEAL").description("Cho phép ẩn/hiện món ăn").createdAt(Instant.now()).build(),
+            Permission.builder().permissionCode("DELETE_MEAL").permissionName("Xóa món ăn").type("MEAL").description("Cho phép xóa món ăn").createdAt(Instant.now()).build(),
+
+            // Bundle & Subscription
+            Permission.builder().permissionCode("VIEW_ALL_BUNDLE").permissionName("Xem danh sách gói dịch vụ").type("BUNDLE").description("Cho phép xem danh sách gói dịch vụ").createdAt(Instant.now()).build(),
+            Permission.builder().permissionCode("CREATE_BUNDLE").permissionName("Tạo gói dịch vụ mới").type("BUNDLE").description("Cho phép tạo gói dịch vụ mới").createdAt(Instant.now()).build(),
+            Permission.builder().permissionCode("UPDATE_BUNDLE").permissionName("Cập nhật gói dịch vụ").type("BUNDLE").description("Cho phép chỉnh sửa gói dịch vụ").createdAt(Instant.now()).build(),
+            Permission.builder().permissionCode("UPDATE_STATE_BUNDLE").permissionName("Thay đổi trạng thái gói dịch vụ").type("BUNDLE").description("Cho phép ẩn/hiện gói dịch vụ").createdAt(Instant.now()).build(),
+            
+            Permission.builder().permissionCode("VIEW_ALL_PAYMENT_HISTORY").permissionName("Xem danh sách lịch sử thanh toán").type("PAYMENT").description("Cho phép xem toàn bộ danh sách lịch sử giao dịch thanh toán").createdAt(Instant.now()).build(),
+            Permission.builder().permissionCode("VIEW_PAYMENT_HISTORY").permissionName("Xem chi tiết thanh toán").type("PAYMENT").description("Cho phép xem chi tiết một lịch sử giao dịch thanh toán").createdAt(Instant.now()).build(),
+            
+            Permission.builder().permissionCode("VIEW_ALL_USER_SUBSCRIPTION").permissionName("Xem danh sách gói đăng ký của user").type("SUBSCRIPTION").description("Cho phép xem thông tin tất cả gói đăng ký của người dùng").createdAt(Instant.now()).build(),
+
+            // User
+            Permission.builder().permissionCode("VIEW_ALL_USER").permissionName("Xem danh sách người dùng").type("USER").description("Cho phép xem danh sách tất cả người dùng").createdAt(Instant.now()).build(),
+            Permission.builder().permissionCode("VIEW_USER_DETAIL").permissionName("Xem chi tiết người dùng").type("USER").description("Cho phép xem chi tiết thông tin một người dùng").createdAt(Instant.now()).build(),
+            Permission.builder().permissionCode("UPDATE_USER_ROLE").permissionName("Cập nhật vai trò người dùng").type("USER").description("Cho phép thay đổi vai trò (Role) của người dùng").createdAt(Instant.now()).build()
     );
 
-    // Lưu toàn bộ vào MongoDB
     permissionRepository.saveAll(permissions);
     System.out.println(">> Khởi tạo danh sách Quyền (Permissions) thành công!");
 }

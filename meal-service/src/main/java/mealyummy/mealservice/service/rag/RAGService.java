@@ -1,9 +1,7 @@
 package mealyummy.mealservice.service.rag;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import mealyummy.mealservice.model.entity.Meal;
+import mealyummy.mealservice.model.entity.food.Meal;
 import mealyummy.mealservice.model.entity.AiChatSession;
 import mealyummy.mealservice.model.repository.MealRepository;
 import mealyummy.mealservice.model.repository.AiChatSessionRepository;

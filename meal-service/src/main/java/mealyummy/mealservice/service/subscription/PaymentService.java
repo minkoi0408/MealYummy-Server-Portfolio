@@ -9,5 +9,7 @@ public interface PaymentService {
     PaymentHistory recordPayment(PaymentHistory paymentHistory);
     PaymentCreateResponse createPaymentUrl(PaymentCreateRequest request, HttpServletRequest httpRequest);
     void processPaymentWebhook(String transactionId, boolean isSuccess);
+    org.springframework.data.domain.Page<PaymentHistory> getAllPaymentHistories(org.springframework.data.domain.Pageable pageable);
+    PaymentHistory getPaymentHistoryById(String id);
 }
 

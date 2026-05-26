@@ -3,9 +3,10 @@ package mealyummy.mealservice.service.category;
 import lombok.RequiredArgsConstructor;
 import mealyummy.mealservice.core.exception.AppException;
 import mealyummy.mealservice.core.exception.ErrorCode;
-import mealyummy.mealservice.model.entity.Category;
+import mealyummy.mealservice.model.entity.food.Category;
 import mealyummy.mealservice.model.repository.CategoryRepository;
 import mealyummy.mealservice.service.category.dto.CategoryDTO;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +19,7 @@ import java.util.stream.Collectors;
 public class CategoryServiceImpl implements CategoryService {
 
     private final CategoryRepository categoryRepository;
+    private final org.springframework.data.mongodb.core.MongoTemplate mongoTemplate;
 
     @Override
     public CategoryDTO create(CategoryDTO request) {
@@ -38,19 +40,17 @@ public class CategoryServiceImpl implements CategoryService {
 
         Category category = Category.builder()
                 .name(name)
+                .description(request.getDescription())
                 .parentId(request.getParentId())
                 .build();
         categoryRepository.save(category);
-        return category.convert();
+        return enrichDto(category.convert());
     }
 
     @Override
-    public List<CategoryDTO> getAll() {
-        List<Category> categories = categoryRepository.findAll();
-
-        return categories.stream()
-                .map(Category::convert)
-                .collect(Collectors.toList());
+    public Page<CategoryDTO> getAll(org.springframework.data.domain.Pageable pageable) {
+        Page<Category> categories = categoryRepository.findAll(pageable);
+        return categories.map(category -> enrichDto(category.convert()));
     }
 
     @Override
@@ -80,7 +80,7 @@ public class CategoryServiceImpl implements CategoryService {
         return mapToDtoWithChildren(category);
     }
     private CategoryDTO mapToDtoWithChildren(Category entity) {
-        CategoryDTO dto = entity.convert();
+        CategoryDTO dto = enrichDto(entity.convert());
         List<Category> childrenEntities = categoryRepository.findAllByParentIdAndActiveTrue(entity.getId());
         if (!childrenEntities.isEmpty()) {
             List<CategoryDTO> childrenDtos = childrenEntities.stream()
@@ -90,6 +90,93 @@ public class CategoryServiceImpl implements CategoryService {
         }
 
         return dto;
+    }
+
+    @Override
+    @Transactional
+    public CategoryDTO update(String id, CategoryDTO request) {
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
+
+        if (request.getName() != null && !request.getName().isEmpty()) {
+            String name = request.getName()
+                    .trim().substring(0, 1).toUpperCase() + request.getName().toLowerCase().substring(1).trim();
+            if (!category.getName().equals(name) && categoryRepository.existsByName(name)) {
+                throw new AppException(ErrorCode.CATEGORY_INVALID_NAME);
+            }
+            category.setName(name);
+        }
+
+        if (request.getParentId() != null && !request.getParentId().isEmpty()) {
+            if (!categoryRepository.existsByIdAndActiveTrue(request.getParentId())) {
+                throw new RuntimeException("Danh mục cha không tồn tại hoặc đã bị ẩn");
+            }
+            category.setParentId(request.getParentId());
+        }
+
+        if (request.getDescription() != null) {
+            category.setDescription(request.getDescription());
+        }
+
+        categoryRepository.save(category);
+        return enrichDto(category.convert());
+    }
+
+    private CategoryDTO enrichDto(CategoryDTO dto) {
+        if (dto.getParentId() != null && !dto.getParentId().isEmpty()) {
+            categoryRepository.findById(dto.getParentId())
+                    .ifPresent(parent -> dto.setParentName(parent.getName()));
+        }
+        return dto;
+    }
+
+    @Override
+    @Transactional
+    public void delete(String id) {
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
+
+        // Delete from DB
+        categoryRepository.delete(category);
+
+        // Remove reference from meals
+        removeCategoryFromMeals(id);
+    }
+
+    @Override
+    @Transactional
+    public void deleteBulk(List<String> ids) {
+        if (ids == null || ids.isEmpty()) return;
+        List<Category> categories = categoryRepository.findAllById(ids);
+        categoryRepository.deleteAll(categories);
+
+        // Remove references from meals
+        for (String id : ids) {
+            removeCategoryFromMeals(id);
+        }
+    }
+
+    private void removeCategoryFromMeals(String categoryId) {
+        org.springframework.data.mongodb.core.query.Query query = new org.springframework.data.mongodb.core.query.Query();
+        query.addCriteria(org.springframework.data.mongodb.core.query.Criteria.where("categories._id").is(categoryId));
+        
+        org.springframework.data.mongodb.core.query.Update update = new org.springframework.data.mongodb.core.query.Update();
+        update.pull("categories", org.springframework.data.mongodb.core.query.Query.query(org.springframework.data.mongodb.core.query.Criteria.where("_id").is(categoryId)));
+        
+        mongoTemplate.updateMulti(query, update, mealyummy.mealservice.model.entity.food.Meal.class);
+    }
+
+    @Override
+    @Transactional
+    public List<CategoryDTO> createBulk(List<CategoryDTO> requests) {
+        if (requests == null || requests.isEmpty()) {
+            throw new AppException(ErrorCode.CATEGORY_INVALID_NAME);
+        }
+        List<CategoryDTO> responses = new ArrayList<>();
+        for (CategoryDTO req : requests) {
+            responses.add(create(req));
+        }
+        return responses;
     }
 
     @Override
@@ -129,6 +216,7 @@ public class CategoryServiceImpl implements CategoryService {
                 // Nếu chưa có thì tạo mới
                 category = Category.builder()
                         .name(formattedName)
+                        .description(dto.getDescription())
                         .parentId(parentId) // Gắn ID của Cha truyền từ tham số vào đây
                         .active(true)
                         .build();
@@ -136,7 +224,7 @@ public class CategoryServiceImpl implements CategoryService {
             }
 
             // Chuyển sang DTO để trả về
-            CategoryDTO savedDto = category.convert();
+            CategoryDTO savedDto = enrichDto(category.convert());
 
             // 4. BƯỚC ĂN TIỀN (ĐỆ QUY): Nếu có mảng children, tiếp tục đào sâu xuống
             if (dto.getChildren() != null && !dto.getChildren().isEmpty()) {

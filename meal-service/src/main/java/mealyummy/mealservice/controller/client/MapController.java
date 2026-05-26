@@ -1,4 +1,4 @@
-package mealyummy.mealservice.controller;
+package mealyummy.mealservice.controller.client;
 
 import mealyummy.mealservice.service.map.MapService;
 import org.springframework.http.ResponseEntity;
