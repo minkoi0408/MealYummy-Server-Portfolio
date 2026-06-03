@@ -11,6 +11,7 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
+import java.util.List;
 
 @Data
 @Builder
@@ -32,6 +33,7 @@ public class UserMetrics {
     private String goal;
     private Double bodyFat;
     private Double muscleMass;
+    private List<String> diseases; // ["DIABETES", "GOUT", ...]
 
     @CreatedDate
     private Instant createdAt;

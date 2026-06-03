@@ -37,6 +37,7 @@ public class UserMetricsService {
                         .goal(m.getGoal())
                         .bodyFat(m.getBodyFat())
                         .muscleMass(m.getMuscleMass())
+                        .diseases(m.getDiseases())
                         .updatedAt(m.getUpdatedAt() != null ? m.getUpdatedAt() : m.getCreatedAt())
                         .build())
                 .orElse(null);
@@ -57,6 +58,7 @@ public class UserMetricsService {
         metrics.setGoal(dto.getGoal());
         metrics.setBodyFat(dto.getBodyFat());
         metrics.setMuscleMass(dto.getMuscleMass());
+        metrics.setDiseases(dto.getDiseases());
         
         metrics.setCreatedAt(Instant.now());
         metrics.setUpdatedAt(Instant.now());
@@ -79,6 +81,7 @@ public class UserMetricsService {
                         .goal(m.getGoal())
                         .bodyFat(m.getBodyFat())
                         .muscleMass(m.getMuscleMass())
+                        .diseases(m.getDiseases())
                         .updatedAt(m.getUpdatedAt() != null ? m.getUpdatedAt() : m.getCreatedAt())
                         .build())
                 .collect(Collectors.toList());

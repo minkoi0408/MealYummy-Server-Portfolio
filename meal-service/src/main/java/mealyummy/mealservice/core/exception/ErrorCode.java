@@ -42,6 +42,11 @@ public enum ErrorCode {
     DURATION_INVALID("Thời hạn gói không hợp lệ", HttpStatus.BAD_REQUEST),
     SUBSCRIPTION_NOT_FOUND("Không tìm thấy đăng ký gói dịch vụ", HttpStatus.NOT_FOUND),
     PAYMENT_HISTORY_NOT_FOUND("Không tìm thấy lịch sử giao dịch", HttpStatus.NOT_FOUND),
+
+    // Diet Roadmap errors
+    USER_METRICS_NOT_FOUND("Vui lòng cập nhật chỉ số cơ thể trước khi tạo lộ trình", HttpStatus.BAD_REQUEST),
+    ROADMAP_NOT_FOUND("Bạn chưa có lộ trình nào. Hãy tạo lộ trình đầu tiên!", HttpStatus.NOT_FOUND),
+    AI_GENERATION_FAILED("AI không thể tạo lộ trình lúc này. Vui lòng thử lại sau.", HttpStatus.INTERNAL_SERVER_ERROR),
     ;
     ErrorCode(String message, HttpStatus statusCode) {
         this.message = message;
