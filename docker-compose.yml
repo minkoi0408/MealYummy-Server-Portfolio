@@ -75,9 +75,6 @@ services:
       # Inject/Override container connection hostnames for inner-docker networking
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      # Connect to the local MongoDB container (using standard hostname alias 'mongodb')
-      # Note: To use cloud MongoDB instead, developers can just modify their .env to point MONGODB_URI to Atlas
-      - MONGODB_URI=mongodb://mongodb:27017/${MONGO_INITDB_DATABASE:-meal-service}
       # PostgreSQL connection string config (if relational database is integrated in future)
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/${DB_NAME:-mealyummy_db}
       - SPRING_DATASOURCE_USERNAME=${DB_USERNAME:-postgres}

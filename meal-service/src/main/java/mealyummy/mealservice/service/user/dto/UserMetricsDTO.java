@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.util.List;
 
 @Data
 @Builder
@@ -20,5 +21,6 @@ public class UserMetricsDTO {
     private String goal;
     private Double bodyFat;
     private Double muscleMass;
+    private List<String> diseases;
     private Instant updatedAt;
 }
