@@ -1,94 +1,157 @@
 [ {
-  "id" : "69a6c060105d13d8ec6d15d0",
+  "id" : "6a218a708ddeb43c6690b593",
   "name" : "Ẩm thực thái lan"
 }, {
-  "id" : "69a6c060105d13d8ec6d15d1",
+  "id" : "6a218a708ddeb43c6690b594",
   "name" : "Ẩm thực hàn quốc"
 }, {
-  "id" : "69a6c060105d13d8ec6d15d2",
+  "id" : "6a218a708ddeb43c6690b595",
   "name" : "Ẩm thực nhật bản"
 }, {
-  "id" : "69a6c060105d13d8ec6d15d3",
+  "id" : "6a218a708ddeb43c6690b596",
   "name" : "Ẩm thực trung hoa"
 }, {
-  "id" : "69a6c060105d13d8ec6d15d4",
+  "id" : "6a218a708ddeb43c6690b597",
   "name" : "Ẩm thực âu mỹ"
 }, {
-  "id" : "69a6c060105d13d8ec6d15d5",
+  "id" : "6a218a708ddeb43c6690b598",
   "name" : "Ẩm thực ý"
 }, {
-  "id" : "69a6c060105d13d8ec6d15d6",
+  "id" : "6a218a708ddeb43c6690b599",
   "name" : "Ẩm thực ấn độ"
 }, {
-  "id" : "69a6c060105d13d8ec6d15d7",
+  "id" : "6a218a708ddeb43c6690b59a",
   "name" : "Đặc sản miền bắc"
 }, {
-  "id" : "69a6c060105d13d8ec6d15d8",
+  "id" : "6a218a708ddeb43c6690b59b",
   "name" : "Đặc sản miền trung"
 }, {
-  "id" : "69a6c060105d13d8ec6d15d9",
+  "id" : "6a218a708ddeb43c6690b59c",
   "name" : "Đặc sản miền nam"
 }, {
-  "id" : "69a6c060105d13d8ec6d15da",
+  "id" : "6a218a708ddeb43c6690b59d",
   "name" : "Thuần chay"
 }, {
-  "id" : "69a6c060105d13d8ec6d15db",
+  "id" : "6a218a708ddeb43c6690b59e",
   "name" : "Chay có trứng sữa"
 }, {
-  "id" : "69a6c060105d13d8ec6d15dc",
+  "id" : "6a218a708ddeb43c6690b59f",
   "name" : "Chay giả mặn"
 }, {
-  "id" : "69a6c060105d13d8ec6d15dd",
+  "id" : "6a218a708ddeb43c6690b5a0",
   "name" : "Thực đơn eat clean"
 }, {
-  "id" : "69a6c060105d13d8ec6d15de",
+  "id" : "6a218a708ddeb43c6690b5a1",
   "name" : "Thực đơn healthy"
 }, {
-  "id" : "69a6c060105d13d8ec6d15df",
+  "id" : "6a218a708ddeb43c6690b5a2",
   "name" : "Thực đơn keto"
 }, {
-  "id" : "69a6c060105d13d8ec6d15e0",
+  "id" : "6a218a708ddeb43c6690b5a3",
   "name" : "Thực đơn low carb"
 }, {
-  "id" : "69a6c060105d13d8ec6d15e1",
+  "id" : "6a218a708ddeb43c6690b5a4",
   "name" : "Thực đơn giảm cân"
 }, {
-  "id" : "69a6c060105d13d8ec6d15e2",
+  "id" : "6a218a708ddeb43c6690b5a5",
   "name" : "Thực đơn tăng cơ"
 }, {
-  "id" : "69a6c060105d13d8ec6d15e3",
+  "id" : "6a218a708ddeb43c6690b5a6",
   "name" : "Dinh dưỡng cho mẹ"
 }, {
-  "id" : "69a6c060105d13d8ec6d15e4",
+  "id" : "6a218a708ddeb43c6690b5a7",
   "name" : "Dinh dưỡng cho bé"
 }, {
-  "id" : "69a6c060105d13d8ec6d15e5",
+  "id" : "6a218a708ddeb43c6690b5a8",
   "name" : "Dinh dưỡng người cao tuổi"
 }, {
-  "id" : "69a6c060105d13d8ec6d15e6",
+  "id" : "6a218a708ddeb43c6690b5a9",
   "name" : "Dinh dưỡng người tiểu đường"
 }, {
-  "id" : "69a6c060105d13d8ec6d15e7",
+  "id" : "6a218a708ddeb43c6690b5aa",
   "name" : "Dinh dưỡng cao huyết áp"
 }, {
-  "id" : "69a6c060105d13d8ec6d15e8",
+  "id" : "6a218a708ddeb43c6690b5ab",
   "name" : "Thực đơn không gluten"
 }, {
-  "id" : "69a6c060105d13d8ec6d15e9",
+  "id" : "6a218a708ddeb43c6690b5ac",
   "name" : "Thực đơn bồi bổ sức khỏe"
 }, {
-  "id" : "69a6c060105d13d8ec6d15ea",
+  "id" : "6a218a708ddeb43c6690b5ad",
   "name" : "Bữa sáng"
 }, {
-  "id" : "69a6c060105d13d8ec6d15eb",
+  "id" : "6a218a708ddeb43c6690b5ae",
   "name" : "Bữa trưa"
 }, {
-  "id" : "69a6c060105d13d8ec6d15ec",
+  "id" : "6a218a708ddeb43c6690b5af",
   "name" : "Bữa tối"
 }, {
-  "id" : "69a6c060105d13d8ec6d15ed",
+  "id" : "6a218a708ddeb43c6690b5b0",
   "name" : "Bữa ăn lãng mạn"
 }, {
-  "id" : "69a6c060105d13d8ec6d15ee",
+  "id" : "6a218a708ddeb43c6690b5b1",
   "name" : "Tiệc sinh nhật"
+}, {
+  "id" : "6a218a708ddeb43c6690b5b2",
+  "name" : "Thực đơn duy trì vóc dáng"
+}, {
+  "id" : "6a218a708ddeb43c6690b5b3",
+  "name" : "Bữa ăn trước khi tập (pre-workout)"
+}, {
+  "id" : "6a218a708ddeb43c6690b5b4",
+  "name" : "Bữa ăn phục hồi sau tập (post-workout)"
+}, {
+  "id" : "6a218a708ddeb43c6690b5b5",
+  "name" : "Giàu protein"
+}, {
+  "id" : "6a218a708ddeb43c6690b5b6",
+  "name" : "Ít calo (< 400 kcal)"
+}, {
+  "id" : "6a218a708ddeb43c6690b5b7",
+  "name" : "Chỉ số đường huyết thấp (low gi)"
+}, {
+  "id" : "6a218a708ddeb43c6690b5b8",
+  "name" : "Giàu chất xơ"
+}, {
+  "id" : "6a218a708ddeb43c6690b5b9",
+  "name" : "Giàu omega-3"
+}, {
+  "id" : "6a218a708ddeb43c6690b5ba",
+  "name" : "Nhiều vitamin c"
+}, {
+  "id" : "6a218a708ddeb43c6690b5bb",
+  "name" : "Nhiều canxi"
+}, {
+  "id" : "6a218a708ddeb43c6690b5bc",
+  "name" : "Tốt cho tim mạch"
+}, {
+  "id" : "6a218a708ddeb43c6690b5bd",
+  "name" : "Hỗ trợ tiêu hóa"
+}, {
+  "id" : "6a218a708ddeb43c6690b5be",
+  "name" : "Tăng cường miễn dịch"
+}, {
+  "id" : "6a218a708ddeb43c6690b5bf",
+  "name" : "Detox thanh lọc cơ thể"
+}, {
+  "id" : "6a218a708ddeb43c6690b5c0",
+  "name" : "Giảm căng thẳng/tốt cho giấc ngủ"
+}, {
+  "id" : "6a218a708ddeb43c6690b5c1",
+  "name" : "Thực đơn địa trung hải (mediterranean)"
+}, {
+  "id" : "6a218a708ddeb43c6690b5c2",
+  "name" : "Thực đơn paleo"
+}, {
+  "id" : "6a218a708ddeb43c6690b5c3",
+  "name" : "Thực đơn dash (trị cao huyết áp)"
+}, {
+  "id" : "6a218a708ddeb43c6690b5c4",
+  "name" : "Thực đơn wfpb (thuần thực vật toàn phần)"
+}, {
+  "id" : "6a218a708ddeb43c6690b5c5",
+  "name" : "Bữa phụ (snack)"
+}, {
+  "id" : "6a218a708ddeb43c6690b5c6",
+  "name" : "Bữa ăn thay thế (meal replacement)"
 } ]

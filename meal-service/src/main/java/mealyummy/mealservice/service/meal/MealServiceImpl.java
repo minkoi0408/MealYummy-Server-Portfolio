@@ -383,6 +383,11 @@ public class MealServiceImpl implements MealService {
         }
         List<MealResponseDTO> responses = new java.util.ArrayList<>();
         for (MealRequestDTO req : requests) {
+            String formattedName = req.getName().trim();
+            formattedName = formattedName.substring(0, 1).toUpperCase() + formattedName.substring(1).toLowerCase();
+            if (mealRepository.existsByName(formattedName)) {
+                continue; // Skip if meal already exists
+            }
             responses.add(create(req));
         }
         return responses;

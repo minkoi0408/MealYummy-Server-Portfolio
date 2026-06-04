@@ -114,114 +114,104 @@ public class RAGService {
     public Object askQuestion(mealyummy.mealservice.service.rag.dto.ChatRequestDTO request, String username) {
         String question = request.getQuestion();
         
-        // 1. Trích xuất tag/category từ prompt người dùng
-        String extractPrompt = "Từ câu hỏi sau: '" + question + "'. Hãy trích xuất ra một mảng các từ khóa (tối đa 5 từ) liên quan đến tag, category, hoặc nguyên liệu món ăn. CHỈ trả về đúng 1 mảng JSON các chuỗi (ví dụ: [\"bò\", \"cay\", \"chay\"]), không kèm văn bản nào khác, không dùng markdown.";
-        String keywordsJson = generateChatResponse(extractPrompt, null, question);
+        // 1. Fetch raw documents to bypass Spring Data Lazy Loading N+1 queries completely
+        org.springframework.data.mongodb.core.query.Query mealQuery = new org.springframework.data.mongodb.core.query.Query(
+                org.springframework.data.mongodb.core.query.Criteria.where("active").is(true)
+        );
+        // Exclude large fields to save memory and tokens
+        mealQuery.fields().include("_id", "name", "description", "categories", "tags");
         
-        List<String> keywords = new ArrayList<>();
+        List<Document> rawMeals = mongoTemplate.find(mealQuery, Document.class, "meals");
+        List<Document> rawCategories = mongoTemplate.findAll(Document.class, "categories");
+        List<Document> rawTags = mongoTemplate.findAll(Document.class, "tags");
+
+        // Format references efficiently
+        List<Map<String, Object>> catalogMeals = new ArrayList<>();
+        for (Document doc : rawMeals) {
+            Map<String, Object> simpleMeal = new java.util.HashMap<>();
+            simpleMeal.put("id", doc.getObjectId("_id").toHexString());
+            simpleMeal.put("name", doc.getString("name"));
+            simpleMeal.put("description", doc.getString("description"));
+            
+            // Extract category and tag IDs
+            Object catObj = doc.get("categories");
+            if (catObj instanceof List) {
+                List<String> cIds = new ArrayList<>();
+                for (Object c : (List<?>) catObj) {
+                    if (c instanceof org.bson.types.ObjectId) cIds.add(((org.bson.types.ObjectId) c).toHexString());
+                    else if (c instanceof com.mongodb.DBRef) cIds.add(((com.mongodb.DBRef) c).getId().toString());
+                    else cIds.add(c.toString());
+                }
+                simpleMeal.put("categoryIds", cIds);
+            }
+            
+            Object tagObj = doc.get("tags");
+            if (tagObj instanceof List) {
+                List<String> tIds = new ArrayList<>();
+                for (Object t : (List<?>) tagObj) {
+                    if (t instanceof org.bson.types.ObjectId) tIds.add(((org.bson.types.ObjectId) t).toHexString());
+                    else if (t instanceof com.mongodb.DBRef) tIds.add(((com.mongodb.DBRef) t).getId().toString());
+                    else tIds.add(t.toString());
+                }
+                simpleMeal.put("tagIds", tIds);
+            }
+            catalogMeals.add(simpleMeal);
+        }
+
+        List<Map<String, String>> catalogCategories = new ArrayList<>();
+        for (Document doc : rawCategories) {
+            catalogCategories.add(Map.of("id", doc.getObjectId("_id").toHexString(), "name", doc.getString("name")));
+        }
+
+        List<Map<String, String>> catalogTags = new ArrayList<>();
+        for (Document doc : rawTags) {
+            catalogTags.add(Map.of("id", doc.getObjectId("_id").toHexString(), "name", doc.getString("name")));
+        }
+
+        // Convert catalog to JSON String
+        String catalogJson = "";
         try {
-            String cleanJson = keywordsJson.replaceAll("(?s)```json(.*?)```", "$1").replaceAll("(?s)```(.*?)```", "$1").trim();
             com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-            keywords = mapper.readValue(cleanJson, new com.fasterxml.jackson.core.type.TypeReference<List<String>>(){});
+            Map<String, Object> fullCatalog = Map.of(
+                "categories", catalogCategories,
+                "tags", catalogTags,
+                "meals", catalogMeals
+            );
+            catalogJson = mapper.writeValueAsString(fullCatalog);
+        } catch(Exception e) {}
+
+        // 2. Pass to LLM for semantic search
+        String systemInstruction = "Bạn là chuyên gia dinh dưỡng AI. Dưới đây là danh sách danh mục (categories), thẻ (tags) và danh sách toàn bộ món ăn (meals) của hệ thống:\n" 
+            + catalogJson + "\n\n"
+            + "Dựa vào yêu cầu của người dùng, hãy chọn ra tối đa 10 món ăn phù hợp nhất về mặt ngữ nghĩa, dinh dưỡng và mục tiêu. Nếu người dùng chọn tag hay category, hãy phân tích từ điển tags/categories để ánh xạ với các tagIds/categoryIds của từng món ăn.\n"
+            + "CHỈ trả về ĐÚNG 1 mảng JSON chứa các ID của món ăn được chọn (Ví dụ: [\"6a21...\", \"6a22...\"]). KHÔNG BAO GỒM BẤT KỲ VĂN BẢN HAY CODE BLOCK MARKDOWN NÀO KHÁC.";
+
+        String responseJson = generateChatResponse(systemInstruction, request.getHistory(), question);
+
+        List<String> selectedIds = new ArrayList<>();
+        try {
+            String cleanJson = responseJson.replaceAll("(?s)```json(.*?)```", "$1").replaceAll("(?s)```(.*?)```", "$1").trim();
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            selectedIds = mapper.readValue(cleanJson, new com.fasterxml.jackson.core.type.TypeReference<List<String>>(){});
         } catch (Exception e) {
-            keywords.add(question);
+            System.err.println("Lỗi parse JSON từ LLM: " + responseJson);
         }
 
-        // 2. Tìm kiếm món ăn phù hợp nhất
-        List<Meal> allMeals = mealRepository.findAll();
-        List<MealScore> mealScores = new ArrayList<>();
-        
-        for (Meal meal : allMeals) {
-            if (!Boolean.TRUE.equals(meal.getActive())) continue;
-            
-            // Exclusion Check
-            if (request.getExcludedIngredientIds() != null && !request.getExcludedIngredientIds().isEmpty() && meal.getIngredients() != null) {
-                boolean hasExcluded = false;
-                for (var ing : meal.getIngredients()) {
-                    if (ing.getIngredientId() != null && request.getExcludedIngredientIds().contains(ing.getIngredientId())) {
-                        hasExcluded = true;
-                        break;
-                    }
-                }
-                if (hasExcluded) continue;
-            }
-
-            // Category Filter Check
-            if (request.getCategoryIds() != null && !request.getCategoryIds().isEmpty()) {
-                boolean hasCategory = false;
-                if (meal.getCategories() != null) {
-                    for (var cat : meal.getCategories()) {
-                        if (request.getCategoryIds().contains(cat.getId())) {
-                            hasCategory = true;
-                            break;
-                        }
-                    }
-                }
-                if (!hasCategory) continue;
-            }
-
-            // Tag Filter Check
-            if (request.getTagIds() != null && !request.getTagIds().isEmpty()) {
-                boolean hasTag = false;
-                if (meal.getTags() != null) {
-                    for (var tag : meal.getTags()) {
-                        if (request.getTagIds().contains(tag.getId())) {
-                            hasTag = true;
-                            break;
-                        }
-                    }
-                }
-                if (!hasTag) continue;
-            }
-
-            int score = 0;
-            String nameLower = meal.getName() != null ? meal.getName().toLowerCase() : "";
-            String descLower = meal.getDescription() != null ? meal.getDescription().toLowerCase() : "";
-            
-            for (String kw : keywords) {
-                String kLower = kw.toLowerCase();
-                if (nameLower.contains(kLower)) score += 3;
-                if (descLower.contains(kLower)) score += 1;
-                
-                if (meal.getTags() != null) {
-                    for (var t : meal.getTags()) {
-                        if (t.getName() != null && t.getName().toLowerCase().contains(kLower)) score += 2;
-                    }
-                }
-                if (meal.getCategories() != null) {
-                    for (var c : meal.getCategories()) {
-                        if (c.getName() != null && c.getName().toLowerCase().contains(kLower)) score += 2;
-                    }
-                }
-            }
-            if (score > 0) {
-                mealScores.add(new MealScore(meal, score));
-            }
-        }
-        
-        mealScores.sort((a, b) -> Integer.compare(b.score, a.score));
-        
-        List<Meal> topMeals = mealScores.stream()
-                .limit(10)
-                .map(ms -> ms.meal)
-                .toList();
-
-        if (topMeals.isEmpty()) {
-            topMeals = allMeals.stream().limit(10).toList();
-        }
-
-        // 3. Map to DTO
+        // 3. Lấy kết quả DTO
         List<Object> responseList = new ArrayList<>();
-        for (Meal m : topMeals) {
-            // Check if MealService is implemented as MealServiceImpl which contains convertMealToMealResponseDTO
-            // Since MealService is an interface, we might not be able to call convertMealToMealResponseDTO if it's not in the interface
-            // Let's just return the raw Meal or manually map to a Map to avoid lazy initialization issues.
-            // Wait, mealService is interface MealService. Let's cast it or just return Meal.
-            // We can fetch via get(id)
+        for (String id : selectedIds) {
             try {
-                responseList.add(mealService.get(m.getId()));
-            } catch (Exception e) {
-                responseList.add(m);
+                responseList.add(mealService.get(id));
+            } catch(Exception e) {}
+        }
+
+        // Fallback ngẫu nhiên nếu LLM lỗi
+        if (responseList.isEmpty()) {
+            int maxFallback = Math.min(10, catalogMeals.size());
+            for (int i = 0; i < maxFallback; i++) {
+                try {
+                    responseList.add(mealService.get(catalogMeals.get(i).get("id").toString()));
+                } catch(Exception e) {}
             }
         }
 
@@ -246,7 +236,7 @@ public class RAGService {
     }
 
     private String generateChatResponse(String systemInstruction, List<mealyummy.mealservice.service.rag.dto.ChatRequestDTO.ChatMessageDTO> history, String currentQuestion) {
-        String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + geminiApiKey;
+        String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + geminiApiKey;
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 

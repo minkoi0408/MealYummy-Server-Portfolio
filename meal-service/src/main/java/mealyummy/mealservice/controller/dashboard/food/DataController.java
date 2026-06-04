@@ -54,6 +54,11 @@ public class DataController {
         return ResponseEntity.ok(BaseApiResponse.ok(dataInitService.exportCategoryToJson(), null));
     }
 
+    @GetMapping("/export/meals")
+    public ResponseEntity<BaseApiResponse<String>> exportMeals() {
+        return ResponseEntity.ok(BaseApiResponse.ok(dataInitService.exportMealToJson(), null));
+    }
+
     @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('CREATE_CATEGORY')")
     @org.springframework.web.bind.annotation.PostMapping("/import/upload/categories")
     public ResponseEntity<BaseApiResponse<String>> importCategoriesUpload(@org.springframework.web.bind.annotation.RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
@@ -72,6 +77,13 @@ public class DataController {
     @org.springframework.web.bind.annotation.PostMapping("/import/upload/ingredients")
     public ResponseEntity<BaseApiResponse<String>> importIngredientsUpload(@org.springframework.web.bind.annotation.RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
         String msg = dataInitService.importIngredientsFromFile(file);
+        return ResponseEntity.status(HttpStatus.CREATED).body(BaseApiResponse.ok(msg, null));
+    }
+
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('CREATE_MEAL')")
+    @org.springframework.web.bind.annotation.PostMapping("/import/upload/meals")
+    public ResponseEntity<BaseApiResponse<String>> importMealsUpload(@org.springframework.web.bind.annotation.RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
+        String msg = dataInitService.importMealsFromFile(file);
         return ResponseEntity.status(HttpStatus.CREATED).body(BaseApiResponse.ok(msg, null));
     }
 }
