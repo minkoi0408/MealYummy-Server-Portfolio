@@ -36,7 +36,6 @@ public class IngredientServiceImpl implements IngredientService {
 
         Ingredient ingredient = Ingredient.builder()
                 .name(formattedName)
-                .description(request.getDescription())
                 .active(true)
                 .build();
 
@@ -73,8 +72,8 @@ public class IngredientServiceImpl implements IngredientService {
             ingredient.setName(formattedName);
         }
 
-        if (request.getDescription() != null) {
-            ingredient.setDescription(request.getDescription());
+        if (request.getActive() != null) {
+            ingredient.setActive(request.getActive());
         }
 
         ingredientRepository.save(ingredient);
@@ -164,7 +163,6 @@ public class IngredientServiceImpl implements IngredientService {
                     String formatted = trimmed.substring(0, 1).toUpperCase() + trimmed.substring(1).toLowerCase();
                     return Ingredient.builder()
                         .name(formatted)
-                        .description(req.getDescription())
                         .active(true)
                         .build();
                 })

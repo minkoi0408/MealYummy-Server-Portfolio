@@ -35,20 +35,31 @@ public class MealServiceImpl implements MealService {
     private final CategoryRepository categoryRepository;
     private final TagRepository tagRepository;
     private final IngredientRepository ingredientRepository;
+    private final mealyummy.mealservice.service.cloudinary.CloudinaryService cloudinaryService;
 
     public MealResponseDTO convertMealToMealResponseDTO(Meal meal) {
-        PriceDTO price = meal.getPrice().convert();
-        List<CategoryDTO> categories = meal.getCategories().stream().map(Category::convertForMeal).toList();
-        List<TagDTO> tags = meal.getTags().stream().map(Tag::convertForMeal).toList();
-        List<MealIngredientDTO> ingredients = meal.getIngredients().stream().map(MealIngredient::convert).toList();
+        PriceDTO price = meal.getPrice() != null ? meal.getPrice().convert() : null;
+        List<CategoryDTO> categories = meal.getCategories() != null ? meal.getCategories().stream().map(Category::convertForMeal).toList() : List.of();
+        List<TagDTO> tags = meal.getTags() != null ? meal.getTags().stream().map(Tag::convertForMeal).toList() : List.of();
+        List<MealIngredientDTO> ingredients = meal.getIngredients() != null ? meal.getIngredients().stream().map(MealIngredient::convert).toList() : List.of();
+        List<mealyummy.mealservice.service.meal.dto.MealImageDTO> images = meal.getImages() != null ? meal.getImages().stream()
+                .map(img -> mealyummy.mealservice.service.meal.dto.MealImageDTO.builder()
+                        .url(img.getUrl())
+                        .isThumbnail(img.getIsThumbnail())
+                        .build())
+                .toList() : List.of();
 
         return MealResponseDTO.builder()
+                .id(meal.getId())
                 .name(meal.getName())
                 .description(meal.getDescription())
                 .price(price)
                 .categories(categories)
                 .tags(tags)
                 .ingredients(ingredients)
+                .images(images)
+                .createdAt(meal.getCreatedAt() != null ? mealyummy.mealservice.core.util.DateTimeFormat.formatInstantCustom(meal.getCreatedAt()) : null)
+                .active(meal.getActive())
                 .build();
     }
 
@@ -375,5 +386,32 @@ public class MealServiceImpl implements MealService {
             responses.add(create(req));
         }
         return responses;
+    }
+
+    @Override
+    @Transactional
+    public MealResponseDTO uploadMealImage(String id, org.springframework.web.multipart.MultipartFile file) {
+        Meal meal = mealRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.MEAL_NOT_FOUND));
+
+        try {
+            String imageUrl = cloudinaryService.uploadImage(file, "MealYummy/meals");
+            
+            if (meal.getImages() == null) {
+                meal.setImages(new java.util.ArrayList<>());
+            }
+            
+            mealyummy.mealservice.model.pojo.MealImage newImage = mealyummy.mealservice.model.pojo.MealImage.builder()
+                    .url(imageUrl)
+                    .isThumbnail(meal.getImages().isEmpty()) // if first image, make it main
+                    .build();
+                    
+            meal.getImages().add(newImage);
+            mealRepository.save(meal);
+            
+            return convertMealToMealResponseDTO(meal);
+        } catch (Exception e) {
+            throw new RuntimeException("Lỗi upload ảnh: " + e.getMessage(), e);
+        }
     }
 }

@@ -30,6 +30,7 @@ public class RAGService {
     private final RestTemplate restTemplate = new RestTemplate();
     private final MealRepository mealRepository;
     private final AiChatSessionRepository aiChatSessionRepository;
+    private final mealyummy.mealservice.service.meal.MealService mealService;
 
     @Value("${gemini.api.key}")
     private String geminiApiKey;
@@ -101,79 +102,131 @@ public class RAGService {
         return null;
     }
 
-    public String askQuestion(mealyummy.mealservice.service.rag.dto.ChatRequestDTO request, String username) {
+    static class MealScore {
+        Meal meal;
+        int score;
+        public MealScore(Meal meal, int score) {
+            this.meal = meal;
+            this.score = score;
+        }
+    }
+
+    public Object askQuestion(mealyummy.mealservice.service.rag.dto.ChatRequestDTO request, String username) {
         String question = request.getQuestion();
         
-        List<Double> questionEmbedding = getEmbedding(question);
-        if (questionEmbedding == null || questionEmbedding.isEmpty()) {
-            return "Xin lỗi, hệ thống AI đang gặp sự cố khi xử lý câu hỏi của bạn.";
-        }
-
-        List<Document> pipeline = List.of(
-            new Document("$vectorSearch",
-                new Document("index", "vector_index")
-                    .append("path", "embedding")
-                    .append("queryVector", questionEmbedding)
-                    .append("numCandidates", 50)
-                    .append("limit", 3)
-            ),
-            new Document("$project",
-                new Document("text", 1)
-                    .append("score", new Document("$meta", "vectorSearchScore"))
-            )
-        );
-
-        StringBuilder contextBuilder = new StringBuilder();
+        // 1. Trích xuất tag/category từ prompt người dùng
+        String extractPrompt = "Từ câu hỏi sau: '" + question + "'. Hãy trích xuất ra một mảng các từ khóa (tối đa 5 từ) liên quan đến tag, category, hoặc nguyên liệu món ăn. CHỈ trả về đúng 1 mảng JSON các chuỗi (ví dụ: [\"bò\", \"cay\", \"chay\"]), không kèm văn bản nào khác, không dùng markdown.";
+        String keywordsJson = generateChatResponse(extractPrompt, null, question);
+        
+        List<String> keywords = new ArrayList<>();
         try {
-            com.mongodb.client.AggregateIterable<Document> results = mongoTemplate.getCollection("vector_store").aggregate(pipeline);
-            for (Document doc : results) {
-                contextBuilder.append("- ").append(doc.getString("text")).append("\n\n");
-            }
+            String cleanJson = keywordsJson.replaceAll("(?s)```json(.*?)```", "$1").replaceAll("(?s)```(.*?)```", "$1").trim();
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            keywords = mapper.readValue(cleanJson, new com.fasterxml.jackson.core.type.TypeReference<List<String>>(){});
         } catch (Exception e) {
-            System.err.println("Lỗi khi tìm kiếm Vector trong MongoDB: " + e.getMessage());
-            return "Xin lỗi, hệ thống cơ sở dữ liệu y khoa đang bảo trì, vui lòng thử lại sau.";
+            keywords.add(question);
         }
 
-        String context = contextBuilder.toString().trim();
-        if (context.isEmpty()) {
-            return "Xin lỗi, tôi chưa được học kiến thức nào liên quan đến vấn đề này. Hãy cung cấp thêm thông tin.";
-        }
+        // 2. Tìm kiếm món ăn phù hợp nhất
+        List<Meal> allMeals = mealRepository.findAll();
+        List<MealScore> mealScores = new ArrayList<>();
+        
+        for (Meal meal : allMeals) {
+            if (!Boolean.TRUE.equals(meal.getActive())) continue;
+            
+            // Exclusion Check
+            if (request.getExcludedIngredientIds() != null && !request.getExcludedIngredientIds().isEmpty() && meal.getIngredients() != null) {
+                boolean hasExcluded = false;
+                for (var ing : meal.getIngredients()) {
+                    if (ing.getIngredientId() != null && request.getExcludedIngredientIds().contains(ing.getIngredientId())) {
+                        hasExcluded = true;
+                        break;
+                    }
+                }
+                if (hasExcluded) continue;
+            }
 
-        List<Meal> meals = mealRepository.findAll();
-        if (meals.size() > 10) {
-            java.util.Collections.shuffle(meals);
-            meals = meals.subList(0, 10);
+            // Category Filter Check
+            if (request.getCategoryIds() != null && !request.getCategoryIds().isEmpty()) {
+                boolean hasCategory = false;
+                if (meal.getCategories() != null) {
+                    for (var cat : meal.getCategories()) {
+                        if (request.getCategoryIds().contains(cat.getId())) {
+                            hasCategory = true;
+                            break;
+                        }
+                    }
+                }
+                if (!hasCategory) continue;
+            }
+
+            // Tag Filter Check
+            if (request.getTagIds() != null && !request.getTagIds().isEmpty()) {
+                boolean hasTag = false;
+                if (meal.getTags() != null) {
+                    for (var tag : meal.getTags()) {
+                        if (request.getTagIds().contains(tag.getId())) {
+                            hasTag = true;
+                            break;
+                        }
+                    }
+                }
+                if (!hasTag) continue;
+            }
+
+            int score = 0;
+            String nameLower = meal.getName() != null ? meal.getName().toLowerCase() : "";
+            String descLower = meal.getDescription() != null ? meal.getDescription().toLowerCase() : "";
+            
+            for (String kw : keywords) {
+                String kLower = kw.toLowerCase();
+                if (nameLower.contains(kLower)) score += 3;
+                if (descLower.contains(kLower)) score += 1;
+                
+                if (meal.getTags() != null) {
+                    for (var t : meal.getTags()) {
+                        if (t.getName() != null && t.getName().toLowerCase().contains(kLower)) score += 2;
+                    }
+                }
+                if (meal.getCategories() != null) {
+                    for (var c : meal.getCategories()) {
+                        if (c.getName() != null && c.getName().toLowerCase().contains(kLower)) score += 2;
+                    }
+                }
+            }
+            if (score > 0) {
+                mealScores.add(new MealScore(meal, score));
+            }
         }
         
-        StringBuilder menuBuilder = new StringBuilder();
-        for (Meal meal : meals) {
-            menuBuilder.append("- Món: ").append(meal.getName())
-                       .append(" (").append(meal.getDescription()).append(")\n");
-            if (meal.getNutrition() != null) {
-                menuBuilder.append("  [Calo: ").append(meal.getNutrition().getCalories())
-                           .append(", Protein: ").append(meal.getNutrition().getProtein()).append("g")
-                           .append(", Fat: ").append(meal.getNutrition().getFat()).append("g")
-                           .append(", Carbs: ").append(meal.getNutrition().getCarbs()).append("g]\n");
-            }
-            if (meal.getImages() != null && !meal.getImages().isEmpty()) {
-                menuBuilder.append("  URL_Image: ").append(meal.getImages().get(0).getUrl()).append("\n");
+        mealScores.sort((a, b) -> Integer.compare(b.score, a.score));
+        
+        List<Meal> topMeals = mealScores.stream()
+                .limit(10)
+                .map(ms -> ms.meal)
+                .toList();
+
+        if (topMeals.isEmpty()) {
+            topMeals = allMeals.stream().limit(10).toList();
+        }
+
+        // 3. Map to DTO
+        List<Object> responseList = new ArrayList<>();
+        for (Meal m : topMeals) {
+            // Check if MealService is implemented as MealServiceImpl which contains convertMealToMealResponseDTO
+            // Since MealService is an interface, we might not be able to call convertMealToMealResponseDTO if it's not in the interface
+            // Let's just return the raw Meal or manually map to a Map to avoid lazy initialization issues.
+            // Wait, mealService is interface MealService. Let's cast it or just return Meal.
+            // We can fetch via get(id)
+            try {
+                responseList.add(mealService.get(m.getId()));
+            } catch (Exception e) {
+                responseList.add(m);
             }
         }
 
-        String systemInstruction = "Bạn là Bác sĩ Dinh dưỡng AI cực kỳ thông minh, thân thiện và tận tâm của nhà hàng MealYummy.\n" +
-                        "Nhiệm vụ của bạn:\n" +
-                        "1. Nếu người dùng cung cấp chiều cao và cân nặng, HÃY tự động tính chỉ số BMI, đánh giá tình trạng cơ thể (thiếu cân, bình thường, thừa cân, béo phì) và đưa ra lời nhận xét thấu cảm, động viên họ.\n" +
-                        "2. Dựa CHỦ YẾU VÀO các thông tin y khoa được cung cấp bên dưới, hãy giải đáp câu hỏi của họ một cách chuyên nghiệp, dễ hiểu.\n" +
-                        "3. BẮT BUỘC HÃY GỢI Ý 1-2 món ăn phù hợp nhất từ MENU CỦA NHÀ HÀNG dưới đây (Tuyệt đối không bịa ra món mới). KHI GỢI Ý, hãy ghi chú đầy đủ thông tin dinh dưỡng (Calo, Protein, Fat, Carbs) để khách hàng tham khảo.\n\n" +
-                        "--- THÔNG TIN Y KHOA (RAG CONTEXT) ---\n" +
-                        context + "\n" +
-                        "------------------------\n\n" +
-                        "--- MENU NHÀ HÀNG MEALYUMMY ---\n" +
-                        menuBuilder.toString();
-
-        String answer = generateChatResponse(systemInstruction, request.getHistory(), question);
-
-        if (username != null && !answer.contains("quá tải hoặc không phản hồi") && !answer.contains("Xin lỗi")) {
+        // Lưu lịch sử chat
+        if (username != null) {
             AiChatSession session = aiChatSessionRepository.findById(username).orElse(new AiChatSession(username, new ArrayList<>(), Instant.now()));
             List<AiChatSession.ChatMessage> history = new ArrayList<>();
             if (request.getHistory() != null) {
@@ -182,14 +235,14 @@ public class RAGService {
                 }
             }
             history.add(new AiChatSession.ChatMessage("user", question));
-            history.add(new AiChatSession.ChatMessage("model", answer));
+            history.add(new AiChatSession.ChatMessage("model", "Đã gợi ý " + responseList.size() + " món ăn phù hợp với yêu cầu của bạn."));
             
             session.setMessages(history);
             session.setUpdatedAt(Instant.now());
             aiChatSessionRepository.save(session);
         }
 
-        return answer;
+        return responseList;
     }
 
     private String generateChatResponse(String systemInstruction, List<mealyummy.mealservice.service.rag.dto.ChatRequestDTO.ChatMessageDTO> history, String currentQuestion) {

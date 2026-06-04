@@ -53,4 +53,25 @@ public class DataController {
     public ResponseEntity<BaseApiResponse<String>> exportCategories() {
         return ResponseEntity.ok(BaseApiResponse.ok(dataInitService.exportCategoryToJson(), null));
     }
+
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('CREATE_CATEGORY')")
+    @org.springframework.web.bind.annotation.PostMapping("/import/upload/categories")
+    public ResponseEntity<BaseApiResponse<String>> importCategoriesUpload(@org.springframework.web.bind.annotation.RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
+        String msg = dataInitService.importCategoriesFromFile(file);
+        return ResponseEntity.status(HttpStatus.CREATED).body(BaseApiResponse.ok(msg, null));
+    }
+
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('CREATE_TAG')")
+    @org.springframework.web.bind.annotation.PostMapping("/import/upload/tags")
+    public ResponseEntity<BaseApiResponse<String>> importTagsUpload(@org.springframework.web.bind.annotation.RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
+        String msg = dataInitService.importTagsFromFile(file);
+        return ResponseEntity.status(HttpStatus.CREATED).body(BaseApiResponse.ok(msg, null));
+    }
+
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('CREATE_INGREDIENT')")
+    @org.springframework.web.bind.annotation.PostMapping("/import/upload/ingredients")
+    public ResponseEntity<BaseApiResponse<String>> importIngredientsUpload(@org.springframework.web.bind.annotation.RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
+        String msg = dataInitService.importIngredientsFromFile(file);
+        return ResponseEntity.status(HttpStatus.CREATED).body(BaseApiResponse.ok(msg, null));
+    }
 }

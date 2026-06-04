@@ -117,4 +117,37 @@ public class DataService {
             throw new RuntimeException("Lỗi xuất JSON Category: " + e.getMessage());
         }
     }
+
+    @Transactional
+    public String importCategoriesFromFile(org.springframework.web.multipart.MultipartFile file) {
+        try {
+            List<CategoryDTO> categoryDTOs = objectMapper.readValue(file.getInputStream(), new TypeReference<List<CategoryDTO>>() {});
+            categoryService.createNestedBulk(categoryDTOs);
+            return "Import thành công " + categoryDTOs.size() + " categories từ file!";
+        } catch (Exception e) {
+            throw new RuntimeException("Lỗi import categories: " + e.getMessage());
+        }
+    }
+
+    @Transactional
+    public String importTagsFromFile(org.springframework.web.multipart.MultipartFile file) {
+        try {
+            List<TagDTO> dtos = objectMapper.readValue(file.getInputStream(), new TypeReference<List<TagDTO>>() {});
+            tagService.createBulk(dtos);
+            return "Import thành công " + dtos.size() + " tags từ file!";
+        } catch (Exception e) {
+            throw new RuntimeException("Lỗi import tags: " + e.getMessage());
+        }
+    }
+
+    @Transactional
+    public String importIngredientsFromFile(org.springframework.web.multipart.MultipartFile file) {
+        try {
+            List<IngredientDTO> dtos = objectMapper.readValue(file.getInputStream(), new TypeReference<List<IngredientDTO>>() {});
+            ingredientService.createBulk(dtos);
+            return "Import thành công " + dtos.size() + " ingredients từ file!";
+        } catch (Exception e) {
+            throw new RuntimeException("Lỗi import ingredients: " + e.getMessage());
+        }
+    }
 }

@@ -14,9 +14,6 @@ public class TagDTO {
     @Schema(description = "Tên tag", example = "")
     private String name;
 
-    @Schema(description = "Mô tả tag", example = "")
-    private String description;
-
     @Schema(description = "Thời gian tạo tag", accessMode = Schema.AccessMode.READ_ONLY)
     private String createdAt;
 

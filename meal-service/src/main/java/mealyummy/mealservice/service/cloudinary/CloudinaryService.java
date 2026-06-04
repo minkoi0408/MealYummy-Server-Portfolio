@@ -19,10 +19,14 @@ public class CloudinaryService {
     private final Cloudinary cloudinary;
 
     public String uploadImage(MultipartFile file) throws IOException {
-        log.info("Uploading image to Cloudinary...");
+        return uploadImage(file, "MealYummy/avatars");
+    }
+
+    public String uploadImage(MultipartFile file, String folder) throws IOException {
+        log.info("Uploading image to Cloudinary folder: {}", folder);
         Map<String, Object> uploadResult = cloudinary.uploader().upload(file.getBytes(),
                 ObjectUtils.asMap(
-                        "folder", "MealYummy/avatars",
+                        "folder", folder,
                         "public_id", UUID.randomUUID().toString(),
                         "overwrite", true,
                         "resource_type", "auto"));
