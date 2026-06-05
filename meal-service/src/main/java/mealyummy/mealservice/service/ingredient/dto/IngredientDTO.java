@@ -14,9 +14,6 @@ public class IngredientDTO {
     @Schema(description = "Tên nguyên liệu", example = "")
     private String name;
 
-    @Schema(description = "Mô tả nguyên liệu", example = "")
-    private String description;
-
     @Schema(description = "Thời gian tạo nguyên liệu", accessMode = Schema.AccessMode.READ_ONLY)
     private String createdAt;
 

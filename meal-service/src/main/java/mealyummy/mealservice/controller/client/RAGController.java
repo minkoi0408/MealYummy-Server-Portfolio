@@ -25,9 +25,9 @@ public class RAGController {
     }
 
     @PostMapping("/chat")
-    public ResponseEntity<BaseApiResponse<String>> chatWithAI(@RequestBody ChatRequestDTO request, java.security.Principal principal) {
+    public ResponseEntity<BaseApiResponse<Object>> chatWithAI(@RequestBody ChatRequestDTO request, java.security.Principal principal) {
         String username = principal != null ? principal.getName() : null;
-        String answer = ragService.askQuestion(request, username);
+        Object answer = ragService.askQuestion(request, username);
         return ResponseEntity.ok(BaseApiResponse.ok("Thành công", answer));
     }
 

@@ -39,8 +39,7 @@ public class CategoryServiceImpl implements CategoryService {
         }
 
         Category category = Category.builder()
-                .name(name)
-                .description(request.getDescription())
+                .name(request.getName())
                 .parentId(request.getParentId())
                 .build();
         categoryRepository.save(category);
@@ -114,8 +113,8 @@ public class CategoryServiceImpl implements CategoryService {
             category.setParentId(request.getParentId());
         }
 
-        if (request.getDescription() != null) {
-            category.setDescription(request.getDescription());
+        if (request.getActive() != null) {
+            category.setActive(request.getActive());
         }
 
         categoryRepository.save(category);
@@ -216,7 +215,6 @@ public class CategoryServiceImpl implements CategoryService {
                 // Nếu chưa có thì tạo mới
                 category = Category.builder()
                         .name(formattedName)
-                        .description(dto.getDescription())
                         .parentId(parentId) // Gắn ID của Cha truyền từ tham số vào đây
                         .active(true)
                         .build();

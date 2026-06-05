@@ -42,4 +42,8 @@ public class MealRequestDTO {
     @Valid // Kích hoạt kiểm tra validation cho từng phần tử trong list
     @Schema(description = "Danh sách nguyên liệu và định lượng")
     private List<MealIngredientDTO> ingredients;
+
+    @Valid
+    @Schema(description = "Thông tin dinh dưỡng")
+    private NutritionDTO nutrition;
 }

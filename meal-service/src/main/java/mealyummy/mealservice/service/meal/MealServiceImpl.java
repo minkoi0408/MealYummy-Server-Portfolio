@@ -35,20 +35,38 @@ public class MealServiceImpl implements MealService {
     private final CategoryRepository categoryRepository;
     private final TagRepository tagRepository;
     private final IngredientRepository ingredientRepository;
+    private final mealyummy.mealservice.service.cloudinary.CloudinaryService cloudinaryService;
 
     public MealResponseDTO convertMealToMealResponseDTO(Meal meal) {
-        PriceDTO price = meal.getPrice().convert();
-        List<CategoryDTO> categories = meal.getCategories().stream().map(Category::convertForMeal).toList();
-        List<TagDTO> tags = meal.getTags().stream().map(Tag::convertForMeal).toList();
-        List<MealIngredientDTO> ingredients = meal.getIngredients().stream().map(MealIngredient::convert).toList();
+        PriceDTO price = meal.getPrice() != null ? meal.getPrice().convert() : null;
+        List<CategoryDTO> categories = meal.getCategories() != null ? meal.getCategories().stream().map(Category::convertForMeal).toList() : List.of();
+        List<TagDTO> tags = meal.getTags() != null ? meal.getTags().stream().map(Tag::convertForMeal).toList() : List.of();
+        List<MealIngredientDTO> ingredients = meal.getIngredients() != null ? meal.getIngredients().stream().map(MealIngredient::convert).toList() : List.of();
+        List<mealyummy.mealservice.service.meal.dto.MealImageDTO> images = meal.getImages() != null ? meal.getImages().stream()
+                .map(img -> mealyummy.mealservice.service.meal.dto.MealImageDTO.builder()
+                        .url(img.getUrl())
+                        .isThumbnail(img.getIsThumbnail())
+                        .build())
+                .toList() : List.of();
 
         return MealResponseDTO.builder()
+                .id(meal.getId())
                 .name(meal.getName())
                 .description(meal.getDescription())
                 .price(price)
+                .nutrition(meal.getNutrition() != null ? mealyummy.mealservice.service.meal.dto.NutritionDTO.builder()
+                        .calories(meal.getNutrition().getCalories())
+                        .protein(meal.getNutrition().getProtein())
+                        .carbs(meal.getNutrition().getCarbs())
+                        .fat(meal.getNutrition().getFat())
+                        .fiber(meal.getNutrition().getFiber())
+                        .build() : null)
                 .categories(categories)
                 .tags(tags)
                 .ingredients(ingredients)
+                .images(images)
+                .createdAt(meal.getCreatedAt() != null ? mealyummy.mealservice.core.util.DateTimeFormat.formatInstantCustom(meal.getCreatedAt()) : null)
+                .active(meal.getActive())
                 .build();
     }
 
@@ -149,10 +167,22 @@ public class MealServiceImpl implements MealService {
                     .build();
         }).toList();
 
+        mealyummy.mealservice.model.pojo.Nutrition nutrition = null;
+        if (request.getNutrition() != null) {
+            nutrition = mealyummy.mealservice.model.pojo.Nutrition.builder()
+                    .calories(request.getNutrition().getCalories())
+                    .protein(request.getNutrition().getProtein())
+                    .carbs(request.getNutrition().getCarbs())
+                    .fat(request.getNutrition().getFat())
+                    .fiber(request.getNutrition().getFiber())
+                    .build();
+        }
+
         Meal meal = Meal.builder()
                 .name(formattedName)
                 .description(request.getDescription())
                 .price(mealPrice)
+                .nutrition(nutrition)
                 .categories(categories)
                 .tags(tags)
                 .ingredients(mealIngredients)
@@ -337,9 +367,21 @@ public class MealServiceImpl implements MealService {
                     .build();
         }).toList();
 
+        mealyummy.mealservice.model.pojo.Nutrition nutrition = null;
+        if (request.getNutrition() != null) {
+            nutrition = mealyummy.mealservice.model.pojo.Nutrition.builder()
+                    .calories(request.getNutrition().getCalories())
+                    .protein(request.getNutrition().getProtein())
+                    .carbs(request.getNutrition().getCarbs())
+                    .fat(request.getNutrition().getFat())
+                    .fiber(request.getNutrition().getFiber())
+                    .build();
+        }
+
         meal.setName(formattedName);
         meal.setDescription(request.getDescription());
         meal.setPrice(mealPrice);
+        meal.setNutrition(nutrition);
         meal.setCategories(categories);
         meal.setTags(tags);
         meal.setIngredients(mealIngredients);
@@ -372,8 +414,40 @@ public class MealServiceImpl implements MealService {
         }
         List<MealResponseDTO> responses = new java.util.ArrayList<>();
         for (MealRequestDTO req : requests) {
+            String formattedName = req.getName().trim();
+            formattedName = formattedName.substring(0, 1).toUpperCase() + formattedName.substring(1).toLowerCase();
+            if (mealRepository.existsByName(formattedName)) {
+                continue; // Skip if meal already exists
+            }
             responses.add(create(req));
         }
         return responses;
+    }
+
+    @Override
+    @Transactional
+    public MealResponseDTO uploadMealImage(String id, org.springframework.web.multipart.MultipartFile file) {
+        Meal meal = mealRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.MEAL_NOT_FOUND));
+
+        try {
+            String imageUrl = cloudinaryService.uploadImage(file, "MealYummy/meals");
+            
+            if (meal.getImages() == null) {
+                meal.setImages(new java.util.ArrayList<>());
+            }
+            
+            mealyummy.mealservice.model.pojo.MealImage newImage = mealyummy.mealservice.model.pojo.MealImage.builder()
+                    .url(imageUrl)
+                    .isThumbnail(meal.getImages().isEmpty()) // if first image, make it main
+                    .build();
+                    
+            meal.getImages().add(newImage);
+            mealRepository.save(meal);
+            
+            return convertMealToMealResponseDTO(meal);
+        } catch (Exception e) {
+            throw new RuntimeException("Lỗi upload ảnh: " + e.getMessage(), e);
+        }
     }
 }

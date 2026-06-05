@@ -2,18 +2,32 @@
   {
     "name": "Bánh mì",
     "children": [
-      { "name": "Bánh mì mặn" },
-      { "name": "Bánh mì chay" },
-      { "name": "Bánh mì ngọt" }
+      {
+        "name": "Bánh mì mặn"
+      },
+      {
+        "name": "Bánh mì chay"
+      },
+      {
+        "name": "Bánh mì ngọt"
+      }
     ]
   },
   {
     "name": "Đồ ngọt",
     "children": [
-      { "name": "Chè" },
-      { "name": "Rau câu" },
-      { "name": "Bánh flan" },
-      { "name": "Kem" }
+      {
+        "name": "Chè"
+      },
+      {
+        "name": "Rau câu"
+      },
+      {
+        "name": "Bánh flan"
+      },
+      {
+        "name": "Kem"
+      }
     ]
   },
   {
@@ -22,130 +36,436 @@
       {
         "name": "Cà phê",
         "children": [
-          { "name": "Cà phê pha máy" },
-          { "name": "Cà phê pha phin" },
-          { "name": "Cà phê túi lọc" }
+          {
+            "name": "Cà phê pha máy"
+          },
+          {
+            "name": "Cà phê pha phin"
+          },
+          {
+            "name": "Cà phê túi lọc"
+          }
         ]
       },
       {
         "name": "Trà",
         "children": [
-          { "name": "Trà trái cây" },
-          { "name": "Trà thảo mộc" },
-          { "name": "Trà nguyên bản" }
+          {
+            "name": "Trà trái cây"
+          },
+          {
+            "name": "Trà thảo mộc"
+          },
+          {
+            "name": "Trà nguyên bản"
+          }
         ]
       },
-      { "name": "Trà sữa" },
-      { "name": "Sinh tố" },
-      { "name": "Nước ép" }
+      {
+        "name": "Trà sữa"
+      },
+      {
+        "name": "Sinh tố"
+      },
+      {
+        "name": "Nước ép"
+      }
     ]
   },
   {
     "name": "Đồ uống có cồn",
     "children": [
-      { "name": "Cocktail" },
-      { "name": "Mocktail" },
-      { "name": "Bia" },
-      { "name": "Rượu vang" },
-      { "name": "Rượu mạnh" }
+      {
+        "name": "Cocktail"
+      },
+      {
+        "name": "Mocktail"
+      },
+      {
+        "name": "Bia"
+      },
+      {
+        "name": "Rượu vang"
+      },
+      {
+        "name": "Rượu mạnh"
+      }
     ]
   },
   {
     "name": "Món cơm",
     "children": [
-      { "name": "Cơm đĩa" },
-      { "name": "Cơm chiên" },
-      { "name": "Cơm niêu" },
-      { "name": "Cơm thố" }
+      {
+        "name": "Cơm đĩa"
+      },
+      {
+        "name": "Cơm chiên"
+      },
+      {
+        "name": "Cơm niêu"
+      },
+      {
+        "name": "Cơm thố"
+      }
     ]
   },
   {
     "name": "Món xôi",
     "children": [
-      { "name": "Xôi mặn" },
-      { "name": "Xôi ngọt" }
+      {
+        "name": "Xôi mặn"
+      },
+      {
+        "name": "Xôi ngọt"
+      }
     ]
   },
   {
     "name": "Món bún",
     "children": [
-      { "name": "Bún nước" },
-      { "name": "Bún khô" },
-      { "name": "Bún trộn" }
+      {
+        "name": "Bún nước"
+      },
+      {
+        "name": "Bún khô"
+      },
+      {
+        "name": "Bún trộn"
+      }
     ]
   },
   {
     "name": "Món phở",
     "children": [
-      { "name": "Phở nước" },
-      { "name": "Phở trộn" },
-      { "name": "Phở cuốn" }
+      {
+        "name": "Phở nước"
+      },
+      {
+        "name": "Phở trộn"
+      },
+      {
+        "name": "Phở cuốn"
+      }
     ]
   },
   {
     "name": "Món mì",
     "children": [
-      { "name": "Mì nước" },
-      { "name": "Mì xào" },
-      { "name": "Mì trộn" }
+      {
+        "name": "Mì nước"
+      },
+      {
+        "name": "Mì xào"
+      },
+      {
+        "name": "Mì trộn"
+      }
     ]
   },
-  { "name": "Món cháo" },
-  { "name": "Món súp" },
-  { "name": "Món canh" },
-  { "name": "Món lẩu" },
-  { "name": "Món nướng" },
-  { "name": "Món chiên" },
-  { "name": "Món xào" },
-  { "name": "Món hấp" },
-  { "name": "Món luộc" },
-  { "name": "Món kho" },
-  { "name": "Món rim" },
-  { "name": "Món gỏi" },
-  { "name": "Món cuốn" },
-  { "name": "Món hầm" },
-  { "name": "Món tiềm" },
+  {
+    "name": "Món cháo"
+  },
+  {
+    "name": "Món súp"
+  },
+  {
+    "name": "Món canh"
+  },
+  {
+    "name": "Món lẩu"
+  },
+  {
+    "name": "Món nướng"
+  },
+  {
+    "name": "Món chiên"
+  },
+  {
+    "name": "Món xào"
+  },
+  {
+    "name": "Món hấp"
+  },
+  {
+    "name": "Món luộc"
+  },
+  {
+    "name": "Món kho"
+  },
+  {
+    "name": "Món rim"
+  },
+  {
+    "name": "Món gỏi"
+  },
+  {
+    "name": "Món cuốn"
+  },
+  {
+    "name": "Món hầm"
+  },
+  {
+    "name": "Món tiềm"
+  },
   {
     "name": "Hải sản",
     "children": [
-      { "name": "Cá" },
-      { "name": "Tôm" },
-      { "name": "Cua" },
-      { "name": "Ghẹ" },
-      { "name": "Mực" },
-      { "name": "Bạch tuộc" },
-      { "name": "Ốc" },
-      { "name": "Nghêu" },
-      { "name": "Sò" }
+      {
+        "name": "Cá"
+      },
+      {
+        "name": "Tôm"
+      },
+      {
+        "name": "Cua"
+      },
+      {
+        "name": "Ghẹ"
+      },
+      {
+        "name": "Mực"
+      },
+      {
+        "name": "Bạch tuộc"
+      },
+      {
+        "name": "Ốc"
+      },
+      {
+        "name": "Nghêu"
+      },
+      {
+        "name": "Sò"
+      }
     ]
   },
   {
     "name": "Món từ thịt",
     "children": [
-      { "name": "Thịt heo" },
-      { "name": "Thịt bò" },
-      { "name": "Thịt dê" },
-      { "name": "Thịt cừu" },
-      { "name": "Thịt ếch" }
+      {
+        "name": "Thịt heo"
+      },
+      {
+        "name": "Thịt bò"
+      },
+      {
+        "name": "Thịt dê"
+      },
+      {
+        "name": "Thịt cừu"
+      },
+      {
+        "name": "Thịt ếch"
+      }
     ]
   },
-  { "name": "Món từ gia cầm" },
+  {
+    "name": "Món từ gia cầm"
+  },
   {
     "name": "Món từ rau củ quả",
     "children": [
-      { "name": "Salad" },
-      { "name": "Món nấm" },
-      { "name": "Món rau xanh" },
-      { "name": "Món củ quả" }
+      {
+        "name": "Salad"
+      },
+      {
+        "name": "Món nấm"
+      },
+      {
+        "name": "Món rau xanh"
+      },
+      {
+        "name": "Món củ quả"
+      }
     ]
   },
-  { "name": "Món từ trứng" },
-  { "name": "Thức ăn nhanh" },
-  { "name": "Đồ ăn vặt đường phố" },
-  { "name": "Đồ hộp" },
-  { "name": "Thực phẩm chế biến sẵn" },
-  { "name": "Nước chấm" },
-  { "name": "Nước sốt" },
-  { "name": "Bánh mặn" },
-  { "name": "Bánh ngọt" }
+  {
+    "name": "Món từ trứng"
+  },
+  {
+    "name": "Thức ăn nhanh"
+  },
+  {
+    "name": "Đồ ăn vặt đường phố"
+  },
+  {
+    "name": "Đồ hộp"
+  },
+  {
+    "name": "Thực phẩm chế biến sẵn"
+  },
+  {
+    "name": "Nước chấm"
+  },
+  {
+    "name": "Nước sốt"
+  },
+  {
+    "name": "Bánh mặn"
+  },
+  {
+    "name": "Bánh ngọt"
+  },
+  {
+    "name": "Món Salad",
+    "children": [
+      {
+        "name": "Salad rau xanh"
+      },
+      {
+        "name": "Salad trái cây"
+      },
+      {
+        "name": "Salad protein"
+      }
+    ]
+  },
+  {
+    "name": "Đồ uống Detox"
+  },
+  {
+    "name": "Sinh tố dinh dưỡng (Smoothie)"
+  },
+  {
+    "name": "Sữa hạt",
+    "children": [
+      {
+        "name": "Sữa hạt điều"
+      },
+      {
+        "name": "Sữa óc chó"
+      },
+      {
+        "name": "Sữa đậu nành"
+      },
+      {
+        "name": "Sữa yến mạch"
+      }
+    ]
+  },
+  {
+    "name": "Ngũ cốc & Hạt"
+  },
+  {
+    "name": "Món ăn vặt lành mạnh (Healthy Snack)"
+  },
+  {
+    "name": "Súp & Canh dinh dưỡng"
+  },
+  {
+    "name": "Bữa ăn sáng yến mạch (Oatmeal)"
+  },
+  {
+    "name": "Bánh nguyên cám/Bánh lành mạnh"
+  },
+  {
+    "name": "Ẩm thực Fusion (Giao thoa)",
+    "children": [
+      {
+        "name": "Á - Âu"
+      },
+      {
+        "name": "Việt - Nhật"
+      },
+      {
+        "name": "Thái - Việt"
+      }
+    ]
+  },
+  {
+    "name": "Đồ nướng BBQ",
+    "children": [
+      {
+        "name": "Nướng Hàn Quốc"
+      },
+      {
+        "name": "Nướng Churrasco (Brazil)"
+      },
+      {
+        "name": "Nướng BBQ Mỹ"
+      }
+    ]
+  },
+  {
+    "name": "Món ăn eat clean nâng cao",
+    "children": [
+      {
+        "name": "Buddha Bowl"
+      },
+      {
+        "name": "Poke Bowl"
+      },
+      {
+        "name": "Açai Bowl"
+      }
+    ]
+  },
+  {
+    "name": "Lẩu đặc biệt",
+    "children": [
+      {
+        "name": "Lẩu thái Tomyum"
+      },
+      {
+        "name": "Lẩu Tứ Xuyên"
+      },
+      {
+        "name": "Lẩu nấm Ashima"
+      },
+      {
+        "name": "Lẩu bò nhúng dấm"
+      }
+    ]
+  },
+  {
+    "name": "Pizza & Pasta",
+    "children": [
+      {
+        "name": "Pizza đế mỏng"
+      },
+      {
+        "name": "Pizza đế dày"
+      },
+      {
+        "name": "Mì ý sốt kem"
+      },
+      {
+        "name": "Mì ý sốt cà"
+      }
+    ]
+  },
+  {
+    "name": "Sushi & Sashimi",
+    "children": [
+      {
+        "name": "Nigiri"
+      },
+      {
+        "name": "Maki"
+      },
+      {
+        "name": "Sashimi cá hồi"
+      },
+      {
+        "name": "Sashimi tổng hợp"
+      }
+    ]
+  },
+  {
+    "name": "Bánh truyền thống Việt Nam",
+    "children": [
+      {
+        "name": "Bánh xèo"
+      },
+      {
+        "name": "Bánh khọt"
+      },
+      {
+        "name": "Bánh chưng/Bánh tét"
+      },
+      {
+        "name": "Bánh da lợn"
+      }
+    ]
+  }
 ]
