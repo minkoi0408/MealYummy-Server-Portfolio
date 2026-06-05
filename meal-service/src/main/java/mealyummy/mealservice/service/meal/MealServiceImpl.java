@@ -54,6 +54,13 @@ public class MealServiceImpl implements MealService {
                 .name(meal.getName())
                 .description(meal.getDescription())
                 .price(price)
+                .nutrition(meal.getNutrition() != null ? mealyummy.mealservice.service.meal.dto.NutritionDTO.builder()
+                        .calories(meal.getNutrition().getCalories())
+                        .protein(meal.getNutrition().getProtein())
+                        .carbs(meal.getNutrition().getCarbs())
+                        .fat(meal.getNutrition().getFat())
+                        .fiber(meal.getNutrition().getFiber())
+                        .build() : null)
                 .categories(categories)
                 .tags(tags)
                 .ingredients(ingredients)
@@ -160,10 +167,22 @@ public class MealServiceImpl implements MealService {
                     .build();
         }).toList();
 
+        mealyummy.mealservice.model.pojo.Nutrition nutrition = null;
+        if (request.getNutrition() != null) {
+            nutrition = mealyummy.mealservice.model.pojo.Nutrition.builder()
+                    .calories(request.getNutrition().getCalories())
+                    .protein(request.getNutrition().getProtein())
+                    .carbs(request.getNutrition().getCarbs())
+                    .fat(request.getNutrition().getFat())
+                    .fiber(request.getNutrition().getFiber())
+                    .build();
+        }
+
         Meal meal = Meal.builder()
                 .name(formattedName)
                 .description(request.getDescription())
                 .price(mealPrice)
+                .nutrition(nutrition)
                 .categories(categories)
                 .tags(tags)
                 .ingredients(mealIngredients)
@@ -348,9 +367,21 @@ public class MealServiceImpl implements MealService {
                     .build();
         }).toList();
 
+        mealyummy.mealservice.model.pojo.Nutrition nutrition = null;
+        if (request.getNutrition() != null) {
+            nutrition = mealyummy.mealservice.model.pojo.Nutrition.builder()
+                    .calories(request.getNutrition().getCalories())
+                    .protein(request.getNutrition().getProtein())
+                    .carbs(request.getNutrition().getCarbs())
+                    .fat(request.getNutrition().getFat())
+                    .fiber(request.getNutrition().getFiber())
+                    .build();
+        }
+
         meal.setName(formattedName);
         meal.setDescription(request.getDescription());
         meal.setPrice(mealPrice);
+        meal.setNutrition(nutrition);
         meal.setCategories(categories);
         meal.setTags(tags);
         meal.setIngredients(mealIngredients);

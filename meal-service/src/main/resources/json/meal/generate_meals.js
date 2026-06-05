@@ -155,6 +155,27 @@ for (let i = 1; i <= numMealsToGenerate; i++) {
     const minPrice = randomInt(35, 80) * 1000;
     const maxPrice = minPrice + randomInt(10, 50) * 1000;
 
+    let calBase = 300;
+    let proBase = 20;
+    let fatBase = 5;
+    let carbBase = 30;
+    
+    if (selectedTypeKey === 'SALAD') {
+        calBase = 250; proBase = 15; fatBase = 10; carbBase = 20;
+    } else if (selectedTypeKey === 'SMOOTHIE') {
+        calBase = 200; proBase = 5; fatBase = 2; carbBase = 40;
+    } else {
+        calBase = 400; proBase = 30; fatBase = 15; carbBase = 50;
+    }
+
+    const nutrition = {
+        calories: calBase + randomInt(0, 150),
+        protein: proBase + randomInt(0, 20),
+        fat: fatBase + randomInt(0, 10),
+        carbs: carbBase + randomInt(0, 30),
+        fiber: randomInt(3, 15)
+    };
+
     const selectedIngs = [];
     const addIng = (ing, valRange, unit) => {
         if(ing && !selectedIngs.find(x => x.ingredientId === ing.id)) {
@@ -196,6 +217,7 @@ for (let i = 1; i <= numMealsToGenerate; i++) {
             minPrice: minPrice,
             maxPrice: maxPrice
         },
+        nutrition: nutrition,
         categoryIds: [...new Set(selectedCats)],
         tagIds: [...new Set(selectedTags)],
         ingredients: selectedIngs

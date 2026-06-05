@@ -32,6 +32,8 @@ public class MealResponseDTO {
 
     private List<MealIngredientDTO> ingredients;
 
+    private NutritionDTO nutrition;
+
     // --- VIEW INTERNAL: Dành cho Admin/Hệ thống ---
 
     private String createdAt; // Format: T3, 10:30:50 20-02-2026
