@@ -1,54 +1,248 @@
 [
-  { "name": "Ẩm thực Thái Lan" },
-  { "name": "Ẩm thực Hàn Quốc" },
-  { "name": "Ẩm thực Nhật Bản" },
-  { "name": "Ẩm thực Trung Hoa" },
-  { "name": "Ẩm thực Âu Mỹ" },
-  { "name": "Ẩm thực Ý" },
-  { "name": "Ẩm thực Ấn Độ" },
-  { "name": "Đặc sản miền Bắc" },
-  { "name": "Đặc sản miền Trung" },
-  { "name": "Đặc sản miền Nam" },
-  { "name": "Thuần chay" },
-  { "name": "Chay có trứng sữa" },
-  { "name": "Chay giả mặn" },
-  { "name": "Thực đơn Eat Clean" },
-  { "name": "Thực đơn Healthy" },
-  { "name": "Thực đơn Keto" },
-  { "name": "Thực đơn Low carb" },
-  { "name": "Thực đơn giảm cân" },
-  { "name": "Thực đơn tăng cơ" },
-  { "name": "Dinh dưỡng cho mẹ" },
-  { "name": "Dinh dưỡng cho bé" },
-  { "name": "Dinh dưỡng người cao tuổi" },
-  { "name": "Dinh dưỡng người tiểu đường" },
-  { "name": "Dinh dưỡng cao huyết áp" },
-  { "name": "Thực đơn không Gluten" },
-  { "name": "Thực đơn bồi bổ sức khỏe" },
-  { "name": "Bữa sáng" },
-  { "name": "Bữa trưa" },
-  { "name": "Bữa tối" },
-  { "name": "Bữa ăn lãng mạn" },
-  { "name": "Tiệc sinh nhật" },
-  { "name": "Thực đơn duy trì vóc dáng" },
-  { "name": "Bữa ăn trước khi tập (Pre-workout)" },
-  { "name": "Bữa ăn phục hồi sau tập (Post-workout)" },
-  { "name": "Giàu Protein" },
-  { "name": "Ít Calo (< 400 Kcal)" },
-  { "name": "Chỉ số đường huyết thấp (Low GI)" },
-  { "name": "Giàu chất xơ" },
-  { "name": "Giàu Omega-3" },
-  { "name": "Nhiều Vitamin C" },
-  { "name": "Nhiều Canxi" },
-  { "name": "Tốt cho tim mạch" },
-  { "name": "Hỗ trợ tiêu hóa" },
-  { "name": "Tăng cường miễn dịch" },
-  { "name": "Detox thanh lọc cơ thể" },
-  { "name": "Giảm căng thẳng/Tốt cho giấc ngủ" },
-  { "name": "Thực đơn Địa Trung Hải (Mediterranean)" },
-  { "name": "Thực đơn Paleo" },
-  { "name": "Thực đơn DASH (Trị cao huyết áp)" },
-  { "name": "Thực đơn WFPB (Thuần thực vật toàn phần)" },
-  { "name": "Bữa phụ (Snack)" },
-  { "name": "Bữa ăn thay thế (Meal Replacement)" }
+  {
+    "name": "Ẩm thực Thái Lan"
+  },
+  {
+    "name": "Ẩm thực Hàn Quốc"
+  },
+  {
+    "name": "Ẩm thực Nhật Bản"
+  },
+  {
+    "name": "Ẩm thực Trung Hoa"
+  },
+  {
+    "name": "Ẩm thực Âu Mỹ"
+  },
+  {
+    "name": "Ẩm thực Ý"
+  },
+  {
+    "name": "Ẩm thực Ấn Độ"
+  },
+  {
+    "name": "Đặc sản miền Bắc"
+  },
+  {
+    "name": "Đặc sản miền Trung"
+  },
+  {
+    "name": "Đặc sản miền Nam"
+  },
+  {
+    "name": "Thuần chay"
+  },
+  {
+    "name": "Chay có trứng sữa"
+  },
+  {
+    "name": "Chay giả mặn"
+  },
+  {
+    "name": "Thực đơn Eat Clean"
+  },
+  {
+    "name": "Thực đơn Healthy"
+  },
+  {
+    "name": "Thực đơn Keto"
+  },
+  {
+    "name": "Thực đơn Low carb"
+  },
+  {
+    "name": "Thực đơn giảm cân"
+  },
+  {
+    "name": "Thực đơn tăng cơ"
+  },
+  {
+    "name": "Dinh dưỡng cho mẹ"
+  },
+  {
+    "name": "Dinh dưỡng cho bé"
+  },
+  {
+    "name": "Dinh dưỡng người cao tuổi"
+  },
+  {
+    "name": "Dinh dưỡng người tiểu đường"
+  },
+  {
+    "name": "Dinh dưỡng cao huyết áp"
+  },
+  {
+    "name": "Thực đơn không Gluten"
+  },
+  {
+    "name": "Thực đơn bồi bổ sức khỏe"
+  },
+  {
+    "name": "Bữa sáng"
+  },
+  {
+    "name": "Bữa trưa"
+  },
+  {
+    "name": "Bữa tối"
+  },
+  {
+    "name": "Bữa ăn lãng mạn"
+  },
+  {
+    "name": "Tiệc sinh nhật"
+  },
+  {
+    "name": "Thực đơn duy trì vóc dáng"
+  },
+  {
+    "name": "Bữa ăn trước khi tập (Pre-workout)"
+  },
+  {
+    "name": "Bữa ăn phục hồi sau tập (Post-workout)"
+  },
+  {
+    "name": "Giàu Protein"
+  },
+  {
+    "name": "Ít Calo (< 400 Kcal)"
+  },
+  {
+    "name": "Chỉ số đường huyết thấp (Low GI)"
+  },
+  {
+    "name": "Giàu chất xơ"
+  },
+  {
+    "name": "Giàu Omega-3"
+  },
+  {
+    "name": "Nhiều Vitamin C"
+  },
+  {
+    "name": "Nhiều Canxi"
+  },
+  {
+    "name": "Tốt cho tim mạch"
+  },
+  {
+    "name": "Hỗ trợ tiêu hóa"
+  },
+  {
+    "name": "Tăng cường miễn dịch"
+  },
+  {
+    "name": "Detox thanh lọc cơ thể"
+  },
+  {
+    "name": "Giảm căng thẳng/Tốt cho giấc ngủ"
+  },
+  {
+    "name": "Thực đơn Địa Trung Hải (Mediterranean)"
+  },
+  {
+    "name": "Thực đơn Paleo"
+  },
+  {
+    "name": "Thực đơn DASH (Trị cao huyết áp)"
+  },
+  {
+    "name": "Thực đơn WFPB (Thuần thực vật toàn phần)"
+  },
+  {
+    "name": "Bữa phụ (Snack)"
+  },
+  {
+    "name": "Bữa ăn thay thế (Meal Replacement)"
+  },
+  {
+    "name": "Dành cho người sành ăn"
+  },
+  {
+    "name": "Món ăn đường phố 5 sao"
+  },
+  {
+    "name": "Hương vị tuổi thơ"
+  },
+  {
+    "name": "Ẩm thực hoàng gia"
+  },
+  {
+    "name": "Món ăn chữa lành (Comfort food)"
+  },
+  {
+    "name": "Bữa tiệc BBQ"
+  },
+  {
+    "name": "Buffet gia đình"
+  },
+  {
+    "name": "Tráng miệng hảo hạng"
+  },
+  {
+    "name": "Đồ uống sáng tạo"
+  },
+  {
+    "name": "Cà phê đặc sản"
+  },
+  {
+    "name": "Món chay Fusion"
+  },
+  {
+    "name": "Thực đơn Ayurvedic"
+  },
+  {
+    "name": "Phục hồi chấn thương"
+  },
+  {
+    "name": "Tốt cho não bộ"
+  },
+  {
+    "name": "Làm đẹp da"
+  },
+  {
+    "name": "Chống lão hóa"
+  },
+  {
+    "name": "Tốt cho thị lực"
+  },
+  {
+    "name": "Giàu kẽm"
+  },
+  {
+    "name": "Giàu sắt"
+  },
+  {
+    "name": "Tăng cường sinh lý"
+  },
+  {
+    "name": "Phát triển chiều cao"
+  },
+  {
+    "name": "Bữa ăn học đường"
+  },
+  {
+    "name": "Thực đơn Omad"
+  },
+  {
+    "name": "Nhịn ăn gián đoạn (IF)"
+  },
+  {
+    "name": "Thực đơn Carnivore"
+  },
+  {
+    "name": "Thực đơn Pescatarian"
+  },
+  {
+    "name": "Thực đơn Flexitarian"
+  },
+  {
+    "name": "Món ăn dã ngoại"
+  },
+  {
+    "name": "Món nhậu lai rai"
+  },
+  {
+    "name": "Đồ ăn vặt văn phòng"
+  }
 ]

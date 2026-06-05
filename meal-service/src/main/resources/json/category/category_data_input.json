@@ -357,5 +357,115 @@
   },
   {
     "name": "Bánh nguyên cám/Bánh lành mạnh"
+  },
+  {
+    "name": "Ẩm thực Fusion (Giao thoa)",
+    "children": [
+      {
+        "name": "Á - Âu"
+      },
+      {
+        "name": "Việt - Nhật"
+      },
+      {
+        "name": "Thái - Việt"
+      }
+    ]
+  },
+  {
+    "name": "Đồ nướng BBQ",
+    "children": [
+      {
+        "name": "Nướng Hàn Quốc"
+      },
+      {
+        "name": "Nướng Churrasco (Brazil)"
+      },
+      {
+        "name": "Nướng BBQ Mỹ"
+      }
+    ]
+  },
+  {
+    "name": "Món ăn eat clean nâng cao",
+    "children": [
+      {
+        "name": "Buddha Bowl"
+      },
+      {
+        "name": "Poke Bowl"
+      },
+      {
+        "name": "Açai Bowl"
+      }
+    ]
+  },
+  {
+    "name": "Lẩu đặc biệt",
+    "children": [
+      {
+        "name": "Lẩu thái Tomyum"
+      },
+      {
+        "name": "Lẩu Tứ Xuyên"
+      },
+      {
+        "name": "Lẩu nấm Ashima"
+      },
+      {
+        "name": "Lẩu bò nhúng dấm"
+      }
+    ]
+  },
+  {
+    "name": "Pizza & Pasta",
+    "children": [
+      {
+        "name": "Pizza đế mỏng"
+      },
+      {
+        "name": "Pizza đế dày"
+      },
+      {
+        "name": "Mì ý sốt kem"
+      },
+      {
+        "name": "Mì ý sốt cà"
+      }
+    ]
+  },
+  {
+    "name": "Sushi & Sashimi",
+    "children": [
+      {
+        "name": "Nigiri"
+      },
+      {
+        "name": "Maki"
+      },
+      {
+        "name": "Sashimi cá hồi"
+      },
+      {
+        "name": "Sashimi tổng hợp"
+      }
+    ]
+  },
+  {
+    "name": "Bánh truyền thống Việt Nam",
+    "children": [
+      {
+        "name": "Bánh xèo"
+      },
+      {
+        "name": "Bánh khọt"
+      },
+      {
+        "name": "Bánh chưng/Bánh tét"
+      },
+      {
+        "name": "Bánh da lợn"
+      }
+    ]
   }
 ]

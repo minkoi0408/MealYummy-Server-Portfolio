@@ -2,8 +2,19 @@ const fs = require('fs');
 const path = require('path');
 
 const ingredientsPath = path.join(__dirname, '../ingredient/ingredient_response.json');
+const tagsPath = path.join(__dirname, '../tag/tag_response.json');
+const categoriesPath = path.join(__dirname, '../category/category_response.json');
 const outputPath = path.join(__dirname, 'meal_data_input.json');
+
 const ingredients = JSON.parse(fs.readFileSync(ingredientsPath, 'utf8'));
+let allTags = [];
+let allCats = [];
+try {
+    allTags = JSON.parse(fs.readFileSync(tagsPath, 'utf8')).map(t => t.id).filter(id => id);
+    allCats = JSON.parse(fs.readFileSync(categoriesPath, 'utf8')).map(c => c.id).filter(id => id);
+} catch (e) {
+    console.log("Could not load tag or category responses, skipping dynamic tags/cats.");
+}
 
 const randomItem = (arr) => arr[Math.floor(Math.random() * arr.length)];
 const randomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
@@ -66,8 +77,16 @@ const sauces = ingredients.filter(i => /Tương|Sốt|Mắm|Dầu|Giấm|Mayonna
 const veganSauces = ingredients.filter(i => /Tương|Dầu|Giấm/.test(i.name) && !/Mắm/.test(i.name));
 const fruits = ingredients.filter(i => /Táo|Chuối|Bơ|Dâu|Cam|Chanh|Việt quất|Xoài|Đu đủ|Mâm xôi/.test(i.name));
 
-const generatedMeals = [];
-const numMealsToGenerate = 200;
+let generatedMeals = [];
+if (fs.existsSync(outputPath)) {
+    try {
+        generatedMeals = JSON.parse(fs.readFileSync(outputPath, 'utf8'));
+    } catch (e) {
+        console.error("Could not read existing meals, starting fresh.");
+    }
+}
+const initialCount = generatedMeals.length;
+const numMealsToGenerate = 1000;
 
 for (let i = 1; i <= numMealsToGenerate; i++) {
     // 25% chance of being vegan
@@ -85,6 +104,14 @@ for (let i = 1; i <= numMealsToGenerate; i++) {
     const selectedTags = shuffle(mealTypeInfo.tags).slice(0, randomInt(2, 3));
     if (isVegan) {
         selectedTags.push(VEGAN_TAG);
+    }
+    
+    // Mix in new dynamic premium tags and categories
+    if (allTags.length > 0) {
+        selectedTags.push(...shuffle(allTags).slice(0, randomInt(1, 3)));
+    }
+    if (allCats.length > 0 && Math.random() > 0.5) {
+        selectedCats.push(randomItem(allCats));
     }
 
     // Determine ingredients based on type & vegan
@@ -175,6 +202,5 @@ for (let i = 1; i <= numMealsToGenerate; i++) {
     });
 }
 
-// Since the user wants to completely remake the data with correct logic, we OVERWRITE the file.
 fs.writeFileSync(outputPath, JSON.stringify(generatedMeals, null, 2));
-console.log(`Successfully generated ${numMealsToGenerate} logically accurate meals and OVERWROTE ${outputPath}`);
+console.log(`Successfully appended ${numMealsToGenerate} logically accurate meals. Total meals in file: ${generatedMeals.length}`);
