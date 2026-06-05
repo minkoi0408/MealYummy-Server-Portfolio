@@ -42,6 +42,9 @@ public class NotificationServiceImpl implements NotificationService {
 
             helper.setTo(email);
             helper.setSubject(subJect);
+            
+            // Set sender với display name đẹp
+            helper.setFrom("huynhvuminhkhoi08042004@gmail.com", "MealYummy");
 
             helper.setText(htmlContent.formatted(otp, otpExpirationMinutes), true);
             mailSender.send(message);
@@ -49,6 +52,8 @@ public class NotificationServiceImpl implements NotificationService {
         } catch (Exception e) {
             log.error("Lỗi gửi email HTML OTP tới {}: {}", email, e.getMessage());
             log.info("=== [DEV] OTP cho {}: {} ===", email, otp);
+            // Throw exception để API trả về lỗi thay vì success
+            throw new AppException(ErrorCode.EMAIL_SEND_FAILED);
         }
     }
 
