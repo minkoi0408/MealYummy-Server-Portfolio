@@ -21,7 +21,6 @@ public class Ingredient {
     @Id
     private String id;
     private String name;
-    private String description;
     @CreatedDate
     private Instant createdAt;
 
@@ -32,7 +31,6 @@ public class Ingredient {
         return IngredientDTO.builder()
                 .id(this.getId())
                 .name(this.getName())
-                .description(this.getDescription())
                 .createdAt(DateTimeFormat.formatInstantCustom(this.getCreatedAt()))
                 .active(this.getActive())
                 .build();

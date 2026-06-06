@@ -1,0 +1,23 @@
+# Railway Nixpacks Configuration for MealYummy Backend
+# This file helps Railway build and deploy the Spring Boot application correctly
+
+[phases.setup]
+nixPkgs = ["maven", "jdk21"]
+
+[phases.build]
+cmds = [
+    "cd meal-service",
+    "mvn clean package -DskipTests -Dmaven.test.skip=true"
+]
+
+[phases.install]
+cmds = [
+    "mkdir -p /app",
+    "cp meal-service/target/*.jar /app/app.jar"
+]
+
+[start]
+cmd = "java -XX:+UseG1GC -XX:+UseStringDeduplication -Xms512m -Xmx1024m -jar /app/app.jar"
+
+[variables]
+MAVEN_OPTS = "-Xmx1024m"

@@ -96,4 +96,15 @@ public class MealController {
                 .status(HttpStatus.OK)
                 .body(BaseApiResponse.ok(msg, response));
     }
+
+    @PreAuthorize("hasAuthority('UPDATE_MEAL')")
+    @PostMapping("/{id}/images")
+    public ResponseEntity<BaseApiResponse<MealResponseDTO>> uploadMealImage(
+            @PathVariable String id, 
+            @RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
+        MealResponseDTO response = mealService.uploadMealImage(id, file);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(BaseApiResponse.ok("Upload ảnh món ăn thành công", response));
+    }
 }

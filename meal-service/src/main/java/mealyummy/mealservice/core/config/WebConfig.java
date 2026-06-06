@@ -9,7 +9,10 @@ import org.springframework.beans.factory.annotation.Value;
 @Configuration
 public class WebConfig implements WebMvcConfigurer{
 
-    @Value("${app.client-url:http://localhost:5173}")
+    @Value("${FRONTEND_URL:http://localhost:5173}")
+    private String frontendUrl;
+
+    @Value("${CLIENT_URL:http://localhost:5173}")
     private String clientUrl;
 
     @Bean
@@ -17,11 +20,18 @@ public class WebConfig implements WebMvcConfigurer{
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/**") // Chỉ áp dụng cho các đường dẫn bắt đầu bằng /api
-                        .allowedOrigins("http://localhost:5173", "http://127.0.0.1:5173", clientUrl) // Cho phép Frontend Vite
-                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // Các phương thức được phép
-                        .allowedHeaders("*") // Cho phép tất cả các Header
-                        .allowCredentials(true); // Quan trọng: Cho phép gửi kèm Cookie/Auth Header
+                registry.addMapping("/**")
+                        .allowedOrigins(
+                            "http://localhost:5173",
+                            "http://127.0.0.1:5173",
+                            frontendUrl,
+                            clientUrl,
+                            "https://mealyummy.vercel.app"  // Hardcode Vercel domain
+                        )
+                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
+                        .allowedHeaders("*")
+                        .allowCredentials(true)
+                        .maxAge(3600); // Cache preflight for 1 hour
             }
         };
     }

@@ -19,7 +19,6 @@ import java.time.Instant;
 public class Category {
     private String id;
     private String name;
-    private String description;
     private String parentId;
 
     @CreatedDate
@@ -31,7 +30,6 @@ public class Category {
         return CategoryDTO.builder()
                 .id(this.getId())
                 .name(this.getName())
-                .description(this.getDescription())
                 .parentId(this.getParentId())
                 .createdAt(DateTimeFormat.formatInstantCustom(this.getCreatedAt()))
                 .active(this.getActive())
