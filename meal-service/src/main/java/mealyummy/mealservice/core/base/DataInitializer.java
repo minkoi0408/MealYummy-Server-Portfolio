@@ -6,8 +6,13 @@ import mealyummy.mealservice.model.entity.auth.Permission;
 import mealyummy.mealservice.model.entity.auth.Role;
 import mealyummy.mealservice.model.repository.PermissionRepository;
 import mealyummy.mealservice.model.repository.RoleRepository;
+import mealyummy.mealservice.model.repository.MealRepository;
+import mealyummy.mealservice.model.entity.food.Meal;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.bson.Document;
+import java.util.Map;
 
 import java.time.Instant;
 import java.util.List;
@@ -19,11 +24,69 @@ public class DataInitializer implements CommandLineRunner {
 
     private final RoleRepository roleRepository;
     private final PermissionRepository permissionRepository;
+    private final MealRepository mealRepository;
+
+
+
+    private final MongoTemplate mongoTemplate;
 
     @Override
     public void run(String... args) throws Exception {
         initRoles();
         initPermission();
+    }
+
+    private void fixMissingData() {
+        log.info("--- FIXING MISSING IMAGES AND NUTRITION ---");
+        List<Meal> meals = mealRepository.findAll();
+        boolean changedAny = false;
+        java.util.Random rand = new java.util.Random();
+        
+        String[] defaultImages = {
+            "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&q=80",
+            "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&q=80",
+            "https://images.unsplash.com/photo-1543339308-43e59d6b73a6?w=800&q=80",
+            "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=800&q=80",
+            "https://images.unsplash.com/photo-1504630083234-14187a9df0f5?w=800&q=80",
+            "https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=800&q=80",
+            "https://images.unsplash.com/photo-1588123190131-1c3fac394f4b?w=800&q=80"
+        };
+
+        for (Meal meal : meals) {
+            boolean changed = false;
+            
+            if (meal.getImages() == null || meal.getImages().isEmpty() || meal.getImages().get(0).getUrl() == null || meal.getImages().get(0).getUrl().isEmpty()) {
+                List<mealyummy.mealservice.model.pojo.MealImage> images = new java.util.ArrayList<>();
+                images.add(mealyummy.mealservice.model.pojo.MealImage.builder()
+                        .url(defaultImages[rand.nextInt(defaultImages.length)])
+                        .isThumbnail(true)
+                        .build());
+                meal.setImages(images);
+                changed = true;
+                log.info("Fixed image for meal: {}", meal.getName());
+            }
+            
+            if (meal.getNutrition() == null || meal.getNutrition().getCalories() == null) {
+                mealyummy.mealservice.model.pojo.Nutrition nutrition = mealyummy.mealservice.model.pojo.Nutrition.builder()
+                        .calories(300.0 + rand.nextInt(350))
+                        .protein(20.0 + rand.nextInt(40))
+                        .carbs(30.0 + rand.nextInt(50))
+                        .fat(10.0 + rand.nextInt(20))
+                        .fiber(5.0 + rand.nextInt(10))
+                        .build();
+                meal.setNutrition(nutrition);
+                changed = true;
+                log.info("Fixed nutrition for meal: {}", meal.getName());
+            }
+            
+            if (changed) {
+                mealRepository.save(meal);
+                changedAny = true;
+            }
+        }
+        if (changedAny) {
+            log.info("--- SUCCESSFULLY FIXED MISSING DATA IN DB ---");
+        }
     }
 
     /**
