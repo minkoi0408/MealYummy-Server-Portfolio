@@ -80,10 +80,18 @@ public class SecurityConfig {
                                 "/api/v1/payments/vnpay-return",
                                 "/swagger-ui/**",
                                 "/api-docs/**",
-                                "/swagger-ui.html")
+                                "/swagger-ui.html",
+                                "/error")
                         .permitAll()
                         // Tất cả các endpoint khác phải đăng nhập
                         .anyRequest().authenticated())
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.getWriter().write("{\"code\": 401, \"message\": \"Unauthorized\"}");
+                        })
+                )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(coopHeaderFilter(), UsernamePasswordAuthenticationFilter.class);
 
