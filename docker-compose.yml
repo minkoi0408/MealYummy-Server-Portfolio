@@ -47,8 +47,6 @@ services:
   redis:
     image: redis:7-alpine
     container_name: mealyummy_redis
-    ports:
-      - "6379:6379"
     volumes:
       - redis_data:/data
     restart: unless-stopped
@@ -79,9 +77,6 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/${DB_NAME:-mealyummy_db}
       - SPRING_DATASOURCE_USERNAME=${DB_USERNAME:-postgres}
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD:-postgres_password}
-    volumes:
-      # Mount the host .env file so the spring-dotenv library can access it if needed
-      - .env:/app/.env
     depends_on:
       mongodb:
         condition: service_healthy

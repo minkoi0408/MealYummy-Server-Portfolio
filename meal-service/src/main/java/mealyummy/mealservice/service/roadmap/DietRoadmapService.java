@@ -10,8 +10,10 @@ import mealyummy.mealservice.model.entity.DietRoadmap;
 import mealyummy.mealservice.model.entity.auth.User;
 import mealyummy.mealservice.model.entity.food.Meal;
 import mealyummy.mealservice.model.entity.profile.UserMetrics;
+import mealyummy.mealservice.model.entity.MealPlanItem;
 import mealyummy.mealservice.model.pojo.RoadmapPhase;
 import mealyummy.mealservice.model.repository.DietRoadmapRepository;
+import mealyummy.mealservice.model.repository.MealPlanRepository;
 import mealyummy.mealservice.model.repository.MealRepository;
 import mealyummy.mealservice.model.repository.UserMetricsRepository;
 import mealyummy.mealservice.model.repository.UserRepository;
@@ -27,7 +29,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import org.springframework.web.client.RestTemplate;
+
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Service
@@ -39,6 +46,7 @@ public class DietRoadmapService {
     private final UserMetricsRepository userMetricsRepository;
     private final MealRepository mealRepository;
     private final DietRoadmapRepository dietRoadmapRepository;
+    private final MealPlanRepository mealPlanRepository;
     private final MongoTemplate mongoTemplate;
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final RestTemplate restTemplate = new RestTemplate();
@@ -100,6 +108,171 @@ public class DietRoadmapService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         dietRoadmapRepository.deleteByIdAndUserId(roadmapId, user.getId());
+    }
+
+    public int syncToMealPlan(String username, String roadmapId, int days) {
+        LocalDate today = LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh"));
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        List<String> dates = new ArrayList<>();
+        for (int i = 0; i < days; i++) {
+            dates.add(today.plusDays(i).format(formatter));
+        }
+        return syncToMealPlanInternal(username, roadmapId, dates);
+    }
+
+    public int syncToMealPlanForDate(String username, String roadmapId, String date) {
+        return syncToMealPlanInternal(username, roadmapId, List.of(date));
+    }
+
+    private int syncToMealPlanInternal(String username, String roadmapId, List<String> dates) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        DietRoadmap roadmap = dietRoadmapRepository.findById(roadmapId)
+                .orElseThrow(() -> new AppException(ErrorCode.ROADMAP_NOT_FOUND));
+
+        if (!roadmap.getUserId().equals(user.getId())) {
+            throw new AppException(ErrorCode.ROADMAP_NOT_FOUND);
+        }
+
+        if (roadmap.getPhases() == null || roadmap.getPhases().isEmpty()) {
+            throw new AppException(ErrorCode.ROADMAP_NOT_FOUND);
+        }
+
+        List<Meal> meals = mealRepository.findAll();
+        // Lọc bỏ các món không có calo hoặc dữ liệu lỗi để đảm bảo frontend hiển thị đầy đủ
+        meals = meals.stream().filter(m -> m.getNutrition() != null && m.getNutrition().getCalories() != null && m.getNutrition().getCalories() > 0).toList();
+        if (meals.isEmpty()) return 0;
+
+        RoadmapPhase phase = roadmap.getPhases().get(0);
+        List<String> allowed = phase.getAllowedFoods() != null ? phase.getAllowedFoods() : Collections.emptyList();
+        List<String> recommended = phase.getRecommendedMealNames() != null ? phase.getRecommendedMealNames() : Collections.emptyList();
+
+        List<Meal> preferredMeals = meals.stream().filter(m -> {
+            String text = m.getName().toLowerCase() + " " + (m.getIngredients() != null ? m.getIngredients().toString().toLowerCase() : "");
+            boolean matchRec = recommended.stream().anyMatch(r -> text.contains(r.toLowerCase()));
+            boolean matchAllow = allowed.stream().anyMatch(a -> text.contains(a.toLowerCase()));
+            return matchRec || matchAllow;
+        }).toList();
+
+        List<Meal> pool = preferredMeals.isEmpty() ? meals : preferredMeals;
+
+        // TDEE Calculation
+        double targetCalories = 2000.0;
+        mealyummy.mealservice.model.entity.profile.UserMetrics metrics = userMetricsRepository.findFirstByUserIdOrderByCreatedAtDesc(user.getId()).orElse(null);
+        if (metrics != null) {
+            double bmr = "male".equalsIgnoreCase(metrics.getGender()) 
+                ? (10 * metrics.getWeight() + 6.25 * metrics.getHeight() - 5 * metrics.getAge() + 5)
+                : (10 * metrics.getWeight() + 6.25 * metrics.getHeight() - 5 * metrics.getAge() - 161);
+            
+            double activityMult = 1.55; // moderate
+            if ("sedentary".equalsIgnoreCase(metrics.getActivity())) activityMult = 1.2;
+            else if ("light".equalsIgnoreCase(metrics.getActivity())) activityMult = 1.375;
+            else if ("active".equalsIgnoreCase(metrics.getActivity())) activityMult = 1.725;
+            else if ("very_active".equalsIgnoreCase(metrics.getActivity())) activityMult = 1.9;
+            
+            double tdee = bmr * activityMult;
+            double goalAdj = 0;
+            if ("cut".equalsIgnoreCase(metrics.getGoal())) goalAdj = -500;
+            else if ("bulk".equalsIgnoreCase(metrics.getGoal())) goalAdj = 300;
+            
+            targetCalories = tdee + goalAdj;
+            if (targetCalories < 1200) targetCalories = 1200;
+        }
+
+        // Xóa thực đơn tự động của những ngày chuẩn bị gen để tạo thành bộ 4 bữa hoàn chỉnh, không chắp vá
+        mealPlanRepository.deleteByUserIdAndDateIn(user.getId(), dates);
+
+        Map<String, Double> mealPercentages = new HashMap<>();
+        mealPercentages.put("breakfast", 0.25);
+        mealPercentages.put("lunch", 0.35);
+        mealPercentages.put("snack", 0.10);
+        mealPercentages.put("dinner", 0.30);
+
+        List<MealPlanItem> newItems = new ArrayList<>();
+        String[] mealTypes = {"breakfast", "lunch", "snack", "dinner"};
+
+        for (String d : dates) {
+            double accumulatedExpectedCal = 0;
+            double accumulatedActualCal = 0;
+            Set<String> chosenMealIdsThisDay = new HashSet<>();
+
+            for (String t : mealTypes) {
+                double expectedMealCal = targetCalories * mealPercentages.get(t);
+                accumulatedExpectedCal += expectedMealCal;
+                
+                // Bù trừ Calo (Smart Calorie Compensation)
+                double adjustedTargetCal = accumulatedExpectedCal - accumulatedActualCal;
+                if (adjustedTargetCal < 50) adjustedTargetCal = 50;
+
+                // Phân loại bữa ăn (Strict Meal Type Filtering)
+                List<Meal> filteredPool = pool.stream().filter(m -> isSuitableForMealType(m, t)).toList();
+                if (filteredPool.isEmpty()) {
+                    filteredPool = new ArrayList<>(pool);
+                }
+
+                // Chống trùng lặp (Variety Enforcement)
+                List<Meal> finalPool = new ArrayList<>(filteredPool);
+                finalPool.removeIf(m -> chosenMealIdsThisDay.contains(m.getId()));
+                if (finalPool.isEmpty()) {
+                    finalPool = filteredPool;
+                }
+                
+                final double finalTargetCal = adjustedTargetCal;
+                List<Meal> sortedPool = finalPool.stream().sorted(Comparator.comparingDouble(m -> {
+                    double cal = (m.getNutrition() != null && m.getNutrition().getCalories() != null) ? m.getNutrition().getCalories() : 0.0;
+                    return Math.abs(cal - finalTargetCal);
+                })).toList();
+                
+                int limit = Math.min(2, sortedPool.size()); // Giảm độ random để bốc sát calo hơn
+                List<Meal> topCandidates = sortedPool.subList(0, limit);
+                Meal bestMeal = topCandidates.get(new Random().nextInt(topCandidates.size()));
+
+                chosenMealIdsThisDay.add(bestMeal.getId());
+                double actualCal = (bestMeal.getNutrition() != null && bestMeal.getNutrition().getCalories() != null) ? bestMeal.getNutrition().getCalories() : 0.0;
+                accumulatedActualCal += actualCal;
+
+                MealPlanItem item = MealPlanItem.builder()
+                        .userId(user.getId())
+                        .recipeId(bestMeal.getId())
+                        .recipeName(bestMeal.getName())
+                        .recipeImage(bestMeal.getImages() != null && !bestMeal.getImages().isEmpty() ? bestMeal.getImages().get(0).getUrl() : "")
+                        .calories(bestMeal.getNutrition() != null ? bestMeal.getNutrition().getCalories() + "" : "0")
+                        .cookTime("15 phút")
+                        .date(d)
+                        .mealType(t)
+                        .isEaten(false)
+                        .createdAt(Instant.now())
+                        .build();
+                newItems.add(item);
+            }
+        }
+
+        mealPlanRepository.saveAll(newItems);
+        return newItems.size();
+    }
+
+    private boolean isSuitableForMealType(Meal meal, String mealType) {
+        String text = (meal.getName() + " " + (meal.getDescription() != null ? meal.getDescription() : "")).toLowerCase();
+        
+        if (meal.getCategories() != null) {
+            for (mealyummy.mealservice.model.entity.food.Category c : meal.getCategories()) {
+                if (c.getName() != null) text += " " + c.getName().toLowerCase();
+            }
+        }
+        if (meal.getTags() != null) {
+            for (mealyummy.mealservice.model.entity.food.Tag t : meal.getTags()) {
+                if (t.getName() != null) text += " " + t.getName().toLowerCase();
+            }
+        }
+
+        return switch (mealType) {
+            case "breakfast" -> text.contains("sáng") || text.contains("breakfast") || text.contains("phở") || text.contains("bún") || text.contains("bánh mì") || text.contains("cháo") || text.contains("pancake") || text.contains("yến mạch") || text.contains("trứng") || text.contains("granola");
+            case "lunch" -> text.contains("trưa") || text.contains("lunch") || text.contains("cơm") || text.contains("salad") || text.contains("bò") || text.contains("gà") || text.contains("cá") || text.contains("ức") || text.contains("thịt");
+            case "dinner" -> text.contains("tối") || text.contains("dinner") || text.contains("salad") || text.contains("canh") || text.contains("cá") || text.contains("gà") || text.contains("rau") || text.contains("súp") || text.contains("ức");
+            case "snack" -> text.contains("vặt") || text.contains("phụ") || text.contains("snack") || text.contains("sữa chua") || text.contains("sinh tố") || text.contains("trái cây") || text.contains("hạt") || text.contains("whey") || text.contains("smoothie") || text.contains("chuối");
+            default -> true;
+        };
     }
 
     // ─── BMI Helpers ────────────────────────────────────────────────────────────

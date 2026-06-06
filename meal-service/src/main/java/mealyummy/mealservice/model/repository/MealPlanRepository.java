@@ -11,4 +11,7 @@ public interface MealPlanRepository extends MongoRepository<MealPlanItem, String
     List<MealPlanItem> findByUserIdOrderByDateDesc(String userId);
     List<MealPlanItem> findByUserIdAndDate(String userId, String date);
     void deleteByUserId(String userId);
+    void deleteByUserIdAndDate(String userId, String date);
+    void deleteByUserIdAndDateIn(String userId, List<String> dates);
+    List<MealPlanItem> findByUserIdAndDateIn(String userId, List<String> dates);
 }

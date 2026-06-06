@@ -32,6 +32,8 @@ public class MealPlanItem {
     private String date; // "YYYY-MM-DD"
     private String mealType; // "breakfast", "lunch", "dinner", "snack"
 
+    private boolean isEaten;
+
     @CreatedDate
     private Instant createdAt;
 }

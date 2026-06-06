@@ -65,4 +65,18 @@ public class DietRoadmapController {
         dietRoadmapService.delete(username, id);
         return ResponseEntity.ok(BaseApiResponse.ok("Đã xóa lộ trình thành công", null));
     }
+
+    /**
+     * POST /api/v1/diet-roadmap/{id}/sync-to-meal-plan
+     * Đồng bộ lộ trình vào thực đơn 7 ngày.
+     */
+    @PostMapping("/{id}/sync-to-meal-plan")
+    public ResponseEntity<BaseApiResponse<Void>> syncToMealPlan(
+            @PathVariable String id,
+            @RequestParam(defaultValue = "7") int days,
+            Authentication authentication) {
+        String username = authentication.getName();
+        int created = dietRoadmapService.syncToMealPlan(username, id, days);
+        return ResponseEntity.ok(BaseApiResponse.ok("Đồng bộ lộ trình vào thực đơn thành công (" + created + " món)", null));
+    }
 }

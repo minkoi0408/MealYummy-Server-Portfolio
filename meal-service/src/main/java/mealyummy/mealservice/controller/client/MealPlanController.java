@@ -41,10 +41,32 @@ public class MealPlanController {
         return ResponseEntity.ok(BaseApiResponse.ok("Xóa món khỏi thực đơn thành công", null));
     }
 
+    @PutMapping("/{id}/toggle")
+    public ResponseEntity<BaseApiResponse<MealPlanDTO>> toggleMealStatus(
+            Authentication authentication,
+            @PathVariable String id) {
+        String username = authentication.getName();
+        return ResponseEntity.ok(BaseApiResponse.ok("Cập nhật trạng thái thành công", mealPlanService.toggleMealStatus(username, id)));
+    }
+
     @DeleteMapping
     public ResponseEntity<BaseApiResponse<Void>> clearMealPlan(Authentication authentication) {
         String username = authentication.getName();
         mealPlanService.clearMealPlan(username);
         return ResponseEntity.ok(BaseApiResponse.ok("Xóa toàn bộ thực đơn thành công", null));
+    }
+
+    @DeleteMapping("/date/{date}")
+    public ResponseEntity<BaseApiResponse<Void>> clearMealPlanForDate(Authentication authentication, @PathVariable String date) {
+        String username = authentication.getName();
+        mealPlanService.clearMealPlanForDate(username, date);
+        return ResponseEntity.ok(BaseApiResponse.ok("Xóa thực đơn ngày " + date + " thành công", null));
+    }
+
+    @PostMapping("/date/{date}/sync")
+    public ResponseEntity<BaseApiResponse<Void>> syncMealPlanForDate(Authentication authentication, @PathVariable String date) {
+        String username = authentication.getName();
+        mealPlanService.syncMealPlanForDate(username, date);
+        return ResponseEntity.ok(BaseApiResponse.ok("Đã tạo thực đơn cho ngày " + date, null));
     }
 }
