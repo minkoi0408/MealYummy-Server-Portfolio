@@ -31,6 +31,7 @@ public enum ErrorCode {
     ACCOUNT_INACTIVE("Tài khoản bị vô hiệu hóa", HttpStatus.FORBIDDEN),
     OTP_INVALID("Mã OTP không đúng hoặc đã hết hạn", HttpStatus.BAD_REQUEST),
     OTP_EXPIRED("Mã OTP đã hết hạn. Vui lòng yêu cầu mã mới", HttpStatus.BAD_REQUEST),
+    EMAIL_SEND_FAILED("Không thể gửi email. Vui lòng thử lại sau", HttpStatus.INTERNAL_SERVER_ERROR),
     INVALID_TOKEN("Token không hợp lệ hoặc đã hết hạn", HttpStatus.UNAUTHORIZED),
     ROLE_NOT_FOUND("Không tìm thấy role phù hợp", HttpStatus.NOT_FOUND),
     PERMISSION_NOT_FOUND("Không tìm thấy quyền phù hợp", HttpStatus.NOT_FOUND),

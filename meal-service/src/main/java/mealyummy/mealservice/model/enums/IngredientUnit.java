@@ -28,6 +28,7 @@ public enum IngredientUnit {
         this.description = description;
     }
 
+    @com.fasterxml.jackson.annotation.JsonCreator
     public static IngredientUnit fromString(String text) {
         for (IngredientUnit unit : IngredientUnit.values()) {
             if (unit.name().equalsIgnoreCase(text) || unit.symbol.equalsIgnoreCase(text)) {

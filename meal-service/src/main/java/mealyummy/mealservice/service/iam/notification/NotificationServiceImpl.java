@@ -12,6 +12,7 @@ import mealyummy.mealservice.service.iam.authentication.AuthService;
 import mealyummy.mealservice.service.iam.authentication.dto.LoginRequestDTO;
 import mealyummy.mealservice.service.iam.notification.dto.SendOtpToEmailRequestDTO;
 import mealyummy.mealservice.service.iam.otp.OtpService;
+import mealyummy.mealservice.service.email.ResendEmailService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -25,9 +26,13 @@ import static mealyummy.mealservice.service.iam.notification.EmailFormatUtil.sen
 @Slf4j
 public class NotificationServiceImpl implements NotificationService {
     private final JavaMailSender mailSender;
+    private final ResendEmailService resendEmailService;
 
     @Value("${app.otp.expiration-minutes}")
     private long otpExpirationMinutes;
+
+    @Value("${resend.enabled:false}")
+    private boolean resendEnabled;
 
     private final OtpService otpService;
     private final AuthService authService;
@@ -36,19 +41,32 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public void sendOtpToEmail(String email, OtpType otpType, String subJect, String htmlContent) {
         String otp = otpService.generateAndSaveOtp(email, otpType);
+        
         try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            String formattedHtml = htmlContent.formatted(otp, otpExpirationMinutes);
+            
+            // Use Resend if enabled, otherwise fall back to SMTP
+            if (resendEnabled) {
+                resendEmailService.sendEmail(email, subJect, formattedHtml);
+            } else {
+                // Fallback to JavaMailSender (SMTP)
+                MimeMessage message = mailSender.createMimeMessage();
+                MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            helper.setTo(email);
-            helper.setSubject(subJect);
-
-            helper.setText(htmlContent.formatted(otp, otpExpirationMinutes), true);
-            mailSender.send(message);
+                helper.setTo(email);
+                helper.setSubject(subJect);
+                helper.setFrom("huynhvuminhkhoi08042004@gmail.com", "MealYummy");
+                helper.setText(formattedHtml, true);
+                
+                mailSender.send(message);
+            }
+            
             log.info("HTML OTP đã gửi thành công tới email: {}", email);
         } catch (Exception e) {
             log.error("Lỗi gửi email HTML OTP tới {}: {}", email, e.getMessage());
             log.info("=== [DEV] OTP cho {}: {} ===", email, otp);
+            // Throw exception để API trả về lỗi thay vì success
+            throw new AppException(ErrorCode.EMAIL_SEND_FAILED);
         }
     }
 

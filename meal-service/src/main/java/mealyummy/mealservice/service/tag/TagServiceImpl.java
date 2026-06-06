@@ -36,7 +36,6 @@ public class TagServiceImpl implements TagService {
 
         Tag tag = Tag.builder()
                 .name(formattedName)
-                .description(request.getDescription())
                 .active(true)
                 .build();
 
@@ -47,14 +46,14 @@ public class TagServiceImpl implements TagService {
     @Override
     public org.springframework.data.domain.Page<TagDTO> getAll(org.springframework.data.domain.Pageable pageable) {
         org.springframework.data.domain.Page<Tag> tags = tagRepository.findAll(pageable);
-        return tags.map(Tag::convertForMeal);
+        return tags.map(Tag::convert);
     }
 
     @Override
     public TagDTO get(String id) {
         Tag tag = tagRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.TAG_NOT_FOUND));
-        return tag.convertForMeal();
+        return tag.convert();
     }
 
     @Override
@@ -73,8 +72,8 @@ public class TagServiceImpl implements TagService {
             tag.setName(formattedName);
         }
 
-        if (request.getDescription() != null) {
-            tag.setDescription(request.getDescription());
+        if (request.getActive() != null) {
+            tag.setActive(request.getActive());
         }
 
         tagRepository.save(tag);
@@ -164,7 +163,6 @@ public class TagServiceImpl implements TagService {
                     String formatted = trimmed.substring(0, 1).toUpperCase() + trimmed.substring(1).toLowerCase();
                     return Tag.builder()
                         .name(formatted)
-                        .description(req.getDescription())
                         .active(true)
                         .build();
                 })

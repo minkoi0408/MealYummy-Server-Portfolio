@@ -172,6 +172,7 @@ private void initPermission() {
             Permission.builder().permissionCode("UPDATE_MEAL").permissionName("Cập nhật món ăn").type("MEAL").description("Cho phép chỉnh sửa món ăn").createdAt(Instant.now()).build(),
             Permission.builder().permissionCode("UPDATE_STATE_MEAL").permissionName("Thay đổi trạng thái món ăn").type("MEAL").description("Cho phép ẩn/hiện món ăn").createdAt(Instant.now()).build(),
             Permission.builder().permissionCode("DELETE_MEAL").permissionName("Xóa món ăn").type("MEAL").description("Cho phép xóa món ăn").createdAt(Instant.now()).build(),
+            Permission.builder().permissionCode("VIEW_MEAL").permissionName("Xem chi tiết món ăn").type("MEAL").description("Cho phép xem chi tiết món ăn").createdAt(Instant.now()).build(),
 
             // Bundle & Subscription
             Permission.builder().permissionCode("VIEW_ALL_BUNDLE").permissionName("Xem danh sách gói dịch vụ").type("BUNDLE").description("Cho phép xem danh sách gói dịch vụ").createdAt(Instant.now()).build(),

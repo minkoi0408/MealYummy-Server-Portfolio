@@ -16,4 +16,5 @@ public interface MealService {
     void deleteBulk(List<String> ids);
     List<MealResponseDTO> createBulk(List<MealRequestDTO> requests);
     List<MealResponseDTO> initHealthyMealsData();
+    MealResponseDTO uploadMealImage(String id, org.springframework.web.multipart.MultipartFile file);
 }
