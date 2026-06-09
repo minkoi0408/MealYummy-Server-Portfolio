@@ -139,6 +139,10 @@ public class DietRoadmapService {
             throw new AppException(ErrorCode.ROADMAP_NOT_FOUND);
         }
 
+        mealyummy.mealservice.model.entity.profile.UserMetrics metrics = userMetricsRepository.findFirstByUserIdOrderByCreatedAtDesc(user.getId()).orElse(null);
+        List<String> diseases = (metrics != null && metrics.getDiseases() != null) ? metrics.getDiseases() : Collections.emptyList();
+        List<String> blacklistedKeywords = buildDiseaseBlacklist(diseases);
+
         List<Meal> meals = mealRepository.findAll();
         // Lọc bỏ các món không có calo hoặc dữ liệu lỗi để đảm bảo frontend hiển thị đầy đủ
         meals = meals.stream().filter(m -> m.getNutrition() != null && m.getNutrition().getCalories() != null && m.getNutrition().getCalories() > 0).toList();
@@ -148,18 +152,19 @@ public class DietRoadmapService {
         List<String> allowed = phase.getAllowedFoods() != null ? phase.getAllowedFoods() : Collections.emptyList();
         List<String> recommended = phase.getRecommendedMealNames() != null ? phase.getRecommendedMealNames() : Collections.emptyList();
 
-        List<Meal> preferredMeals = meals.stream().filter(m -> {
-            String text = m.getName().toLowerCase() + " " + (m.getIngredients() != null ? m.getIngredients().toString().toLowerCase() : "");
-            boolean matchRec = recommended.stream().anyMatch(r -> text.contains(r.toLowerCase()));
-            boolean matchAllow = allowed.stream().anyMatch(a -> text.contains(a.toLowerCase()));
-            return matchRec || matchAllow;
+        // 1. LỌC TUYỆT ĐỐI THEO BỆNH LÝ (Bảo vệ sức khỏe người dùng)
+        List<Meal> safeMeals = meals.stream().filter(m -> {
+            String text = (m.getName() + " " + (m.getIngredients() != null ? m.getIngredients().toString() : "")).toLowerCase();
+            return blacklistedKeywords.stream().noneMatch(bad -> text.contains(bad));
         }).toList();
 
-        List<Meal> pool = preferredMeals.isEmpty() ? meals : preferredMeals;
+        // Fallback cực đoan: Nếu bộ lọc quá gắt gao làm mất gần hết DB, phải nới lỏng để đảm bảo thuật toán chọn đủ 4 món khác nhau
+        if (safeMeals.size() < 4) {
+            safeMeals = new ArrayList<>(meals);
+        }
 
         // TDEE Calculation
         double targetCalories = 2000.0;
-        mealyummy.mealservice.model.entity.profile.UserMetrics metrics = userMetricsRepository.findFirstByUserIdOrderByCreatedAtDesc(user.getId()).orElse(null);
         if (metrics != null) {
             double bmr = "male".equalsIgnoreCase(metrics.getGender()) 
                 ? (10 * metrics.getWeight() + 6.25 * metrics.getHeight() - 5 * metrics.getAge() + 5)
@@ -180,7 +185,7 @@ public class DietRoadmapService {
             if (targetCalories < 1200) targetCalories = 1200;
         }
 
-        // Xóa thực đơn tự động của những ngày chuẩn bị gen để tạo thành bộ 4 bữa hoàn chỉnh, không chắp vá
+        // Xóa thực đơn tự động của những ngày chuẩn bị gen
         mealPlanRepository.deleteByUserIdAndDateIn(user.getId(), dates);
 
         Map<String, Double> mealPercentages = new HashMap<>();
@@ -203,30 +208,70 @@ public class DietRoadmapService {
                 
                 // Bù trừ Calo (Smart Calorie Compensation)
                 double adjustedTargetCal = accumulatedExpectedCal - accumulatedActualCal;
+                
+                // Nếu là buổi phụ (snack) là tùy chọn, nếu lượng calo còn lại quá thấp thì có thể bỏ qua
+                if (t.equals("snack") && adjustedTargetCal < 80) {
+                    continue; 
+                }
                 if (adjustedTargetCal < 50) adjustedTargetCal = 50;
 
-                // Phân loại bữa ăn (Strict Meal Type Filtering)
-                List<Meal> filteredPool = pool.stream().filter(m -> isSuitableForMealType(m, t)).toList();
+                // Phân loại bữa ăn (Strict Meal Type Filtering) trên tập món an toàn
+                List<Meal> filteredPool = safeMeals.stream().filter(m -> isSuitableForMealType(m, t)).toList();
                 if (filteredPool.isEmpty()) {
-                    filteredPool = new ArrayList<>(pool);
+                    filteredPool = new ArrayList<>(safeMeals);
                 }
 
-                // Chống trùng lặp (Variety Enforcement)
+                // Chống trùng lặp (Variety Enforcement - Ít nhất 3 món khác nhau trong ngày)
                 List<Meal> finalPool = new ArrayList<>(filteredPool);
                 finalPool.removeIf(m -> chosenMealIdsThisDay.contains(m.getId()));
+                
+                // Nếu không còn món thỏa mãn loại bữa ăn, nới lỏng loại bữa ăn nhưng vẫn cấm trùng
                 if (finalPool.isEmpty()) {
-                    finalPool = filteredPool;
+                    finalPool = new ArrayList<>(safeMeals);
+                    finalPool.removeIf(m -> chosenMealIdsThisDay.contains(m.getId()));
+                }
+                
+                // Trực tiếp fallback về TẤT CẢ CÁC MÓN để cố gắng chống trùng tuyệt đối
+                if (finalPool.isEmpty()) {
+                    finalPool = new ArrayList<>(meals);
+                    finalPool.removeIf(m -> chosenMealIdsThisDay.contains(m.getId()));
+                }
+                
+                // Nếu DB thực sự dưới 4 món thì đành chịu trùng lặp
+                if (finalPool.isEmpty()) {
+                    finalPool = meals;
                 }
                 
                 final double finalTargetCal = adjustedTargetCal;
                 List<Meal> sortedPool = finalPool.stream().sorted(Comparator.comparingDouble(m -> {
                     double cal = (m.getNutrition() != null && m.getNutrition().getCalories() != null) ? m.getNutrition().getCalories() : 0.0;
-                    return Math.abs(cal - finalTargetCal);
+                    double calDiff = Math.abs(cal - finalTargetCal);
+                    
+                    // 2. TÍNH ĐIỂM (Scoring) DỰA TRÊN ROADMAP VÀ TỪ KHÓA MÓN VIỆT NAM
+                    String text = (m.getName() + " " + (m.getIngredients() != null ? m.getIngredients().toString() : "")).toLowerCase();
+                    double score = 0;
+                    
+                    boolean matchRec = recommended.stream().anyMatch(r -> text.contains(r.toLowerCase()));
+                    boolean matchAllow = allowed.stream().anyMatch(a -> text.contains(a.toLowerCase()));
+                    if (matchRec) score += 200;
+                    if (matchAllow) score += 100;
+                    
+                    // Ưu tiên MẠNH NHẤT các món ăn phù hợp với người Việt Nam để chắc chắn lên top
+                    if (t.equals("breakfast") && (text.contains("phở") || text.contains("bún") || text.contains("bánh mì") || text.contains("cháo") || text.contains("xôi"))) score += 500;
+                    if ((t.equals("lunch") || t.equals("dinner")) && (text.contains("cơm") || text.contains("kho") || text.contains("xào") || text.contains("thịt") || text.contains("cá"))) score += 500;
+                    if (t.equals("snack") && (text.contains("sinh tố") || text.contains("trái cây") || text.contains("sữa chua") || text.contains("nước ép") || text.contains("salad") || (text.contains("canh") && !text.contains("bánh canh")))) score += 500;
+
+                    // CẤM TUYỆT ĐỐI Canh, Salad, Sinh tố, Trái cây ở các bữa chính (Sáng, Trưa, Tối)
+                    if (!t.equals("snack") && ((text.contains("canh") && !text.contains("bánh canh")) || text.contains("salad") || text.contains("sinh tố") || text.contains("trái cây") || text.contains("nước ép") || text.contains("sữa chua"))) {
+                        score -= 10000;
+                    }
+
+                    // Score càng cao, trừ càng nhiều vào Diff => Ưu tiên món Việt Nam tuyệt đối
+                    return calDiff - (score * 10); 
                 })).toList();
                 
-                int limit = Math.min(2, sortedPool.size()); // Giảm độ random để bốc sát calo hơn
-                List<Meal> topCandidates = sortedPool.subList(0, limit);
-                Meal bestMeal = topCandidates.get(new Random().nextInt(topCandidates.size()));
+                int limit = Math.min(3, sortedPool.size()); // Giảm độ random để bốc sát calo/score hơn
+                Meal bestMeal = sortedPool.get(new Random().nextInt(limit));
 
                 chosenMealIdsThisDay.add(bestMeal.getId());
                 double actualCal = (bestMeal.getNutrition() != null && bestMeal.getNutrition().getCalories() != null) ? bestMeal.getNutrition().getCalories() : 0.0;
@@ -252,6 +297,43 @@ public class DietRoadmapService {
         return newItems.size();
     }
 
+    private List<String> buildDiseaseBlacklist(List<String> diseases) {
+        Set<String> bads = new HashSet<>();
+        if (diseases == null || diseases.isEmpty()) return new ArrayList<>();
+
+        for (String d : diseases) {
+            switch (d) {
+                case "DIABETES":
+                    bads.addAll(Arrays.asList("ngọt", "đường", "sữa đặc", "bánh ngọt", "chè", "nước ngọt", "bánh kẹo"));
+                    break;
+                case "GOUT":
+                    bads.addAll(Arrays.asList("nội tạng", "lòng", "gan", "bò", "hải sản", "tôm", "cua", "bia", "rượu"));
+                    break;
+                case "HYPERTENSION":
+                    bads.addAll(Arrays.asList("muối", "chiên", "mặn", "dưa muối", "cà pháo", "đồ hộp", "mắm"));
+                    break;
+                case "DYSLIPIDEMIA":
+                case "FATTY_LIVER":
+                    bads.addAll(Arrays.asList("chiên", "dầu mỡ", "nội tạng", "mỡ", "da gà", "thịt mỡ", "xào nhiều dầu"));
+                    break;
+                case "CHRONIC_KIDNEY":
+                case "KIDNEY_STONE":
+                    bads.addAll(Arrays.asList("muối", "mặn", "mắm", "dưa muối", "cà pháo"));
+                    break;
+                case "GERD":
+                    bads.addAll(Arrays.asList("cay", "chua", "tiêu", "ớt", "chanh", "giấm", "đồ chua"));
+                    break;
+                case "LACTOSE_INTOLERANT":
+                    bads.addAll(Arrays.asList("sữa bò", "phô mai", "bơ", "sữa tươi", "lactose"));
+                    break;
+                case "HEMORRHOID":
+                    bads.addAll(Arrays.asList("cay", "nóng", "ớt", "tiêu", "chiên"));
+                    break;
+            }
+        }
+        return new ArrayList<>(bads);
+    }
+
     private boolean isSuitableForMealType(Meal meal, String mealType) {
         String text = (meal.getName() + " " + (meal.getDescription() != null ? meal.getDescription() : "")).toLowerCase();
         
@@ -267,10 +349,10 @@ public class DietRoadmapService {
         }
 
         return switch (mealType) {
-            case "breakfast" -> text.contains("sáng") || text.contains("breakfast") || text.contains("phở") || text.contains("bún") || text.contains("bánh mì") || text.contains("cháo") || text.contains("pancake") || text.contains("yến mạch") || text.contains("trứng") || text.contains("granola");
-            case "lunch" -> text.contains("trưa") || text.contains("lunch") || text.contains("cơm") || text.contains("salad") || text.contains("bò") || text.contains("gà") || text.contains("cá") || text.contains("ức") || text.contains("thịt");
-            case "dinner" -> text.contains("tối") || text.contains("dinner") || text.contains("salad") || text.contains("canh") || text.contains("cá") || text.contains("gà") || text.contains("rau") || text.contains("súp") || text.contains("ức");
-            case "snack" -> text.contains("vặt") || text.contains("phụ") || text.contains("snack") || text.contains("sữa chua") || text.contains("sinh tố") || text.contains("trái cây") || text.contains("hạt") || text.contains("whey") || text.contains("smoothie") || text.contains("chuối");
+            case "breakfast" -> text.contains("sáng") || text.contains("breakfast") || text.contains("phở") || text.contains("bún") || text.contains("bánh mì") || text.contains("cháo") || text.contains("pancake") || text.contains("yến mạch") || text.contains("trứng") || text.contains("granola") || text.contains("xôi");
+            case "lunch" -> text.contains("trưa") || text.contains("lunch") || text.contains("cơm") || text.contains("salad") || text.contains("bò") || text.contains("gà") || text.contains("cá") || text.contains("ức") || text.contains("thịt") || text.contains("canh") || text.contains("kho") || text.contains("xào");
+            case "dinner" -> text.contains("tối") || text.contains("dinner") || text.contains("salad") || text.contains("canh") || text.contains("cá") || text.contains("gà") || text.contains("rau") || text.contains("súp") || text.contains("ức") || text.contains("cơm");
+            case "snack" -> text.contains("vặt") || text.contains("phụ") || text.contains("snack") || text.contains("sữa chua") || text.contains("sinh tố") || text.contains("trái cây") || text.contains("hạt") || text.contains("whey") || text.contains("smoothie") || text.contains("chuối") || text.contains("nước ép");
             default -> true;
         };
     }
