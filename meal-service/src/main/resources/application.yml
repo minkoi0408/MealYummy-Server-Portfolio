@@ -91,16 +91,10 @@ resend:
 
 # Payment Gateway Configurations
 payment:
-  vnpay:
-    tmn-code: ${VNPAY_TMN_CODE:PLACEHOLDER}
-    hash-secret: ${VNPAY_HASH_SECRET:PLACEHOLDER}
-    url: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
-    return-url: ${APP_URL:http://localhost:8080}/api/v1/payments/vnpay-return
-  momo:
-    partner-code: ${MOMO_PARTNER_CODE:PLACEHOLDER}
-    access-key: ${MOMO_ACCESS_KEY:PLACEHOLDER}
-    secret-key: ${MOMO_SECRET_KEY:PLACEHOLDER}
-    endpoint: https://test-payment.momo.vn/v2/gateway/api/create
-    return-url: ${APP_URL:http://localhost:8080}/api/v1/payments/momo-return
-    notify-url: ${APP_URL:http://localhost:8080}/api/v1/payments/momo-ipn
+  payos:
+    client-id: ${PAYOS_CLIENT_ID}
+    api-key: ${PAYOS_API_KEY}
+    checksum-key: ${PAYOS_CHECKSUM_KEY}
+    return-url: ${APP_URL:http://localhost:8082}/api/v1/payments/payos-return
+    cancel-url: ${APP_URL:http://localhost:8082}/api/v1/payments/payos-cancel
 

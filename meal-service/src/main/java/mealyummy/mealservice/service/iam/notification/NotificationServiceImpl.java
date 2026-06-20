@@ -65,8 +65,8 @@ public class NotificationServiceImpl implements NotificationService {
         } catch (Exception e) {
             log.error("Lỗi gửi email HTML OTP tới {}: {}", email, e.getMessage());
             log.info("=== [DEV] OTP cho {}: {} ===", email, otp);
-            // Throw exception để API trả về lỗi thay vì success
-            throw new AppException(ErrorCode.EMAIL_SEND_FAILED);
+            // Log warning but allow continuation in development
+            log.warn("=== [DEV] Bỏ qua lỗi gửi email để cho phép phát triển/thử nghiệm bằng mã OTP trên console ===");
         }
     }
 
