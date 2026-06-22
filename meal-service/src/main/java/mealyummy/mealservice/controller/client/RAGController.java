@@ -24,6 +24,12 @@ public class RAGController {
                 .body(BaseApiResponse.ok(msg, null));
     }
 
+    @PostMapping("/sync-meals")
+    public ResponseEntity<BaseApiResponse<String>> syncMeals() {
+        String msg = ragService.syncMealEmbeddings();
+        return ResponseEntity.ok(BaseApiResponse.ok(msg, null));
+    }
+
     @PostMapping("/chat")
     public ResponseEntity<BaseApiResponse<Object>> chatWithAI(@RequestBody ChatRequestDTO request, java.security.Principal principal) {
         String username = principal != null ? principal.getName() : null;

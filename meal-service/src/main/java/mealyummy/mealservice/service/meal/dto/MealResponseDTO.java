@@ -3,8 +3,7 @@ package mealyummy.mealservice.service.meal.dto;
 import java.util.List;
 
 import lombok.*;
-import mealyummy.mealservice.service.category.dto.CategoryDTO;
-import mealyummy.mealservice.service.tag.dto.TagDTO;
+
 
 @Data
 @Builder
@@ -18,7 +17,6 @@ public class MealResponseDTO {
 
     private String name;
 
-    private PriceDTO price;
 
     private List<MealImageDTO> images;
 
@@ -26,9 +24,9 @@ public class MealResponseDTO {
 
     private String description;
 
-    private List<CategoryDTO> categories;
+    private List<String> categories;
 
-    private List<TagDTO> tags;
+    private List<String> tags;
 
     private List<MealIngredientDTO> ingredients;
 

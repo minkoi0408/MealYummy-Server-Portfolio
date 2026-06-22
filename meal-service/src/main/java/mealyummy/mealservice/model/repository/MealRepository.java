@@ -7,4 +7,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface MealRepository extends MongoRepository<Meal,String> {
     boolean existsByName(String formattedName);
+    java.util.List<Meal> findByActiveTrue();
 }
