@@ -137,6 +137,7 @@ public class AuthServiceImpl implements AuthService {
                 .avatarUrl(user.getAvatarUrl())
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
+                .createdAt(user.getCreatedAt())
                 .build();
     }
 
@@ -228,6 +229,7 @@ public class AuthServiceImpl implements AuthService {
                     .avatarUrl(user.getAvatarUrl())
                     .accessToken(accessToken)
                     .refreshToken(refreshToken)
+                .createdAt(user.getCreatedAt())
                     .build();
 
         } catch (Exception e) {
@@ -305,7 +307,8 @@ public class AuthServiceImpl implements AuthService {
                 .email(user.getEmail())
                 .avatarUrl(user.getAvatarUrl())
                 .accessToken(newAccessToken)
-                .refreshToken(refreshToken) // Giữ nguyên refresh token cũ
+                .refreshToken(refreshToken)
+                .createdAt(user.getCreatedAt()) // Giữ nguyên refresh token cũ
                 .build();
     }
 }
