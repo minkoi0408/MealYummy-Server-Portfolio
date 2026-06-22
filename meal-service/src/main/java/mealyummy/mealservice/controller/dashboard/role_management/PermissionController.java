@@ -18,7 +18,7 @@ import java.util.List;
 public class PermissionController {
     private final PermissionService permissionService;
 
-    @PreAuthorize("hasAuthority('PERMISSION_VIEW')")
+    @PreAuthorize("@apiAuth.check()")
     @GetMapping
     public ResponseEntity<BaseApiResponse<List<PermissionResponse>>> getAllPermissions() {
 

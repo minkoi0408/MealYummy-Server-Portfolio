@@ -23,7 +23,7 @@ public class DataController {
                 .body(BaseApiResponse.ok(msg, null));
     }
 
-    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('CREATE_MEAL')")
+    @org.springframework.security.access.prepost.PreAuthorize("@apiAuth.check()")
     @org.springframework.web.bind.annotation.PostMapping("/import/upload/meals")
     public ResponseEntity<BaseApiResponse<String>> importMealsUpload(@org.springframework.web.bind.annotation.RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
         String msg = dataInitService.importMealsFromFile(file);

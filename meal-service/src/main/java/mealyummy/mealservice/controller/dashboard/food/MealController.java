@@ -22,7 +22,7 @@ public class MealController {
 
     private final MealService mealService;
 
-    @PreAuthorize("hasAuthority('CREATE_MEAL')")
+    @PreAuthorize("@apiAuth.check()")
     @PostMapping
     public ResponseEntity<BaseApiResponse<MealResponseDTO>> createMeal(
             @Valid @RequestBody MealRequestDTO request) {
@@ -33,7 +33,7 @@ public class MealController {
                 .body(BaseApiResponse.ok(msg, response));
     }
 
-    @PreAuthorize("hasAuthority('VIEW_ALL_MEAL')")
+    @PreAuthorize("@apiAuth.check()")
     @GetMapping
     public ResponseEntity<BaseApiResponse<Page<MealResponseDTO>>> getAllMeals(Pageable pageable) {
         Page<MealResponseDTO> response = mealService.getAll(pageable);
@@ -42,7 +42,7 @@ public class MealController {
                 .body(BaseApiResponse.ok("Lấy danh sách món ăn thành công", response));
     }
 
-    @PreAuthorize("hasAuthority('VIEW_MEAL')")
+    @PreAuthorize("@apiAuth.check()")
     @GetMapping("/{id}")
     public ResponseEntity<BaseApiResponse<MealResponseDTO>> getMeal(@PathVariable String id) {
         MealResponseDTO response = mealService.get(id);
@@ -51,7 +51,7 @@ public class MealController {
                 .body(BaseApiResponse.ok("Thông tin món ăn", response));
     }
 
-    @PreAuthorize("hasAuthority('UPDATE_MEAL')")
+    @PreAuthorize("@apiAuth.check()")
     @PutMapping("/{id}")
     public ResponseEntity<BaseApiResponse<MealResponseDTO>> updateMeal(@PathVariable String id, @Valid @RequestBody MealRequestDTO request) {
         MealResponseDTO response = mealService.update(id, request);
@@ -60,7 +60,7 @@ public class MealController {
                 .body(BaseApiResponse.ok("Cập nhật món ăn thành công", response));
     }
 
-    @PreAuthorize("hasAuthority('DELETE_MEAL')")
+    @PreAuthorize("@apiAuth.check()")
     @DeleteMapping("/{id}")
     public ResponseEntity<BaseApiResponse<Void>> deleteMeal(@PathVariable String id) {
         mealService.delete(id);
@@ -69,7 +69,7 @@ public class MealController {
                 .body(BaseApiResponse.ok("Xóa món ăn thành công", null));
     }
 
-    @PreAuthorize("hasAuthority('DELETE_MEAL')")
+    @PreAuthorize("@apiAuth.check()")
     @DeleteMapping("/bulk")
     public ResponseEntity<BaseApiResponse<Void>> deleteMealsBulk(@RequestBody List<String> ids) {
         mealService.deleteBulk(ids);
@@ -78,7 +78,7 @@ public class MealController {
                 .body(BaseApiResponse.ok("Xóa danh sách món ăn thành công", null));
     }
 
-    @PreAuthorize("hasAuthority('CREATE_MEAL')")
+    @PreAuthorize("@apiAuth.check()")
     @PostMapping("/bulk")
     public ResponseEntity<BaseApiResponse<List<MealResponseDTO>>> createMealsBulk(@Valid @RequestBody List<MealRequestDTO> requests) {
         List<MealResponseDTO> response = mealService.createBulk(requests);
@@ -87,7 +87,7 @@ public class MealController {
                 .body(BaseApiResponse.ok("Tạo nhiều món ăn thành công", response));
     }
 
-    @PreAuthorize("hasAuthority('CREATE_MEAL')")
+    @PreAuthorize("@apiAuth.check()")
     @GetMapping("/import/healthy-meals")
     public ResponseEntity<BaseApiResponse<java.util.List<MealResponseDTO>>> initHealthyMealsDatabase() {
         java.util.List<MealResponseDTO> response = mealService.initHealthyMealsData();
@@ -97,7 +97,7 @@ public class MealController {
                 .body(BaseApiResponse.ok(msg, response));
     }
 
-    @PreAuthorize("hasAuthority('UPDATE_MEAL')")
+    @PreAuthorize("@apiAuth.check()")
     @PostMapping("/{id}/images")
     public ResponseEntity<BaseApiResponse<MealResponseDTO>> uploadMealImage(
             @PathVariable String id, 

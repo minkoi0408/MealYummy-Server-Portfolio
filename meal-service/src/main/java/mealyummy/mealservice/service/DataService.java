@@ -21,8 +21,7 @@ public class DataService {
     private final MongoTemplate mongoTemplate;
 
     private final mealyummy.mealservice.service.meal.MealService mealService;
-
-
+    private final mealyummy.mealservice.service.rag.RAGService ragService;
 
     public void writeObjectToFile(String subUrl, List<?> object){
         String mainUrl = "meal-service/src/main/resources/json"+subUrl;
@@ -70,7 +69,11 @@ public class DataService {
             List<mealyummy.mealservice.service.meal.dto.MealResponseDTO> responses = mealService.createBulk(dtos);
             List<java.util.Map<String, String>> exportData = responses.stream().map(r -> java.util.Map.of("id", r.getId(), "name", r.getName())).toList();
             writeObjectToFile("/meal/meal_response.json", exportData);
-            return "Import thành công " + dtos.size() + " meals từ file real-meal-data-input.json và đã xuất response JSON!";
+            
+            // TỰ ĐỘNG ĐỒNG BỘ VECTOR CHO AI SAU KHI IMPORT XONG
+            String ragSyncMsg = ragService.syncMealEmbeddings();
+            
+            return "Import thành công " + dtos.size() + " meals từ file real-meal-data-input.json và đã xuất response JSON! " + ragSyncMsg;
         } catch (Exception e) {
             throw new RuntimeException("Lỗi import meals từ local JSON: " + e.getMessage());
         }

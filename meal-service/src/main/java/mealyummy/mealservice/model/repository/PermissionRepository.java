@@ -6,5 +6,6 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import java.util.Collection;
 
 public interface PermissionRepository extends MongoRepository<Permission,String> {
+    boolean existsByPermissionCode(String permissionCode);
     long countByPermissionCodeIn(Collection<String> permissionCodes);
 }

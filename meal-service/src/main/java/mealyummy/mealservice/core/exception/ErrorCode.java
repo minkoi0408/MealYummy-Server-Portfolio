@@ -37,6 +37,8 @@ public enum ErrorCode {
     PERMISSION_NOT_FOUND("Không tìm thấy quyền phù hợp", HttpStatus.NOT_FOUND),
     ROLE_HAS_NO_PERMISSION("Quyền muốn xóa không tồn tại trong Role này", HttpStatus.NOT_FOUND),
     CANNOT_DELETE_ASSIGN_PERMISSION("Không thể xóa đi quyền thêm quyền cho role", HttpStatus.FORBIDDEN),
+    ACCESS_DENIED("Bạn không có quyền truy cập", HttpStatus.FORBIDDEN),
+    RATE_LIMIT_EXCEEDED("Bạn đã vượt quá giới hạn sử dụng trong ngày. Vui lòng nâng cấp tài khoản để tiếp tục", HttpStatus.TOO_MANY_REQUESTS),
 
     // Subscription errors
     BUNDLE_NOT_FOUND("Không tìm thấy gói dịch vụ hoặc gói dịch vụ đã bị vô hiệu hóa", HttpStatus.NOT_FOUND),

@@ -18,7 +18,7 @@ public class PaymentHistoryController {
 
     private final PaymentService paymentService;
 
-    @PreAuthorize("hasAuthority('VIEW_ALL_PAYMENT_HISTORY')")
+    @PreAuthorize("@apiAuth.check()")
     @GetMapping
     public ResponseEntity<BaseApiResponse<Page<PaymentHistory>>> getAllPaymentHistories(Pageable pageable) {
         Page<PaymentHistory> response = paymentService.getAllPaymentHistories(pageable);
@@ -27,7 +27,7 @@ public class PaymentHistoryController {
                 .body(BaseApiResponse.ok("Lấy danh sách lịch sử thanh toán thành công", response));
     }
 
-    @PreAuthorize("hasAuthority('VIEW_PAYMENT_HISTORY')")
+    @PreAuthorize("@apiAuth.check()")
     @GetMapping("/{id}")
     public ResponseEntity<BaseApiResponse<PaymentHistory>> getPaymentHistory(@PathVariable String id) {
         PaymentHistory response = paymentService.getPaymentHistoryById(id);
