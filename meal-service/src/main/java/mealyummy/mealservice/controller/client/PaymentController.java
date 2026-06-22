@@ -3,8 +3,6 @@ package mealyummy.mealservice.controller.client;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import mealyummy.mealservice.core.base.BaseApiResponse;
-import mealyummy.mealservice.service.payment.MomoService;
-import mealyummy.mealservice.service.payment.VnpayService;
 import mealyummy.mealservice.service.subscription.PaymentService;
 import mealyummy.mealservice.service.subscription.dto.PaymentCreateRequest;
 import mealyummy.mealservice.service.subscription.dto.PaymentCreateResponse;
@@ -16,6 +14,9 @@ import org.springframework.beans.factory.annotation.Value;
 import java.util.Map;
 
 import mealyummy.mealservice.model.repository.UserRepository;
+import vn.payos.PayOS;
+import vn.payos.model.webhooks.Webhook;
+import vn.payos.model.webhooks.WebhookData;
 
 @RestController
 @RequestMapping("/api/v1/payments")
@@ -23,9 +24,8 @@ import mealyummy.mealservice.model.repository.UserRepository;
 public class PaymentController {
 
     private final PaymentService paymentService;
-    private final VnpayService vnpayService;
-    private final MomoService momoService;
     private final UserRepository userRepository;
+    private final PayOS payOS;
 
     @Value("${app.client-url}")
     private String clientUrl;
@@ -49,20 +49,20 @@ public class PaymentController {
         return ResponseEntity.ok(BaseApiResponse.ok("Tạo URL thanh toán thành công", response));
     }
 
-    // --- VNPay Webhooks ---
+    // --- PayOS Webhooks & Redirects ---
 
-    @GetMapping("/vnpay-return")
-    public ResponseEntity<Void> vnpayReturn(@RequestParam Map<String, String> params) {
-        boolean isValid = vnpayService.verifyIpn(params);
-        String orderId = params.get("vnp_TxnRef");
-        String responseCode = params.get("vnp_ResponseCode");
-        boolean isSuccess = isValid && "00".equals(responseCode);
+    @GetMapping("/payos-return")
+    public ResponseEntity<Void> payosReturn(@RequestParam Map<String, String> params) {
+        String status = params.get("status");
+        String code = params.get("code");
+        String orderCode = params.get("orderCode");
+        boolean isSuccess = "00".equals(code) || "PAID".equals(status);
 
-        if (isValid) {
+        if (orderCode != null) {
             try {
-                paymentService.processPaymentWebhook(orderId, isSuccess);
+                paymentService.processPaymentWebhook(orderCode, isSuccess);
             } catch (Exception e) {
-                System.err.println("❌ [VNPAY_RETURN] Lỗi khi xử lý webhook VNPay: " + e.getMessage());
+                System.err.println("❌ [PAYOS_RETURN] Lỗi khi xử lý return: " + e.getMessage());
                 e.printStackTrace();
             }
         }
@@ -73,65 +73,35 @@ public class PaymentController {
                 .build();
     }
 
-    @GetMapping("/vnpay-ipn")
-    public ResponseEntity<String> vnpayIpn(@RequestParam Map<String, String> params) {
-        boolean isValid = vnpayService.verifyIpn(params);
-        if (!isValid) {
-            return ResponseEntity.ok("{\"RspCode\":\"97\",\"Message\":\"Invalid Checksum\"}");
+    @GetMapping("/payos-cancel")
+    public ResponseEntity<Void> payosCancel(@RequestParam Map<String, String> params) {
+        String orderCode = params.get("orderCode");
+        if (orderCode != null) {
+            try {
+                paymentService.processPaymentWebhook(orderCode, false);
+            } catch (Exception e) {
+                System.err.println("❌ [PAYOS_CANCEL] Lỗi khi xử lý cancel: " + e.getMessage());
+            }
         }
-
-        String orderId = params.get("vnp_TxnRef");
-        String responseCode = params.get("vnp_ResponseCode");
-        boolean isSuccess = "00".equals(responseCode);
-
-        try {
-            paymentService.processPaymentWebhook(orderId, isSuccess);
-            return ResponseEntity.ok("{\"RspCode\":\"00\",\"Message\":\"Confirm Success\"}");
-        } catch (Exception e) {
-            return ResponseEntity.ok("{\"RspCode\":\"99\",\"Message\":\"Unknown error\"}");
-        }
-    }
-
-    // --- MoMo Webhooks ---
-
-    @GetMapping("/momo-return")
-    public ResponseEntity<Void> momoReturn(@RequestParam Map<String, String> params) {
-        String resultCode = params.get("resultCode");
-        String orderId = params.get("orderId");
-        boolean isSuccess = "0".equals(resultCode);
-
-        try {
-            paymentService.processPaymentWebhook(orderId, isSuccess);
-        } catch (Exception e) {
-            System.err.println("❌ [MOMO_RETURN] Lỗi khi xử lý webhook MoMo: " + e.getMessage());
-            e.printStackTrace();
-        }
-
-        String redirectUrl = clientUrl + "/membership?payment=" + (isSuccess ? "success" : "failed");
+        String redirectUrl = clientUrl + "/membership?payment=failed";
         return ResponseEntity.status(org.springframework.http.HttpStatus.FOUND)
                 .location(java.net.URI.create(redirectUrl))
                 .build();
     }
 
-    @PostMapping("/momo-ipn")
-    public ResponseEntity<String> momoIpn(@RequestBody Map<String, String> payload) {
-        String orderId = payload.get("orderId");
-        String amount = payload.get("amount");
-        String resultCode = payload.get("resultCode");
-        String message = payload.get("message");
-        String responseTime = payload.get("responseTime");
-        String extraData = payload.get("extraData");
-        String signature = payload.get("signature");
-
-        boolean isValid = momoService.verifyIpn(orderId, amount, resultCode, message, responseTime, extraData, signature);
-        if (!isValid) {
+    @PostMapping("/payos-webhook")
+    public ResponseEntity<Void> payosWebhook(@RequestBody Webhook webhookBody) {
+        try {
+            WebhookData data = payOS.webhooks().verify(webhookBody);
+            String transactionId = String.valueOf(data.getOrderCode());
+            boolean isSuccess = "00".equals(data.getCode());
+            
+            paymentService.processPaymentWebhook(transactionId, isSuccess);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            System.err.println("❌ [PAYOS_WEBHOOK] Lỗi xác thực hoặc xử lý webhook: " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.badRequest().build();
         }
-
-        boolean isSuccess = "0".equals(resultCode);
-        paymentService.processPaymentWebhook(orderId, isSuccess);
-
-        // MoMo expects a 204 No Content for successful IPN acknowledgement usually, or empty 200 OK.
-        return ResponseEntity.ok().build();
     }
 }

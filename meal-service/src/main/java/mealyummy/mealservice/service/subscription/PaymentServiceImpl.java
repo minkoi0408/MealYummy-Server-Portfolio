@@ -2,6 +2,7 @@ package mealyummy.mealservice.service.subscription;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import mealyummy.mealservice.core.config.PayosConfig;
 import mealyummy.mealservice.core.exception.AppException;
 import mealyummy.mealservice.core.exception.ErrorCode;
 import mealyummy.mealservice.model.entity.subscription.Bundle;
@@ -10,14 +11,14 @@ import mealyummy.mealservice.model.enums.PaymentMethod;
 import mealyummy.mealservice.model.enums.PaymentStatus;
 import mealyummy.mealservice.model.pojo.BundleDuration;
 import mealyummy.mealservice.model.repository.subscription.PaymentHistoryRepository;
-import mealyummy.mealservice.service.payment.MomoService;
-import mealyummy.mealservice.service.payment.VnpayService;
 import mealyummy.mealservice.service.subscription.dto.PaymentCreateRequest;
 import mealyummy.mealservice.service.subscription.dto.PaymentCreateResponse;
 import org.springframework.stereotype.Service;
+import vn.payos.PayOS;
+import vn.payos.model.v2.paymentRequests.CreatePaymentLinkRequest;
+import vn.payos.model.v2.paymentRequests.CreatePaymentLinkResponse;
 
 import java.time.Instant;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -26,8 +27,8 @@ public class PaymentServiceImpl implements PaymentService {
     private final PaymentHistoryRepository paymentHistoryRepository;
     private final BundleService bundleService;
     private final SubscriptionService subscriptionService;
-    private final VnpayService vnpayService;
-    private final MomoService momoService;
+    private final PayOS payOS;
+    private final PayosConfig payosConfig;
 
     @Override
     public PaymentHistory recordPayment(PaymentHistory paymentHistory) {
@@ -43,8 +44,9 @@ public class PaymentServiceImpl implements PaymentService {
                 .findFirst()
                 .orElseThrow(() -> new AppException(ErrorCode.DURATION_INVALID));
 
-        // Create transaction ID
-        String transactionId = UUID.randomUUID().toString();
+        // Create transaction ID (PayOS orderCode must be a number <= 9007199254740991)
+        long orderCode = System.currentTimeMillis() / 1000 * 100000 + (new java.util.Random().nextInt(90000) + 10000);
+        String transactionId = String.valueOf(orderCode);
 
         // Save pending payment history
         PaymentHistory paymentHistory = PaymentHistory.builder()
@@ -59,10 +61,22 @@ public class PaymentServiceImpl implements PaymentService {
 
         // Generate URL
         String paymentUrl = "";
-        if (request.getPaymentMethod() == PaymentMethod.VNPAY) {
-            paymentUrl = vnpayService.createPaymentUrl(transactionId, duration.getPrice(), httpRequest);
-        } else if (request.getPaymentMethod() == PaymentMethod.MOMO) {
-            paymentUrl = momoService.createPaymentUrl(transactionId, duration.getPrice());
+        if (request.getPaymentMethod() == PaymentMethod.PAYOS) {
+            CreatePaymentLinkRequest paymentRequest = CreatePaymentLinkRequest.builder()
+                    .orderCode(orderCode)
+                    .amount((long) duration.getPrice())
+                    .description("MealYummy VIP")
+                    .returnUrl(payosConfig.getReturnUrl())
+                    .cancelUrl(payosConfig.getCancelUrl())
+                    .build();
+            try {
+                CreatePaymentLinkResponse response = payOS.paymentRequests().create(paymentRequest);
+                paymentUrl = response.getCheckoutUrl();
+            } catch (Exception e) {
+                System.err.println("❌ [PAYOS] Lỗi khi tạo link thanh toán PayOS: " + e.getMessage());
+                e.printStackTrace();
+                throw new AppException(ErrorCode.PAYMENT_HISTORY_NOT_FOUND);
+            }
         }
 
         return PaymentCreateResponse.builder()
