@@ -217,8 +217,35 @@ public class RAGService {
         );
     }
 
+    public List<String> getRestaurantKeywords(String mealName) {
+        String systemInstruction = "Bạn là chuyên gia ẩm thực. "
+            + "Nhận vào tên một món ăn, hãy trả về chính xác 2 cụm từ khóa ngắn gọn về loại quán ăn/nhà hàng thường bán món này ở Việt Nam. "
+            + "Chỉ trả về các cụm từ, phân cách bằng dấu phẩy, KHÔNG GIẢI THÍCH THÊM.\n"
+            + "Ví dụ: Sườn xào chua ngọt -> Quán cơm tấm, Quán cơm bình dân\n"
+            + "Pizza -> Tiệm bánh pizza, Nhà hàng Ý";
+
+        String response = generateChatResponse(systemInstruction, null, mealName);
+        
+        List<String> keywords = new ArrayList<>();
+        if (response != null && !response.trim().isEmpty() && !response.contains("quá tải")) {
+            String[] parts = response.split(",");
+            for (String p : parts) {
+                String kw = p.trim();
+                if (kw.startsWith("-") || kw.startsWith(".")) kw = kw.substring(1).trim();
+                if (!kw.isEmpty()) keywords.add(kw);
+            }
+        }
+        
+        if (keywords.isEmpty()) {
+            keywords.add("Quán " + mealName);
+            keywords.add("Nhà hàng");
+        }
+        
+        return keywords;
+    }
+
     private String generateChatResponse(String systemInstruction, List<mealyummy.mealservice.service.rag.dto.ChatRequestDTO.ChatMessageDTO> history, String currentQuestion) {
-        String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-latest:generateContent?key=" + geminiApiKey;
+        String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + geminiApiKey;
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 

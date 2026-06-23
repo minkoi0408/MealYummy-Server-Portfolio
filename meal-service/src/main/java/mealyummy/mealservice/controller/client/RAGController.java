@@ -40,6 +40,12 @@ public class RAGController {
         return ResponseEntity.ok(BaseApiResponse.ok("Thành công", answer));
     }
 
+    @GetMapping("/restaurant-keywords")
+    public ResponseEntity<BaseApiResponse<java.util.List<String>>> getRestaurantKeywords(@RequestParam String mealName) {
+        java.util.List<String> keywords = ragService.getRestaurantKeywords(mealName);
+        return ResponseEntity.ok(BaseApiResponse.ok("Thành công", keywords));
+    }
+
     @GetMapping("/quota")
     public ResponseEntity<BaseApiResponse<java.util.Map<String, Integer>>> getQuota(org.springframework.security.core.Authentication auth) {
         if (auth == null || !auth.isAuthenticated() || auth.getPrincipal() == null || "anonymousUser".equals(auth.getPrincipal())) {
