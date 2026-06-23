@@ -22,7 +22,7 @@ public class RoleController {
 
     private final RoleService roleService;
 
-    @PreAuthorize("hasAuthority('VIEW_ALL_ROLE')")
+    @PreAuthorize("@apiAuth.check()")
     @GetMapping
     public ResponseEntity<BaseApiResponse<List<RoleResponse>>> getAllRoles() {
         List<RoleResponse> roles = roleService.getAllRoles();
@@ -31,7 +31,7 @@ public class RoleController {
                 .body(BaseApiResponse.ok("Lấy danh sách vai trò thành công", roles));
     }
 
-    @PreAuthorize("hasAuthority('VIEW_ROLE')")
+    @PreAuthorize("@apiAuth.check()")
     @GetMapping("/{id}")
     public ResponseEntity<BaseApiResponse<RoleResponse>> getRole(@PathVariable String id) {
         RoleResponse role = roleService.getRole(id);
@@ -40,7 +40,7 @@ public class RoleController {
                 .body(BaseApiResponse.ok("Thông tin vai trò", role));
     }
 
-    @PreAuthorize("hasAuthority('CREATE_ROLE')")
+    @PreAuthorize("@apiAuth.check()")
     @PostMapping
     public ResponseEntity<BaseApiResponse<RoleResponse>> createRole(@Valid @RequestBody RoleRequestDTO request) {
         RoleResponse role = roleService.createRole(request);
@@ -49,7 +49,7 @@ public class RoleController {
                 .body(BaseApiResponse.ok("Tạo mới vai trò thành công", role));
     }
 
-    @PreAuthorize("hasAuthority('UPDATE_ROLE')")
+    @PreAuthorize("@apiAuth.check()")
     @PutMapping("/{id}")
     public ResponseEntity<BaseApiResponse<RoleResponse>> updateRole(
             @PathVariable String id,
@@ -60,7 +60,7 @@ public class RoleController {
                 .body(BaseApiResponse.ok("Cập nhật vai trò thành công", role));
     }
 
-    @PreAuthorize("hasAuthority('DELETE_ROLE')")
+    @PreAuthorize("@apiAuth.check()")
     @DeleteMapping("/{id}")
     public ResponseEntity<BaseApiResponse<Void>> deleteRole(@PathVariable String id) {
         roleService.deleteRole(id);
@@ -69,7 +69,7 @@ public class RoleController {
                 .body(BaseApiResponse.ok("Xóa vai trò thành công", null));
     }
 
-    @PreAuthorize("hasAuthority('ROLE_ASSIGN_PERMISSION')")
+    @PreAuthorize("@apiAuth.check()")
     @PutMapping("/permissions/add")
     public ResponseEntity<BaseApiResponse<Role>> addPermissionsToRole(
             @Valid @RequestBody RolePermissionDTO request) {
@@ -79,7 +79,7 @@ public class RoleController {
                 .body(BaseApiResponse.ok("Cập nhật thêm quyền cho vai trò thành công", updatedRole));
     }
 
-    @PreAuthorize("hasAuthority('ROLE_REVOKE_PERMISSION')")
+    @PreAuthorize("@apiAuth.check()")
     @PutMapping("/permissions/delete")
     public ResponseEntity<BaseApiResponse<Role>> deletePermissionsFromRole(
             @Valid @RequestBody RolePermissionDTO request) {

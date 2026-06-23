@@ -18,7 +18,7 @@ public class UserSubscriptionController {
 
     private final SubscriptionService subscriptionService;
 
-    @PreAuthorize("hasAuthority('VIEW_ALL_USER_SUBSCRIPTION')")
+    @PreAuthorize("@apiAuth.check()")
     @GetMapping
     public ResponseEntity<BaseApiResponse<Page<UserSubscription>>> getAllSubscriptions(Pageable pageable) {
         Page<UserSubscription> response = subscriptionService.getAllSubscriptions(pageable);
@@ -27,7 +27,7 @@ public class UserSubscriptionController {
                 .body(BaseApiResponse.ok("Lấy danh sách người dùng đăng ký gói thành công", response));
     }
 
-    @PreAuthorize("hasAuthority('VIEW_USER_SUBSCRIPTION')")
+    @PreAuthorize("@apiAuth.check()")
     @GetMapping("/{id}")
     public ResponseEntity<BaseApiResponse<UserSubscription>> getSubscription(@PathVariable String id) {
         UserSubscription response = subscriptionService.getSubscriptionById(id);

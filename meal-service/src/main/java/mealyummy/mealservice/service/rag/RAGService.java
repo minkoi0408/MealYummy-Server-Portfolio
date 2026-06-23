@@ -111,109 +111,87 @@ public class RAGService {
         }
     }
 
+    public String syncMealEmbeddings() {
+        List<Meal> meals = mealRepository.findByActiveTrue();
+        int count = 0;
+        for (Meal meal : meals) {
+            StringBuilder textToEmbed = new StringBuilder();
+            if (meal.getName() != null) textToEmbed.append(meal.getName()).append(" ");
+            if (meal.getDescription() != null) textToEmbed.append(meal.getDescription()).append(" ");
+            
+            if (meal.getCategories() != null) {
+                for (String cat : meal.getCategories()) {
+                    if (cat != null) textToEmbed.append(cat).append(" ");
+                }
+            }
+            if (meal.getTags() != null) {
+                for (String tag : meal.getTags()) {
+                    if (tag != null) textToEmbed.append(tag).append(" ");
+                }
+            }
+            
+            String content = textToEmbed.toString().trim();
+            if (!content.isEmpty()) {
+                List<Double> embedding = getEmbedding(content);
+                if (embedding != null) {
+                    meal.setEmbedding(embedding);
+                    mealRepository.save(meal);
+                    count++;
+                }
+            }
+        }
+        return "Đã đồng bộ Vector (Embedding) thành công cho " + count + " món ăn.";
+    }
+
     public Object askQuestion(mealyummy.mealservice.service.rag.dto.ChatRequestDTO request, String username) {
         String question = request.getQuestion();
         
-        // 1. Fetch raw documents to bypass Spring Data Lazy Loading N+1 queries completely
-        org.springframework.data.mongodb.core.query.Query mealQuery = new org.springframework.data.mongodb.core.query.Query(
-                org.springframework.data.mongodb.core.query.Criteria.where("active").is(true)
-        );
-        // Exclude large fields to save memory and tokens
-        mealQuery.fields().include("_id", "name", "description", "categories", "tags");
+        // 1. Convert user question to vector
+        List<Double> questionEmbedding = getEmbedding(question);
         
-        List<Document> rawMeals = mongoTemplate.find(mealQuery, Document.class, "meals");
-        List<Document> rawCategories = mongoTemplate.findAll(Document.class, "categories");
-        List<Document> rawTags = mongoTemplate.findAll(Document.class, "tags");
-
-        // Format references efficiently
-        List<Map<String, Object>> catalogMeals = new ArrayList<>();
-        for (Document doc : rawMeals) {
-            Map<String, Object> simpleMeal = new java.util.HashMap<>();
-            simpleMeal.put("id", doc.getObjectId("_id").toHexString());
-            simpleMeal.put("name", doc.getString("name"));
-            simpleMeal.put("description", doc.getString("description"));
-            
-            // Extract category and tag IDs
-            Object catObj = doc.get("categories");
-            if (catObj instanceof List) {
-                List<String> cIds = new ArrayList<>();
-                for (Object c : (List<?>) catObj) {
-                    if (c instanceof org.bson.types.ObjectId) cIds.add(((org.bson.types.ObjectId) c).toHexString());
-                    else if (c instanceof com.mongodb.DBRef) cIds.add(((com.mongodb.DBRef) c).getId().toString());
-                    else cIds.add(c.toString());
-                }
-                simpleMeal.put("categoryIds", cIds);
-            }
-            
-            Object tagObj = doc.get("tags");
-            if (tagObj instanceof List) {
-                List<String> tIds = new ArrayList<>();
-                for (Object t : (List<?>) tagObj) {
-                    if (t instanceof org.bson.types.ObjectId) tIds.add(((org.bson.types.ObjectId) t).toHexString());
-                    else if (t instanceof com.mongodb.DBRef) tIds.add(((com.mongodb.DBRef) t).getId().toString());
-                    else tIds.add(t.toString());
-                }
-                simpleMeal.put("tagIds", tIds);
-            }
-            catalogMeals.add(simpleMeal);
-        }
-
-        List<Map<String, String>> catalogCategories = new ArrayList<>();
-        for (Document doc : rawCategories) {
-            catalogCategories.add(Map.of("id", doc.getObjectId("_id").toHexString(), "name", doc.getString("name")));
-        }
-
-        List<Map<String, String>> catalogTags = new ArrayList<>();
-        for (Document doc : rawTags) {
-            catalogTags.add(Map.of("id", doc.getObjectId("_id").toHexString(), "name", doc.getString("name")));
-        }
-
-        // Convert catalog to JSON String
-        String catalogJson = "";
-        try {
-            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-            Map<String, Object> fullCatalog = Map.of(
-                "categories", catalogCategories,
-                "tags", catalogTags,
-                "meals", catalogMeals
+        List<Meal> responseList = new ArrayList<>();
+        
+        if (questionEmbedding != null) {
+            // 2. Perform MongoDB Atlas Vector Search
+            // Note: This requires an Atlas Vector Search index named "vector_index" on the "meals" collection
+            org.springframework.data.mongodb.core.aggregation.Aggregation aggregation = org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation(
+                (org.springframework.data.mongodb.core.aggregation.AggregationOperationContext context) -> new Document("$vectorSearch", new Document("index", "vector_index")
+                        .append("path", "embedding")
+                        .append("queryVector", questionEmbedding)
+                        .append("numCandidates", 100)
+                        .append("limit", 12)
+                ),
+                org.springframework.data.mongodb.core.aggregation.Aggregation.match(
+                    org.springframework.data.mongodb.core.query.Criteria.where("active").is(true)
+                )
             );
-            catalogJson = mapper.writeValueAsString(fullCatalog);
-        } catch(Exception e) {}
 
-        // 2. Pass to LLM for semantic search
-        String systemInstruction = "Bạn là chuyên gia dinh dưỡng AI. Dưới đây là danh sách danh mục (categories), thẻ (tags) và danh sách toàn bộ món ăn (meals) của hệ thống:\n" 
-            + catalogJson + "\n\n"
-            + "Dựa vào yêu cầu của người dùng, hãy chọn ra tối đa 10 món ăn phù hợp nhất về mặt ngữ nghĩa, dinh dưỡng và mục tiêu. Nếu người dùng chọn tag hay category, hãy phân tích từ điển tags/categories để ánh xạ với các tagIds/categoryIds của từng món ăn.\n"
-            + "CHỈ trả về ĐÚNG 1 mảng JSON chứa các ID của món ăn được chọn (Ví dụ: [\"6a21...\", \"6a22...\"]). KHÔNG BAO GỒM BẤT KỲ VĂN BẢN HAY CODE BLOCK MARKDOWN NÀO KHÁC.";
-
-        String responseJson = generateChatResponse(systemInstruction, request.getHistory(), question);
-
-        List<String> selectedIds = new ArrayList<>();
-        try {
-            String cleanJson = responseJson.replaceAll("(?s)```json(.*?)```", "$1").replaceAll("(?s)```(.*?)```", "$1").trim();
-            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-            selectedIds = mapper.readValue(cleanJson, new com.fasterxml.jackson.core.type.TypeReference<List<String>>(){});
-        } catch (Exception e) {
-            System.err.println("Lỗi parse JSON từ LLM: " + responseJson);
+            org.springframework.data.mongodb.core.aggregation.AggregationResults<Meal> results = 
+                mongoTemplate.aggregate(aggregation, "meals_v2", Meal.class);
+                
+            responseList = results.getMappedResults();
         }
-
-        // 3. Lấy kết quả DTO
-        List<Object> responseList = new ArrayList<>();
-        for (String id : selectedIds) {
-            try {
-                responseList.add(mealService.get(id));
-            } catch(Exception e) {}
-        }
-
-        // Fallback ngẫu nhiên nếu LLM lỗi
+        
+        // Fallback or if Vector Search failed (or no index)
         if (responseList.isEmpty()) {
-            int maxFallback = Math.min(10, catalogMeals.size());
-            for (int i = 0; i < maxFallback; i++) {
-                try {
-                    responseList.add(mealService.get(catalogMeals.get(i).get("id").toString()));
-                } catch(Exception e) {}
-            }
+             // Fallback to basic keyword search or return top active meals
+             org.springframework.data.mongodb.core.query.Query fallbackQuery = new org.springframework.data.mongodb.core.query.Query(
+                 org.springframework.data.mongodb.core.query.Criteria.where("active").is(true)
+             ).limit(12);
+             responseList = mongoTemplate.find(fallbackQuery, Meal.class, "meals_v2");
         }
+
+        // 3. Format response using Gemini for natural language (Optional but requested)
+        StringBuilder mealsContext = new StringBuilder();
+        for (Meal meal : responseList) {
+            mealsContext.append("- ").append(meal.getName()).append(": ").append(meal.getDescription()).append("\n");
+        }
+        
+        String systemInstruction = "Bạn là chuyên gia dinh dưỡng AI. Dựa vào danh sách các món ăn đã được tìm kiếm dưới đây:\n"
+            + mealsContext.toString() + "\n\n"
+            + "Hãy trả lời câu hỏi của người dùng và tư vấn lý do tại sao các món này lại phù hợp một cách ngắn gọn, tự nhiên.";
+            
+        String aiChatResponse = generateChatResponse(systemInstruction, request.getHistory(), question);
 
         // Lưu lịch sử chat
         if (username != null) {
@@ -225,14 +203,45 @@ public class RAGService {
                 }
             }
             history.add(new AiChatSession.ChatMessage("user", question));
-            history.add(new AiChatSession.ChatMessage("model", "Đã gợi ý " + responseList.size() + " món ăn phù hợp với yêu cầu của bạn."));
+            history.add(new AiChatSession.ChatMessage("model", aiChatResponse));
             
             session.setMessages(history);
             session.setUpdatedAt(Instant.now());
             aiChatSessionRepository.save(session);
         }
 
-        return responseList;
+        // Return a custom object containing both the AI text and the list of meals
+        return Map.of(
+            "aiMessage", aiChatResponse,
+            "suggestedMeals", responseList
+        );
+    }
+
+    public List<String> getRestaurantKeywords(String mealName) {
+        String systemInstruction = "Bạn là chuyên gia ẩm thực. "
+            + "Nhận vào tên một món ăn, hãy trả về chính xác 2 cụm từ khóa ngắn gọn về loại quán ăn/nhà hàng thường bán món này ở Việt Nam. "
+            + "Chỉ trả về các cụm từ, phân cách bằng dấu phẩy, KHÔNG GIẢI THÍCH THÊM.\n"
+            + "Ví dụ: Sườn xào chua ngọt -> Quán cơm tấm, Quán cơm bình dân\n"
+            + "Pizza -> Tiệm bánh pizza, Nhà hàng Ý";
+
+        String response = generateChatResponse(systemInstruction, null, mealName);
+        
+        List<String> keywords = new ArrayList<>();
+        if (response != null && !response.trim().isEmpty() && !response.contains("quá tải")) {
+            String[] parts = response.split(",");
+            for (String p : parts) {
+                String kw = p.trim();
+                if (kw.startsWith("-") || kw.startsWith(".")) kw = kw.substring(1).trim();
+                if (!kw.isEmpty()) keywords.add(kw);
+            }
+        }
+        
+        if (keywords.isEmpty()) {
+            keywords.add("Quán " + mealName);
+            keywords.add("Nhà hàng");
+        }
+        
+        return keywords;
     }
 
     private String generateChatResponse(String systemInstruction, List<mealyummy.mealservice.service.rag.dto.ChatRequestDTO.ChatMessageDTO> history, String currentQuestion) {

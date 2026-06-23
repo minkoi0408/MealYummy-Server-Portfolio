@@ -15,4 +15,5 @@ public class AuthResponseDTO {
     private String avatarUrl;
     private String accessToken;
     private String refreshToken;
+    private java.time.Instant createdAt;
 }

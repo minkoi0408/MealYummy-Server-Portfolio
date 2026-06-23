@@ -3,7 +3,7 @@ package mealyummy.mealservice.model.entity.food;
 import mealyummy.mealservice.model.pojo.MealImage;
 import mealyummy.mealservice.model.pojo.MealIngredient;
 import mealyummy.mealservice.model.pojo.Nutrition;
-import mealyummy.mealservice.model.pojo.Price;
+import mealyummy.mealservice.model.pojo.Nutrition;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import org.springframework.data.annotation.Id;
@@ -25,27 +25,27 @@ import org.springframework.data.annotation.CreatedDate;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(collection = "meals")
+@Document(collection = "meals_v2")
 public class Meal {
 
     @Id
     private String id;
     private String name;
     private String description;
-    private Price price;
+
     private List<MealImage> images;
     private Nutrition nutrition;
 
-    @DocumentReference(lazy = true)
-    private List<Category> categories;
+    private List<String> categories;
 
-    @DocumentReference(lazy = true)
-    private List<Tag> tags;
+    private List<String> tags;
 
     private List<MealIngredient> ingredients;
 
     @CreatedDate
     private Instant createdAt;
+
+    private List<Double> embedding;
 
     @Builder.Default
     private Boolean active = true;

@@ -13,7 +13,6 @@ import mealyummy.mealservice.service.meal.dto.MealResponseDTO;
 @AllArgsConstructor
 @NoArgsConstructor
 public class MealIngredient {
-    private String ingredientId;
 
     private String name;
 
@@ -22,7 +21,6 @@ public class MealIngredient {
 
     public MealIngredientDTO convert(){
         return MealIngredientDTO.builder()
-                .ingredientId(this.ingredientId)
                 .name(this.name)
                 .value(this.value)
                 .unitDesc(this.unit.getDescription())

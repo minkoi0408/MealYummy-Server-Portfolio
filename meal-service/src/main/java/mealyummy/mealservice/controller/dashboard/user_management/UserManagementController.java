@@ -20,7 +20,7 @@ public class UserManagementController {
 
     private final UserService userService;
 
-    @PreAuthorize("hasAuthority('VIEW_ALL_USER')")
+    @PreAuthorize("@apiAuth.check()")
     @GetMapping
     public ResponseEntity<BaseApiResponse<Page<UserResponseDTO>>> getAllUsers(Pageable pageable) {
         Page<UserResponseDTO> response = userService.getAllUsers(pageable);
@@ -29,7 +29,7 @@ public class UserManagementController {
                 .body(BaseApiResponse.ok("Lấy danh sách người dùng thành công", response));
     }
 
-    @PreAuthorize("hasAuthority('VIEW_USER')")
+    @PreAuthorize("@apiAuth.check()")
     @GetMapping("/{id}")
     public ResponseEntity<BaseApiResponse<UserResponseDTO>> getUser(@PathVariable String id) {
         UserResponseDTO response = userService.getUser(id);
@@ -38,7 +38,7 @@ public class UserManagementController {
                 .body(BaseApiResponse.ok("Thông tin người dùng", response));
     }
 
-    @PreAuthorize("hasAuthority('UPDATE_USER_ROLE')")
+    @PreAuthorize("@apiAuth.check()")
     @PutMapping("/{id}/role")
     public ResponseEntity<BaseApiResponse<UserResponseDTO>> updateUserRole(
             @PathVariable String id,

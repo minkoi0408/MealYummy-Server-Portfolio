@@ -338,13 +338,13 @@ public class DietRoadmapService {
         String text = (meal.getName() + " " + (meal.getDescription() != null ? meal.getDescription() : "")).toLowerCase();
         
         if (meal.getCategories() != null) {
-            for (mealyummy.mealservice.model.entity.food.Category c : meal.getCategories()) {
-                if (c.getName() != null) text += " " + c.getName().toLowerCase();
+            for (String c : meal.getCategories()) {
+                if (c != null) text += " " + c.toLowerCase();
             }
         }
         if (meal.getTags() != null) {
-            for (mealyummy.mealservice.model.entity.food.Tag t : meal.getTags()) {
-                if (t.getName() != null) text += " " + t.getName().toLowerCase();
+            for (String t : meal.getTags()) {
+                if (t != null) text += " " + t.toLowerCase();
             }
         }
 

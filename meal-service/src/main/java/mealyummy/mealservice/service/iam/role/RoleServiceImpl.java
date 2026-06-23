@@ -84,7 +84,7 @@ public class RoleServiceImpl implements RoleService {
         Role role = roleRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
 
-        if (role.getPermissions() != null && role.getPermissions().contains("ROLE_ASSIGN_PERMISSION")) {
+        if (role.getPermissions() != null && role.getRoleCode().equals("ROLE_ADMIN")) {
             throw new AppException(ErrorCode.CANNOT_DELETE_ASSIGN_PERMISSION);
         }
 
@@ -111,7 +111,7 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     public Role deletePermissionsFromRole(RolePermissionDTO request) {
-        if (request.getPermissionCodes() != null && request.getPermissionCodes().contains("ROLE_ASSIGN_PERMISSION")) {
+        if (request.getPermissionCodes() != null && "ROLE_ADMIN".equals(request.getRoleCode())) {
             throw new AppException(ErrorCode.CANNOT_DELETE_ASSIGN_PERMISSION);
         }
         Role role = roleRepository.findByRoleCode(request.getRoleCode())

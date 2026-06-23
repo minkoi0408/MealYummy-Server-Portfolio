@@ -30,11 +30,28 @@ public enum IngredientUnit {
 
     @com.fasterxml.jackson.annotation.JsonCreator
     public static IngredientUnit fromString(String text) {
+        if (text == null || text.trim().isEmpty()) {
+            return PIECE;
+        }
+        String lower = text.trim().toLowerCase();
         for (IngredientUnit unit : IngredientUnit.values()) {
-            if (unit.name().equalsIgnoreCase(text) || unit.symbol.equalsIgnoreCase(text)) {
+            if (unit.name().equalsIgnoreCase(lower) || unit.symbol.equalsIgnoreCase(lower)) {
                 return unit;
             }
         }
-        throw new IllegalArgumentException("Không hỗ trợ đơn vị đo lường: " + text);
+        // Fallback for English / Spoonacular units
+        if (lower.contains("teaspoon") || lower.equals("tsp")) return TSP;
+        if (lower.contains("tablespoon") || lower.equals("tbsp")) return TBSP;
+        if (lower.contains("cup") || lower.equals("c")) return BOWL;
+        if (lower.contains("clove")) return CLOVE;
+        if (lower.contains("bunch") || lower.contains("stalk")) return BUNCH;
+        if (lower.contains("pinch") || lower.contains("dash")) return PINCH;
+        if (lower.contains("g") || lower.contains("gram") || lower.contains("ounce") || lower.contains("oz")) return G;
+        if (lower.contains("kg") || lower.contains("kilogram") || lower.contains("pound") || lower.contains("lb")) return KG;
+        if (lower.contains("ml") || lower.contains("milliliter")) return ML;
+        if (lower.contains("l") || lower.contains("liter")) return L;
+        
+        // Default fallback instead of crashing
+        return PIECE;
     }
 }
