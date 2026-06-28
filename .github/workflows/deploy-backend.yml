@@ -30,13 +30,22 @@ jobs:
           ${{ secrets.PROD_ENV_FILE }}
           EOF
 
-      - name: Copy Files to VPS
+      - name: Copy Root Files to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           password: ${{ secrets.VPS_PASSWORD }}
-          source: "meal-service/target/meal-service-0.0.1-SNAPSHOT.jar,meal-service/Dockerfile.backend,docker-compose.yml,.env"
+          source: "docker-compose.yml,.env"
+          target: "/root/meal-yummi"
+
+      - name: Copy Service Files to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          source: "meal-service/target/meal-service-0.0.1-SNAPSHOT.jar,meal-service/Dockerfile.backend"
           target: "/root/meal-yummi"
           strip_components: 1
 
