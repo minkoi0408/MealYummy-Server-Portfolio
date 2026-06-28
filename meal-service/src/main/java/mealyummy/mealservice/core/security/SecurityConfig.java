@@ -3,6 +3,7 @@ package mealyummy.mealservice.core.security;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -20,6 +21,7 @@ import java.io.IOException;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -58,23 +60,37 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // Cho phép OPTIONS requests (dùng cho CORS preflight)
+                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                         // Các endpoint công khai (không cần đăng nhập)
                         .requestMatchers(
+                                "/api/v1/bundles/**",
+                                "/api/v1/subscriptions/**",
                                 "/api/v1/auth/**",
                                 "/api/v1/notification/**",
-                                "/api/v1/data/**",
                                 "/api/v1/categories/**",
                                 "/api/v1/tags/**",
                                 "/api/v1/ingredients/**",
                                 "/api/v1/meals/**",
                                 "/api/v1/ai/**",
                                 "/api/v1/map/**",
+                                "/api/v1/payments/payos-webhook",
+                                "/api/v1/payments/payos-return",
+                                "/api/v1/payments/payos-cancel",
                                 "/swagger-ui/**",
                                 "/api-docs/**",
-                                "/swagger-ui.html")
+                                "/swagger-ui.html",
+                                "/error")
                         .permitAll()
                         // Tất cả các endpoint khác phải đăng nhập
                         .anyRequest().authenticated())
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.getWriter().write("{\"code\": 401, \"message\": \"Unauthorized\"}");
+                        })
+                )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(coopHeaderFilter(), UsernamePasswordAuthenticationFilter.class);
 

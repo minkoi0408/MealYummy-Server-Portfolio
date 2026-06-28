@@ -11,7 +11,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.time.Instant;
-import java.util.HashSet;
 import java.util.Set;
 
 @Data
@@ -41,6 +40,5 @@ public class Role {
     private Instant createdAt;
 
     @Field("permissions")
-    @Builder.Default
-    private Set<String> permissions = new HashSet<>();
+    private Set<String> permissions;
 }

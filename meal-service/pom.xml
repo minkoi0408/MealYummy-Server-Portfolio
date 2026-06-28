@@ -32,6 +32,11 @@
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
+            <version>3.2.4</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-devtools</artifactId>
             <scope>runtime</scope>
             <optional>true</optional>
@@ -147,6 +152,13 @@
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>location</artifactId>
             <version>2.25.16</version>
+        </dependency>
+
+        <!-- PayOS SDK -->
+        <dependency>
+            <groupId>vn.payos</groupId>
+            <artifactId>payos-java</artifactId>
+            <version>2.0.1</version>
         </dependency>
 
     </dependencies>

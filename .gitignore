@@ -1,2 +1,28 @@
+.codegraph
+
+# Build outputs
+target/
+dist/
+build/
+out/
+
+# Environment files (sensitive data)
 .env
-.idea
+.env.local
+.env.*.local
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDE settings (optional, but good to exclude for sharing)
+.idea/
+.vscode/
+
+# Testing artifacts
+coverage/
+test-output/
+
+# Misc
+.history/
+PROD_ENV_TEMPLATE.txt

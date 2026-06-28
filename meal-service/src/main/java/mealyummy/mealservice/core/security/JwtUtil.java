@@ -1,6 +1,7 @@
 package mealyummy.mealservice.core.security;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -34,34 +36,49 @@ public class JwtUtil {
     }
 
     /**
-     * Tạo Access Token (sống 5 phút)
+     * Tạo Access Token (Sẽ chứa đầy đủ Role và Permissions)
      */
-    public String generateAccessToken(String username) {
-        return buildToken(username, accessTokenExpirationMs, "ACCESS");
+    public String generateAccessToken(String username, String roleCode, Set<String> permissions) {
+        return buildToken(username, roleCode, permissions, accessTokenExpirationMs, "ACCESS");
     }
 
     /**
-     * Tạo Refresh Token (sống 1 tuần)
+     * Tạo Refresh Token (Chỉ chứa Username, KHÔNG chứa Role và Permissions)
+     * Hàm này đã được bỏ bớt 2 tham số roleCode và permissions ở đầu vào.
      */
     public String generateRefreshToken(String username) {
-        return buildToken(username, refreshTokenExpirationMs, "REFRESH");
+        // Truyền null vào các tham số phân quyền
+        return buildToken(username, null, null, refreshTokenExpirationMs, "REFRESH");
     }
 
     /**
      * Tạo token với type (ACCESS hoặc REFRESH)
      */
-    private String buildToken(String username, long expirationMs, String tokenType) {
+    private String buildToken(String username, String roleCode, Set<String> permissions, long expirationMs, String tokenType) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + expirationMs);
 
-        return Jwts.builder()
+        // 1. Khởi tạo Builder với các thông tin CƠ BẢN bắt buộc token nào cũng phải có
+        JwtBuilder builder = Jwts.builder()
                 .subject(username)
                 .claim("type", tokenType)
                 .id(UUID.randomUUID().toString()) // unique token ID
                 .issuedAt(now)
                 .expiration(expiry)
-                .signWith(secretKey)
-                .compact();
+                .signWith(secretKey);
+
+        // 2. Chỉ nhúng Role nếu có dữ liệu (Dành cho Access Token)
+        if (roleCode != null && !roleCode.trim().isEmpty()) {
+            builder.claim("role", roleCode);
+        }
+
+        // 3. Chỉ nhúng Permissions nếu có dữ liệu (Dành cho Access Token)
+        if (permissions != null && !permissions.isEmpty()) {
+            builder.claim("permissions", permissions);
+        }
+
+        // 4. Đóng gói token
+        return builder.compact();
     }
 
     /**
@@ -105,7 +122,7 @@ public class JwtUtil {
         return refreshTokenExpirationMs;
     }
 
-    private Claims parseClaims(String token) {
+    public Claims parseClaims(String token) {
         return Jwts.parser()
                 .verifyWith(secretKey)
                 .build()

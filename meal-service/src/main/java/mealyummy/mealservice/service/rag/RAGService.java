@@ -1,9 +1,7 @@
 package mealyummy.mealservice.service.rag;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import mealyummy.mealservice.model.entity.Meal;
+import mealyummy.mealservice.model.entity.food.Meal;
 import mealyummy.mealservice.model.entity.AiChatSession;
 import mealyummy.mealservice.model.repository.MealRepository;
 import mealyummy.mealservice.model.repository.AiChatSessionRepository;
@@ -32,6 +30,7 @@ public class RAGService {
     private final RestTemplate restTemplate = new RestTemplate();
     private final MealRepository mealRepository;
     private final AiChatSessionRepository aiChatSessionRepository;
+    private final mealyummy.mealservice.service.meal.MealService mealService;
 
     @Value("${gemini.api.key}")
     private String geminiApiKey;
@@ -103,79 +102,99 @@ public class RAGService {
         return null;
     }
 
-    public String askQuestion(mealyummy.mealservice.service.rag.dto.ChatRequestDTO request, String username) {
+    static class MealScore {
+        Meal meal;
+        int score;
+        public MealScore(Meal meal, int score) {
+            this.meal = meal;
+            this.score = score;
+        }
+    }
+
+    public String syncMealEmbeddings() {
+        List<Meal> meals = mealRepository.findByActiveTrue();
+        int count = 0;
+        for (Meal meal : meals) {
+            StringBuilder textToEmbed = new StringBuilder();
+            if (meal.getName() != null) textToEmbed.append(meal.getName()).append(" ");
+            if (meal.getDescription() != null) textToEmbed.append(meal.getDescription()).append(" ");
+            
+            if (meal.getCategories() != null) {
+                for (String cat : meal.getCategories()) {
+                    if (cat != null) textToEmbed.append(cat).append(" ");
+                }
+            }
+            if (meal.getTags() != null) {
+                for (String tag : meal.getTags()) {
+                    if (tag != null) textToEmbed.append(tag).append(" ");
+                }
+            }
+            
+            String content = textToEmbed.toString().trim();
+            if (!content.isEmpty()) {
+                List<Double> embedding = getEmbedding(content);
+                if (embedding != null) {
+                    meal.setEmbedding(embedding);
+                    mealRepository.save(meal);
+                    count++;
+                }
+            }
+        }
+        return "Đã đồng bộ Vector (Embedding) thành công cho " + count + " món ăn.";
+    }
+
+    public Object askQuestion(mealyummy.mealservice.service.rag.dto.ChatRequestDTO request, String username) {
         String question = request.getQuestion();
         
+        // 1. Convert user question to vector
         List<Double> questionEmbedding = getEmbedding(question);
-        if (questionEmbedding == null || questionEmbedding.isEmpty()) {
-            return "Xin lỗi, hệ thống AI đang gặp sự cố khi xử lý câu hỏi của bạn.";
-        }
+        
+        List<Meal> responseList = new ArrayList<>();
+        
+        if (questionEmbedding != null) {
+            // 2. Perform MongoDB Atlas Vector Search
+            // Note: This requires an Atlas Vector Search index named "vector_index" on the "meals" collection
+            org.springframework.data.mongodb.core.aggregation.Aggregation aggregation = org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation(
+                (org.springframework.data.mongodb.core.aggregation.AggregationOperationContext context) -> new Document("$vectorSearch", new Document("index", "vector_index")
+                        .append("path", "embedding")
+                        .append("queryVector", questionEmbedding)
+                        .append("numCandidates", 100)
+                        .append("limit", 12)
+                ),
+                org.springframework.data.mongodb.core.aggregation.Aggregation.match(
+                    org.springframework.data.mongodb.core.query.Criteria.where("active").is(true)
+                )
+            );
 
-        List<Document> pipeline = List.of(
-            new Document("$vectorSearch",
-                new Document("index", "vector_index")
-                    .append("path", "embedding")
-                    .append("queryVector", questionEmbedding)
-                    .append("numCandidates", 50)
-                    .append("limit", 3)
-            ),
-            new Document("$project",
-                new Document("text", 1)
-                    .append("score", new Document("$meta", "vectorSearchScore"))
-            )
-        );
-
-        StringBuilder contextBuilder = new StringBuilder();
-        try {
-            com.mongodb.client.AggregateIterable<Document> results = mongoTemplate.getCollection("vector_store").aggregate(pipeline);
-            for (Document doc : results) {
-                contextBuilder.append("- ").append(doc.getString("text")).append("\n\n");
-            }
-        } catch (Exception e) {
-            System.err.println("Lỗi khi tìm kiếm Vector trong MongoDB: " + e.getMessage());
-            return "Xin lỗi, hệ thống cơ sở dữ liệu y khoa đang bảo trì, vui lòng thử lại sau.";
-        }
-
-        String context = contextBuilder.toString().trim();
-        if (context.isEmpty()) {
-            return "Xin lỗi, tôi chưa được học kiến thức nào liên quan đến vấn đề này. Hãy cung cấp thêm thông tin.";
-        }
-
-        List<Meal> meals = mealRepository.findAll();
-        if (meals.size() > 10) {
-            java.util.Collections.shuffle(meals);
-            meals = meals.subList(0, 10);
+            org.springframework.data.mongodb.core.aggregation.AggregationResults<Meal> results = 
+                mongoTemplate.aggregate(aggregation, "meals_v2", Meal.class);
+                
+            responseList = results.getMappedResults();
         }
         
-        StringBuilder menuBuilder = new StringBuilder();
-        for (Meal meal : meals) {
-            menuBuilder.append("- Món: ").append(meal.getName())
-                       .append(" (").append(meal.getDescription()).append(")\n");
-            if (meal.getNutrition() != null) {
-                menuBuilder.append("  [Calo: ").append(meal.getNutrition().getCalories())
-                           .append(", Protein: ").append(meal.getNutrition().getProtein()).append("g")
-                           .append(", Fat: ").append(meal.getNutrition().getFat()).append("g")
-                           .append(", Carbs: ").append(meal.getNutrition().getCarbs()).append("g]\n");
-            }
-            if (meal.getImages() != null && !meal.getImages().isEmpty()) {
-                menuBuilder.append("  URL_Image: ").append(meal.getImages().get(0).getUrl()).append("\n");
-            }
+        // Fallback or if Vector Search failed (or no index)
+        if (responseList.isEmpty()) {
+             // Fallback to basic keyword search or return top active meals
+             org.springframework.data.mongodb.core.query.Query fallbackQuery = new org.springframework.data.mongodb.core.query.Query(
+                 org.springframework.data.mongodb.core.query.Criteria.where("active").is(true)
+             ).limit(12);
+             responseList = mongoTemplate.find(fallbackQuery, Meal.class, "meals_v2");
         }
 
-        String systemInstruction = "Bạn là Bác sĩ Dinh dưỡng AI cực kỳ thông minh, thân thiện và tận tâm của nhà hàng MealYummy.\n" +
-                        "Nhiệm vụ của bạn:\n" +
-                        "1. Nếu người dùng cung cấp chiều cao và cân nặng, HÃY tự động tính chỉ số BMI, đánh giá tình trạng cơ thể (thiếu cân, bình thường, thừa cân, béo phì) và đưa ra lời nhận xét thấu cảm, động viên họ.\n" +
-                        "2. Dựa CHỦ YẾU VÀO các thông tin y khoa được cung cấp bên dưới, hãy giải đáp câu hỏi của họ một cách chuyên nghiệp, dễ hiểu.\n" +
-                        "3. BẮT BUỘC HÃY GỢI Ý 1-2 món ăn phù hợp nhất từ MENU CỦA NHÀ HÀNG dưới đây (Tuyệt đối không bịa ra món mới). KHI GỢI Ý, hãy ghi chú đầy đủ thông tin dinh dưỡng (Calo, Protein, Fat, Carbs) để khách hàng tham khảo.\n\n" +
-                        "--- THÔNG TIN Y KHOA (RAG CONTEXT) ---\n" +
-                        context + "\n" +
-                        "------------------------\n\n" +
-                        "--- MENU NHÀ HÀNG MEALYUMMY ---\n" +
-                        menuBuilder.toString();
+        // 3. Format response using Gemini for natural language (Optional but requested)
+        StringBuilder mealsContext = new StringBuilder();
+        for (Meal meal : responseList) {
+            mealsContext.append("- ").append(meal.getName()).append(": ").append(meal.getDescription()).append("\n");
+        }
+        
+        String systemInstruction = "Bạn là chuyên gia dinh dưỡng AI. Dựa vào danh sách các món ăn đã được tìm kiếm dưới đây:\n"
+            + mealsContext.toString() + "\n\n"
+            + "Hãy trả lời câu hỏi của người dùng và tư vấn lý do tại sao các món này lại phù hợp một cách ngắn gọn, tự nhiên.";
+            
+        String aiChatResponse = generateChatResponse(systemInstruction, request.getHistory(), question);
 
-        String answer = generateChatResponse(systemInstruction, request.getHistory(), question);
-
-        if (username != null && !answer.contains("quá tải hoặc không phản hồi") && !answer.contains("Xin lỗi")) {
+        // Lưu lịch sử chat
+        if (username != null) {
             AiChatSession session = aiChatSessionRepository.findById(username).orElse(new AiChatSession(username, new ArrayList<>(), Instant.now()));
             List<AiChatSession.ChatMessage> history = new ArrayList<>();
             if (request.getHistory() != null) {
@@ -184,18 +203,49 @@ public class RAGService {
                 }
             }
             history.add(new AiChatSession.ChatMessage("user", question));
-            history.add(new AiChatSession.ChatMessage("model", answer));
+            history.add(new AiChatSession.ChatMessage("model", aiChatResponse));
             
             session.setMessages(history);
             session.setUpdatedAt(Instant.now());
             aiChatSessionRepository.save(session);
         }
 
-        return answer;
+        // Return a custom object containing both the AI text and the list of meals
+        return Map.of(
+            "aiMessage", aiChatResponse,
+            "suggestedMeals", responseList
+        );
+    }
+
+    public List<String> getRestaurantKeywords(String mealName) {
+        String systemInstruction = "Bạn là chuyên gia ẩm thực. "
+            + "Nhận vào tên một món ăn, hãy trả về chính xác 2 cụm từ khóa ngắn gọn về loại quán ăn/nhà hàng thường bán món này ở Việt Nam. "
+            + "Chỉ trả về các cụm từ, phân cách bằng dấu phẩy, KHÔNG GIẢI THÍCH THÊM.\n"
+            + "Ví dụ: Sườn xào chua ngọt -> Quán cơm tấm, Quán cơm bình dân\n"
+            + "Pizza -> Tiệm bánh pizza, Nhà hàng Ý";
+
+        String response = generateChatResponse(systemInstruction, null, mealName);
+        
+        List<String> keywords = new ArrayList<>();
+        if (response != null && !response.trim().isEmpty() && !response.contains("quá tải")) {
+            String[] parts = response.split(",");
+            for (String p : parts) {
+                String kw = p.trim();
+                if (kw.startsWith("-") || kw.startsWith(".")) kw = kw.substring(1).trim();
+                if (!kw.isEmpty()) keywords.add(kw);
+            }
+        }
+        
+        if (keywords.isEmpty()) {
+            keywords.add("Quán " + mealName);
+            keywords.add("Nhà hàng");
+        }
+        
+        return keywords;
     }
 
     private String generateChatResponse(String systemInstruction, List<mealyummy.mealservice.service.rag.dto.ChatRequestDTO.ChatMessageDTO> history, String currentQuestion) {
-        String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + geminiApiKey;
+        String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + geminiApiKey;
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 

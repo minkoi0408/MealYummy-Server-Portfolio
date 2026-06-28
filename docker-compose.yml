@@ -1,106 +1,41 @@
+version: '3.8'
+
 services:
-  # ============================================================================
-  # MongoDB Service (Primary Database for Meal Yummy Server)
-  # ============================================================================
-  mongodb:
-    image: mongo:6.0
-    container_name: mealyummy_mongodb
-    ports:
-      - "27017:27017"
-    environment:
-      - MONGO_INITDB_DATABASE=${MONGO_INITDB_DATABASE:-meal-service}
-    volumes:
-      - mongodb_data:/data/db
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-
-  # ============================================================================
-  # PostgreSQL Service (Relational Database - configured as requested)
-  # ============================================================================
-  postgres:
-    image: postgres:15-alpine
-    container_name: mealyummy_postgres
-    ports:
-      - "${DB_LOCAL_PORT:-5432}:5432"
-    environment:
-      - POSTGRES_USER=${DB_USERNAME:-postgres}
-      - POSTGRES_PASSWORD=${DB_PASSWORD:-postgres_password}
-      - POSTGRES_DB=${DB_NAME:-mealyummy_db}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-mealyummy_db}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-
-  # ============================================================================
-  # Redis Cache Service
-  # ============================================================================
   redis:
-    image: redis:7-alpine
+    image: redis:alpine
     container_name: mealyummy_redis
     ports:
       - "6379:6379"
-    volumes:
-      - redis_data:/data
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 5s
+    networks:
+      - mealyummy-net
 
-  # ============================================================================
-  # Backend Spring Boot Service
-  # ============================================================================
   backend:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.backend
     container_name: mealyummy_backend
     ports:
-      - "${SERVER_PORT:-8082}:${SERVER_PORT:-8082}"
+      - "8082:8082"
     env_file:
       - .env
-    environment:
-      # Inject/Override container connection hostnames for inner-docker networking
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      # Connect to the local MongoDB container (using standard hostname alias 'mongodb')
-      # Note: To use cloud MongoDB instead, developers can just modify their .env to point MONGODB_URI to Atlas
-      - MONGODB_URI=mongodb://mongodb:27017/${MONGO_INITDB_DATABASE:-meal-service}
-      # PostgreSQL connection string config (if relational database is integrated in future)
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/${DB_NAME:-mealyummy_db}
-      - SPRING_DATASOURCE_USERNAME=${DB_USERNAME:-postgres}
-      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD:-postgres_password}
-    volumes:
-      # Mount the host .env file so the spring-dotenv library can access it if needed
-      - .env:/app/.env
-    depends_on:
-      mongodb:
-        condition: service_healthy
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
     restart: unless-stopped
+    networks:
+      - mealyummy-net
 
-# ==============================================================================
-# Persistent Volumes Definition
-# ==============================================================================
-volumes:
-  mongodb_data:
-    driver: local
-  postgres_data:
-    driver: local
-  redis_data:
-    driver: local
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile.frontend
+    container_name: mealyummy_frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - mealyummy-net
+
+networks:
+  mealyummy-net:
+    driver: bridge

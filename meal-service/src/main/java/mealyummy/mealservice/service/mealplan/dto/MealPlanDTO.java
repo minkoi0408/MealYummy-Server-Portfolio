@@ -14,6 +14,8 @@ public class MealPlanDTO {
     private RecipeDTO recipe;
     private String date;
     private String mealType;
+    @com.fasterxml.jackson.annotation.JsonProperty("isEaten")
+    private boolean isEaten;
 
     @Data
     @Builder

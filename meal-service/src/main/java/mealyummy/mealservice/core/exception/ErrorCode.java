@@ -31,8 +31,25 @@ public enum ErrorCode {
     ACCOUNT_INACTIVE("Tài khoản bị vô hiệu hóa", HttpStatus.FORBIDDEN),
     OTP_INVALID("Mã OTP không đúng hoặc đã hết hạn", HttpStatus.BAD_REQUEST),
     OTP_EXPIRED("Mã OTP đã hết hạn. Vui lòng yêu cầu mã mới", HttpStatus.BAD_REQUEST),
+    EMAIL_SEND_FAILED("Không thể gửi email. Vui lòng thử lại sau", HttpStatus.INTERNAL_SERVER_ERROR),
     INVALID_TOKEN("Token không hợp lệ hoặc đã hết hạn", HttpStatus.UNAUTHORIZED),
-    ROLE_NOT_FOUDN("Không tìm thấy role phù hợp", HttpStatus.NOT_FOUND),
+    ROLE_NOT_FOUND("Không tìm thấy role phù hợp", HttpStatus.NOT_FOUND),
+    PERMISSION_NOT_FOUND("Không tìm thấy quyền phù hợp", HttpStatus.NOT_FOUND),
+    ROLE_HAS_NO_PERMISSION("Quyền muốn xóa không tồn tại trong Role này", HttpStatus.NOT_FOUND),
+    CANNOT_DELETE_ASSIGN_PERMISSION("Không thể xóa đi quyền thêm quyền cho role", HttpStatus.FORBIDDEN),
+    ACCESS_DENIED("Bạn không có quyền truy cập", HttpStatus.FORBIDDEN),
+    RATE_LIMIT_EXCEEDED("Bạn đã vượt quá giới hạn sử dụng trong ngày. Vui lòng nâng cấp tài khoản để tiếp tục", HttpStatus.TOO_MANY_REQUESTS),
+
+    // Subscription errors
+    BUNDLE_NOT_FOUND("Không tìm thấy gói dịch vụ hoặc gói dịch vụ đã bị vô hiệu hóa", HttpStatus.NOT_FOUND),
+    DURATION_INVALID("Thời hạn gói không hợp lệ", HttpStatus.BAD_REQUEST),
+    SUBSCRIPTION_NOT_FOUND("Không tìm thấy đăng ký gói dịch vụ", HttpStatus.NOT_FOUND),
+    PAYMENT_HISTORY_NOT_FOUND("Không tìm thấy lịch sử giao dịch", HttpStatus.NOT_FOUND),
+
+    // Diet Roadmap errors
+    USER_METRICS_NOT_FOUND("Vui lòng cập nhật chỉ số cơ thể trước khi tạo lộ trình", HttpStatus.BAD_REQUEST),
+    ROADMAP_NOT_FOUND("Bạn chưa có lộ trình nào. Hãy tạo lộ trình đầu tiên!", HttpStatus.NOT_FOUND),
+    AI_GENERATION_FAILED("AI không thể tạo lộ trình lúc này. Vui lòng thử lại sau.", HttpStatus.INTERNAL_SERVER_ERROR),
     ;
     ErrorCode(String message, HttpStatus statusCode) {
         this.message = message;

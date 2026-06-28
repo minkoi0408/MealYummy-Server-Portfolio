@@ -12,11 +12,8 @@ import mealyummy.mealservice.model.enums.IngredientUnit;
 @AllArgsConstructor
 @NoArgsConstructor
 public class MealIngredientDTO {
-    @NotBlank(message = "ID nguyên liệu không được để trống")
-    @Schema(description = "ID của nguyên liệu lấy từ bảng Ingredients", example = "65f1a2b3c4d5e6f7a8b9c123")
-    private String ingredientId;
-
-    @Schema(description = "Tên nguyên liệu", accessMode = Schema.AccessMode.READ_ONLY)
+    @NotBlank(message = "Tên nguyên liệu không được để trống")
+    @Schema(description = "Tên nguyên liệu", example = "Thịt bò")
     private String name;
 
     @NotNull(message = "Định lượng không được để trống")
