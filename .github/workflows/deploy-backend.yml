@@ -57,5 +57,7 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           script: |
             cd /root/meal-yummi
+            # Force remove old container if it exists from another folder
+            docker rm -f mealyummy_backend || true
             # Restart backend container
             docker compose up -d --build backend
