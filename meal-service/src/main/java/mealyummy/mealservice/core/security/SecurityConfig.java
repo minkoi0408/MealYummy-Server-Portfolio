@@ -26,6 +26,7 @@ import java.io.IOException;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final AccessLogFilter accessLogFilter;
 
     /**
      * Filter này ghi đè header COOP thành "unsafe-none"
@@ -92,6 +93,7 @@ public class SecurityConfig {
                         })
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(accessLogFilter, JwtAuthenticationFilter.class)
                 .addFilterBefore(coopHeaderFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import mealyummy.mealservice.core.base.BaseApiResponse;
 import mealyummy.mealservice.model.entity.subscription.PaymentHistory;
 import mealyummy.mealservice.service.subscription.PaymentService;
+import mealyummy.mealservice.service.subscription.dto.PaymentHistoryResponseDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -20,11 +21,11 @@ public class PaymentHistoryController {
 
     @PreAuthorize("@apiAuth.check()")
     @GetMapping
-    public ResponseEntity<BaseApiResponse<Page<PaymentHistory>>> getAllPaymentHistories(Pageable pageable) {
-        Page<PaymentHistory> response = paymentService.getAllPaymentHistories(pageable);
+    public ResponseEntity<BaseApiResponse<Page<PaymentHistoryResponseDTO>>> getAllPaymentHistories(Pageable pageable) {
+        Page<PaymentHistoryResponseDTO> response = paymentService.getAllPaymentHistories(pageable);
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(BaseApiResponse.ok("Lấy danh sách lịch sử thanh toán thành công", response));
+                .body(BaseApiResponse.ok("Lay danh sach lich su thanh toan thanh cong", response));
     }
 
     @PreAuthorize("@apiAuth.check()")
@@ -33,6 +34,6 @@ public class PaymentHistoryController {
         PaymentHistory response = paymentService.getPaymentHistoryById(id);
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(BaseApiResponse.ok("Thông tin lịch sử thanh toán", response));
+                .body(BaseApiResponse.ok("Thong tin lich su thanh toan", response));
     }
 }

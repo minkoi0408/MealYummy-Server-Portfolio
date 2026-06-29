@@ -37,7 +37,13 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         Set<String> allApiPermissions = initPermission();
-        initRoles(allApiPermissions);
+        
+        // Chỉ khởi tạo Roles và gán Role cho User NẾU DB chưa có Role nào
+        if (roleRepository.count() == 0) {
+            initRoles(allApiPermissions);
+        } else {
+            log.info("--- Roles đã tồn tại, bỏ qua bước khởi tạo Roles ---");
+        }
     }
 
     private void fixMissingData() {
@@ -95,7 +101,6 @@ public class DataInitializer implements CommandLineRunner {
 
     private void initRoles(Set<String> allApiPermissions) {
         log.info("--- Khởi tạo lại Roles và đồng bộ Permissions ---");
-        roleRepository.deleteAll(); // Xóa roles cũ để đảm bảo chỉ còn 3 roles
 
         Role adminRole = Role.builder()
                 .roleCode("ROLE_ADMIN")
@@ -147,8 +152,6 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private Set<String> initPermission() {
-        // Xóa data cũ để force tạo lại list từ API Scanner (chỉ làm 1 lần lúc thay đổi kiến trúc)
-        permissionRepository.deleteAll();
         
         // Quét API
         Set<String> scannedPermissions = permissionSyncService.syncApiPermissions();

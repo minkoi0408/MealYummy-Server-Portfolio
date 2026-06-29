@@ -6,6 +6,9 @@ import mealyummy.mealservice.core.security.JwtUtil;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -19,6 +22,26 @@ public class TokenServiceImpl implements TokenService {
 
     private static final String ACCESS_PREFIX = "access:";
     private static final String REFRESH_PREFIX = "refresh:";
+
+    /**
+     * Lấy danh sách các user đang active dựa trên token trong Redis
+     */
+    public List<String> getActiveUsers() {
+        Set<String> keys = redisTemplate.keys(ACCESS_PREFIX + "*");
+        if (keys == null || keys.isEmpty()) {
+            return new ArrayList<>();
+        }
+        
+        Set<String> activeUsers = new HashSet<>();
+        for (String key : keys) {
+            // Key format: access:{username}:{tokenId}
+            String[] parts = key.split(":");
+            if (parts.length >= 2) {
+                activeUsers.add(parts[1]);
+            }
+        }
+        return new ArrayList<>(activeUsers);
+    }
 
     /**
      * Lưu Access Token vào Redis (TTL: 5 phút)
@@ -75,7 +98,7 @@ public class TokenServiceImpl implements TokenService {
 
 
     /**
-     * Xóa TẤT CẢ token của user (dùng khi logout toàn bộ thiết bị)
+     * XÓA TẤT CẢ token của user (dùng khi logout toàn bộ thiết bị)
      */
     public void removeAllTokensOfUser(String username) {
         // Xóa tất cả access tokens

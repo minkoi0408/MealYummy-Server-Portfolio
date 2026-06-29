@@ -1,14 +1,12 @@
-package mealyummy.mealservice.model.entity.subscription;
+package mealyummy.mealservice.model.entity.challenge;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import mealyummy.mealservice.model.enums.PaymentStatus;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
@@ -18,8 +16,8 @@ import java.time.Instant;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(collection = "payment_histories")
-public class PaymentHistory {
+@Document(collection = "user_streaks")
+public class UserStreak {
 
     @Id
     private String id;
@@ -27,23 +25,16 @@ public class PaymentHistory {
     @Field("user_id")
     private String userId;
 
-    @Field("bundle_id")
-    private String bundleId;
+    @Field("current_streak")
+    @Builder.Default
+    private int currentStreak = 0;
 
-    @Field("duration_code")
-    private String durationCode;
+    @Field("highest_streak")
+    @Builder.Default
+    private int highestStreak = 0;
 
-    @Field("amount")
-    private double amount;
-
-    @Field("payment_status")
-    private PaymentStatus paymentStatus;
-
-    @Field("transaction_id")
-    private String transactionId;
-
-    @Field("paid_at")
-    private Instant paidAt;
+    @Field("last_active_date")
+    private String lastActiveDate; // Format: YYYY-MM-DD
 
     @CreatedDate
     @Field("created_at")
@@ -52,10 +43,4 @@ public class PaymentHistory {
     @LastModifiedDate
     @Field("updated_at")
     private Instant updatedAt;
-    
-    @Transient
-    private String username;
-    
-    @Transient
-    private String bundleName;
 }

@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import mealyummy.mealservice.core.base.BaseApiResponse;
 import mealyummy.mealservice.model.entity.subscription.UserSubscription;
 import mealyummy.mealservice.service.subscription.SubscriptionService;
+import mealyummy.mealservice.service.subscription.dto.UserSubscriptionResponseDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -20,11 +21,11 @@ public class UserSubscriptionController {
 
     @PreAuthorize("@apiAuth.check()")
     @GetMapping
-    public ResponseEntity<BaseApiResponse<Page<UserSubscription>>> getAllSubscriptions(Pageable pageable) {
-        Page<UserSubscription> response = subscriptionService.getAllSubscriptions(pageable);
+    public ResponseEntity<BaseApiResponse<Page<UserSubscriptionResponseDTO>>> getAllSubscriptions(Pageable pageable) {
+        Page<UserSubscriptionResponseDTO> response = subscriptionService.getAllSubscriptions(pageable);
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(BaseApiResponse.ok("Lấy danh sách người dùng đăng ký gói thành công", response));
+                .body(BaseApiResponse.ok("Lay danh sach dang ky thanh cong", response));
     }
 
     @PreAuthorize("@apiAuth.check()")
@@ -33,6 +34,6 @@ public class UserSubscriptionController {
         UserSubscription response = subscriptionService.getSubscriptionById(id);
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(BaseApiResponse.ok("Thông tin đăng ký gói", response));
+                .body(BaseApiResponse.ok("Thong tin dang ky", response));
     }
 }

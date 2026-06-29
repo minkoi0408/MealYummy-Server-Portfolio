@@ -1,14 +1,12 @@
-package mealyummy.mealservice.model.entity.subscription;
+package mealyummy.mealservice.model.entity.challenge;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import mealyummy.mealservice.model.enums.SubscriptionStatus;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
@@ -18,8 +16,8 @@ import java.time.Instant;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(collection = "user_subscriptions")
-public class UserSubscription {
+@Document(collection = "daily_meal_records")
+public class DailyMealRecord {
 
     @Id
     private String id;
@@ -27,27 +25,28 @@ public class UserSubscription {
     @Field("user_id")
     private String userId;
 
-    @Field("role")
-    private String role;
+    @Field("record_date")
+    private String recordDate; // Format: YYYY-MM-DD
 
-    @Field("bundle_id")
-    private String bundleId;
-
-    @Field("duration_code")
-    private String durationCode;
-
-    @Field("start_date")
-    private Instant startDate;
-
-    @Field("end_date")
-    private Instant endDate;
-
-    @Field("status")
-    private SubscriptionStatus status;
-
-    @Field("auto_renew")
+    @Field("breakfast_done")
     @Builder.Default
-    private boolean autoRenew = false;
+    private boolean breakfastDone = false;
+
+    @Field("lunch_done")
+    @Builder.Default
+    private boolean lunchDone = false;
+
+    @Field("dinner_done")
+    @Builder.Default
+    private boolean dinnerDone = false;
+
+    @Field("snack_done")
+    @Builder.Default
+    private boolean snackDone = false;
+
+    @Field("is_completed")
+    @Builder.Default
+    private boolean isCompleted = false;
 
     @CreatedDate
     @Field("created_at")
@@ -56,10 +55,4 @@ public class UserSubscription {
     @LastModifiedDate
     @Field("updated_at")
     private Instant updatedAt;
-    
-    @Transient
-    private String username;
-    
-    @Transient
-    private String bundleName;
 }

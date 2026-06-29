@@ -14,9 +14,11 @@ import mealyummy.mealservice.model.enums.SubscriptionStatus;
 import mealyummy.mealservice.model.pojo.BundleDuration;
 import mealyummy.mealservice.model.repository.RoleRepository;
 import mealyummy.mealservice.model.repository.UserRepository;
+import mealyummy.mealservice.model.repository.subscription.BundleRepository;
 import mealyummy.mealservice.model.repository.subscription.PaymentHistoryRepository;
 import mealyummy.mealservice.model.repository.subscription.UserSubscriptionRepository;
 import mealyummy.mealservice.service.subscription.dto.MockPurchaseRequest;
+import mealyummy.mealservice.service.subscription.dto.UserSubscriptionResponseDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,6 +37,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private final UserSubscriptionRepository userSubscriptionRepository;
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final BundleRepository bundleRepository;
 
     private static final String ROLE_MEMBERSHIP = "ROLE_MEMBERSHIP";
     private static final String ROLE_FREE = "ROLE_FREE";
@@ -42,9 +45,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     @Override
     @Transactional
     public UserSubscription mockPurchase(MockPurchaseRequest request) {
-        // Mock purchase now just delegates to processSuccessfulPayment
-        // It bypasses the payment gateway for testing
-        
         Bundle bundle = bundleService.getBundleById(request.getBundleId());
         BundleDuration chosenDuration = bundle.getDurations().stream()
                 .filter(d -> d.getDurationCode().equals(request.getDurationCode()))
@@ -82,7 +82,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-        // 3. Update or Create UserSubscription
         UserSubscription subscription = userSubscriptionRepository
                 .findByUserIdAndStatus(user.getId(), SubscriptionStatus.ACTIVE)
                 .orElse(UserSubscription.builder()
@@ -93,7 +92,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                         .endDate(Instant.now())
                         .build());
 
-        // Accumulate endDate if already active
         Instant newEndDate = (subscription.getEndDate().isAfter(Instant.now()) 
                 ? subscription.getEndDate() 
                 : Instant.now())
@@ -102,7 +100,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         subscription.setEndDate(newEndDate);
         userSubscriptionRepository.save(subscription);
 
-        // 4. Update User Role
         updateUserRole(user, ROLE_MEMBERSHIP);
     }
 
@@ -131,8 +128,46 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override
-    public org.springframework.data.domain.Page<UserSubscription> getAllSubscriptions(org.springframework.data.domain.Pageable pageable) {
-        return userSubscriptionRepository.findAll(pageable);
+    public org.springframework.data.domain.Page<UserSubscriptionResponseDTO> getAllSubscriptions(org.springframework.data.domain.Pageable pageable) {
+        org.springframework.data.domain.Page<UserSubscription> page = userSubscriptionRepository.findAll(pageable);
+        return page.map(sub -> {
+            String uname = sub.getUserId();
+            String bname = sub.getBundleId();
+            
+            try {
+                if (sub.getUserId() != null) {
+                    User u = userRepository.findById(sub.getUserId()).orElse(null);
+                    if (u != null && u.getUsername() != null) uname = u.getUsername();
+                }
+            } catch (Exception e) {
+                log.error("Error finding user for ID: " + sub.getUserId(), e);
+            }
+
+            try {
+                if (sub.getBundleId() != null) {
+                    Bundle b = bundleRepository.findById(sub.getBundleId()).orElse(null);
+                    if (b != null && b.getName() != null) bname = b.getName();
+                }
+            } catch (Exception e) {
+                log.error("Error finding bundle for ID: " + sub.getBundleId(), e);
+            }
+            
+            return UserSubscriptionResponseDTO.builder()
+                    .id(sub.getId())
+                    .userId(sub.getUserId())
+                    .role(sub.getRole())
+                    .bundleId(sub.getBundleId())
+                    .durationCode(sub.getDurationCode())
+                    .startDate(sub.getStartDate())
+                    .endDate(sub.getEndDate())
+                    .status(sub.getStatus())
+                    .autoRenew(sub.isAutoRenew())
+                    .createdAt(sub.getCreatedAt())
+                    .updatedAt(sub.getUpdatedAt())
+                    .username(uname)
+                    .bundleName(bname)
+                    .build();
+        });
     }
 
     @Override

@@ -148,10 +148,6 @@ public class DietRoadmapService {
         meals = meals.stream().filter(m -> m.getNutrition() != null && m.getNutrition().getCalories() != null && m.getNutrition().getCalories() > 0).toList();
         if (meals.isEmpty()) return 0;
 
-        RoadmapPhase phase = roadmap.getPhases().get(0);
-        List<String> allowed = phase.getAllowedFoods() != null ? phase.getAllowedFoods() : Collections.emptyList();
-        List<String> recommended = phase.getRecommendedMealNames() != null ? phase.getRecommendedMealNames() : Collections.emptyList();
-
         // 1. LỌC TUYỆT ĐỐI THEO BỆNH LÝ (Bảo vệ sức khỏe người dùng)
         List<Meal> safeMeals = meals.stream().filter(m -> {
             String text = (m.getName() + " " + (m.getIngredients() != null ? m.getIngredients().toString() : "")).toLowerCase();
@@ -163,8 +159,8 @@ public class DietRoadmapService {
             safeMeals = new ArrayList<>(meals);
         }
 
-        // TDEE Calculation
-        double targetCalories = 2000.0;
+        // Base TDEE Calculation (fallback if AI doesn't provide calories)
+        double baseTdee = 2000.0;
         if (metrics != null) {
             double bmr = "male".equalsIgnoreCase(metrics.getGender()) 
                 ? (10 * metrics.getWeight() + 6.25 * metrics.getHeight() - 5 * metrics.getAge() + 5)
@@ -181,8 +177,8 @@ public class DietRoadmapService {
             if ("cut".equalsIgnoreCase(metrics.getGoal())) goalAdj = -500;
             else if ("bulk".equalsIgnoreCase(metrics.getGoal())) goalAdj = 300;
             
-            targetCalories = tdee + goalAdj;
-            if (targetCalories < 1200) targetCalories = 1200;
+            baseTdee = tdee + goalAdj;
+            if (baseTdee < 1200) baseTdee = 1200;
         }
 
         // Xóa thực đơn tự động của những ngày chuẩn bị gen
@@ -197,7 +193,36 @@ public class DietRoadmapService {
         List<MealPlanItem> newItems = new ArrayList<>();
         String[] mealTypes = {"breakfast", "lunch", "snack", "dinner"};
 
-        for (String d : dates) {
+        for (int i = 0; i < dates.size(); i++) {
+            String d = dates.get(i);
+            
+            // 2. MAPPING THEO PHASE (Dựa trên tuần hiện tại)
+            int currentWeek = (i / 7) + 1;
+            RoadmapPhase currentPhase = roadmap.getPhases().get(0); // fallback
+            
+            for (RoadmapPhase p : roadmap.getPhases()) {
+                try {
+                    String sStr = p.getStartWeek() != null ? p.getStartWeek().replaceAll("[^0-9]", "") : "";
+                    String eStr = p.getEndWeek() != null ? p.getEndWeek().replaceAll("[^0-9]", "") : "";
+                    if (!sStr.isEmpty() && !eStr.isEmpty()) {
+                        int start = Integer.parseInt(sStr);
+                        int end = Integer.parseInt(eStr);
+                        if (currentWeek >= start && currentWeek <= end) {
+                            currentPhase = p;
+                            break;
+                        }
+                    }
+                } catch (Exception ignored) {}
+            }
+
+            // Lấy lượng Calo từ AI, nếu AI trả về 0 thì dùng TDEE tính tay
+            double targetCalories = (currentPhase.getTargetCaloriesPerDay() > 500)
+                    ? currentPhase.getTargetCaloriesPerDay() 
+                    : baseTdee;
+
+            List<String> allowed = currentPhase.getAllowedFoods() != null ? currentPhase.getAllowedFoods() : Collections.emptyList();
+            List<String> recommended = currentPhase.getRecommendedMealNames() != null ? currentPhase.getRecommendedMealNames() : Collections.emptyList();
+
             double accumulatedExpectedCal = 0;
             double accumulatedActualCal = 0;
             Set<String> chosenMealIdsThisDay = new HashSet<>();
@@ -441,9 +466,9 @@ public class DietRoadmapService {
 
     private String buildMenuContext() {
         List<Meal> meals = mealRepository.findAll();
-        if (meals.size() > 15) {
+        if (meals.size() > 500) {
             Collections.shuffle(meals);
-            meals = meals.subList(0, 15);
+            meals = meals.subList(0, 500);
         }
         StringBuilder sb = new StringBuilder();
         for (Meal m : meals) {
