@@ -13,6 +13,7 @@ import java.util.List;
 public class DashboardOverviewDTO {
     private long totalUsers;
     private double totalRevenue;
+    private double thisMonthRevenue;
     private long activeSubscriptions;
     private long totalMeals;
     

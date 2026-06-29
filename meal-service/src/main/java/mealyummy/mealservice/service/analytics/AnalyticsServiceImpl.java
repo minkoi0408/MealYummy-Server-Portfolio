@@ -3,6 +3,7 @@ package mealyummy.mealservice.service.analytics;
 import lombok.RequiredArgsConstructor;
 import mealyummy.mealservice.model.entity.auth.User;
 import mealyummy.mealservice.model.entity.food.Meal;
+import mealyummy.mealservice.model.entity.subscription.Bundle;
 import mealyummy.mealservice.model.entity.subscription.PaymentHistory;
 import mealyummy.mealservice.model.entity.subscription.UserSubscription;
 import mealyummy.mealservice.service.analytics.dto.DashboardOverviewDTO;
@@ -16,6 +17,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -36,19 +38,33 @@ public class AnalyticsServiceImpl implements AnalyticsService {
         Criteria activeCriteria = Criteria.where("status").is("ACTIVE");
         long activeSubscriptions = mongoTemplate.count(new Query(activeCriteria), UserSubscription.class);
 
-        // Sum revenue
         Criteria successPayment = Criteria.where("paymentStatus").is("SUCCESS");
-        Aggregation sumAggregation = Aggregation.newAggregation(
-                Aggregation.match(successPayment),
-                Aggregation.group().sum("amount").as("totalRevenue")
-        );
-        AggregationResults<org.bson.Document> sumResults = mongoTemplate.aggregate(sumAggregation, PaymentHistory.class, org.bson.Document.class);
+        List<PaymentHistory> allSuccess = mongoTemplate.find(new Query(successPayment), PaymentHistory.class);
+
         double totalRevenue = 0;
-        if (!sumResults.getMappedResults().isEmpty()) {
-            Object revObj = sumResults.getMappedResults().get(0).get("totalRevenue");
-            if (revObj instanceof Number) {
-                totalRevenue = ((Number) revObj).doubleValue();
+        double thisMonthRevenue = 0;
+        int currentMonth = Instant.now().atZone(ZoneId.systemDefault()).getMonthValue();
+        int currentYear = Instant.now().atZone(ZoneId.systemDefault()).getYear();
+        
+        double[] monthlyRevenues = new double[12];
+        
+        for (PaymentHistory p : allSuccess) {
+            if (p.getCreatedAt() != null) {
+                var zdt = p.getCreatedAt().atZone(ZoneId.systemDefault());
+                if (zdt.getYear() == currentYear) {
+                    monthlyRevenues[zdt.getMonthValue() - 1] += p.getAmount();
+                }
+                if (zdt.getYear() == currentYear && zdt.getMonthValue() == currentMonth) {
+                    thisMonthRevenue += p.getAmount();
+                }
             }
+            totalRevenue += p.getAmount();
+        }
+        
+        List<RevenueDataPointDTO> chartData = new ArrayList<>();
+        String[] monthLabels = {"T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12"};
+        for (int i = 0; i < 12; i++) {
+            chartData.add(new RevenueDataPointDTO(monthLabels[i], monthlyRevenues[i]));
         }
 
         // Recent transactions
@@ -61,7 +77,13 @@ public class AnalyticsServiceImpl implements AnalyticsService {
             String email = user != null ? user.getEmail() : "No Email";
             String avatar = user != null ? user.getAvatarUrl() : "";
             
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy").withZone(ZoneId.systemDefault());
+            Bundle bundle = null;
+            if (p.getBundleId() != null) {
+                bundle = mongoTemplate.findById(p.getBundleId(), Bundle.class);
+            }
+            String bundleName = bundle != null ? bundle.getName() : "Premium Bundle";
+            
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm").withZone(ZoneId.systemDefault());
             String dateStr = p.getCreatedAt() != null ? formatter.format(p.getCreatedAt()) : "";
             
             return RecentTransactionDTO.builder()
@@ -70,25 +92,18 @@ public class AnalyticsServiceImpl implements AnalyticsService {
                     .email(email)
                     .avatarUrl(avatar)
                     .amount(p.getAmount())
-                    .bundleName("Premium Bundle")
+                    .bundleName(bundleName)
                     .date(dateStr)
                     .build();
         }).collect(Collectors.toList());
 
-        // Dummy chart data for now, could be aggregated properly
-        List<RevenueDataPointDTO> chartData = new ArrayList<>();
-        chartData.add(new RevenueDataPointDTO("T1", totalRevenue * 0.1));
-        chartData.add(new RevenueDataPointDTO("T2", totalRevenue * 0.15));
-        chartData.add(new RevenueDataPointDTO("T3", totalRevenue * 0.2));
-        chartData.add(new RevenueDataPointDTO("T4", totalRevenue * 0.25));
-        chartData.add(new RevenueDataPointDTO("T5", totalRevenue * 0.1));
-        chartData.add(new RevenueDataPointDTO("T6", totalRevenue * 0.2));
 
         return DashboardOverviewDTO.builder()
                 .totalUsers(totalUsers)
                 .totalMeals(totalMeals)
                 .activeSubscriptions(activeSubscriptions)
                 .totalRevenue(totalRevenue)
+                .thisMonthRevenue(thisMonthRevenue)
                 .userChangeStr("+12%")
                 .revenueChangeStr("+8.4%")
                 .subscriptionChangeStr("-2%")
