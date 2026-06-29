@@ -5,14 +5,17 @@ import lombok.RequiredArgsConstructor;
 import mealyummy.mealservice.core.config.PayosConfig;
 import mealyummy.mealservice.core.exception.AppException;
 import mealyummy.mealservice.core.exception.ErrorCode;
+import mealyummy.mealservice.model.entity.auth.User;
 import mealyummy.mealservice.model.entity.subscription.Bundle;
 import mealyummy.mealservice.model.entity.subscription.PaymentHistory;
 import mealyummy.mealservice.model.enums.PaymentMethod;
 import mealyummy.mealservice.model.enums.PaymentStatus;
 import mealyummy.mealservice.model.pojo.BundleDuration;
+import mealyummy.mealservice.model.repository.UserRepository;
 import mealyummy.mealservice.model.repository.subscription.PaymentHistoryRepository;
 import mealyummy.mealservice.service.subscription.dto.PaymentCreateRequest;
 import mealyummy.mealservice.service.subscription.dto.PaymentCreateResponse;
+import mealyummy.mealservice.service.subscription.dto.PaymentHistoryResponseDTO;
 import org.springframework.stereotype.Service;
 import vn.payos.PayOS;
 import vn.payos.model.v2.paymentRequests.CreatePaymentLinkRequest;
@@ -27,6 +30,7 @@ public class PaymentServiceImpl implements PaymentService {
     private final PaymentHistoryRepository paymentHistoryRepository;
     private final BundleService bundleService;
     private final SubscriptionService subscriptionService;
+    private final UserRepository userRepository;
     private final PayOS payOS;
     private final PayosConfig payosConfig;
 
@@ -37,18 +41,15 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public PaymentCreateResponse createPaymentUrl(PaymentCreateRequest request, HttpServletRequest httpRequest) {
-        // Validate bundle
         Bundle bundle = bundleService.getBundleById(request.getBundleId());
         BundleDuration duration = bundle.getDurations().stream()
                 .filter(d -> d.getDurationCode().equals(request.getDurationCode()))
                 .findFirst()
                 .orElseThrow(() -> new AppException(ErrorCode.DURATION_INVALID));
 
-        // Create transaction ID (PayOS orderCode must be a number <= 9007199254740991)
         long orderCode = System.currentTimeMillis() / 1000 * 100000 + (new java.util.Random().nextInt(90000) + 10000);
         String transactionId = String.valueOf(orderCode);
 
-        // Save pending payment history
         PaymentHistory paymentHistory = PaymentHistory.builder()
                 .userId(request.getUserId())
                 .bundleId(bundle.getId())
@@ -59,7 +60,6 @@ public class PaymentServiceImpl implements PaymentService {
                 .build();
         paymentHistoryRepository.save(paymentHistory);
 
-        // Generate URL
         String paymentUrl = "";
         if (request.getPaymentMethod() == PaymentMethod.PAYOS) {
             CreatePaymentLinkRequest paymentRequest = CreatePaymentLinkRequest.builder()
@@ -73,7 +73,6 @@ public class PaymentServiceImpl implements PaymentService {
                 CreatePaymentLinkResponse response = payOS.paymentRequests().create(paymentRequest);
                 paymentUrl = response.getCheckoutUrl();
             } catch (Exception e) {
-                System.err.println("❌ [PAYOS] Lỗi khi tạo link thanh toán PayOS: " + e.getMessage());
                 e.printStackTrace();
                 throw new AppException(ErrorCode.PAYMENT_HISTORY_NOT_FOUND);
             }
@@ -87,21 +86,16 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public void processPaymentWebhook(String transactionId, boolean isSuccess) {
-        System.out.println("✅ [WEBHOOK] Xử lý transactionId: " + transactionId + ", success: " + isSuccess);
-        
         PaymentHistory payment = paymentHistoryRepository.findByTransactionId(transactionId)
-                .orElseThrow(() -> new RuntimeException("❌ Không tìm thấy Payment với transactionId: " + transactionId));
+                .orElseThrow(() -> new RuntimeException("Payment not found"));
 
         if (payment.getPaymentStatus() == PaymentStatus.SUCCESS) {
-            System.out.println("⚡ [WEBHOOK] Payment đã xử lý rồi (idempotent), bỏ qua.");
-            return; // Idempotent check
+            return;
         }
 
         if (isSuccess) {
             payment.setPaymentStatus(PaymentStatus.SUCCESS);
             payment.setPaidAt(Instant.now());
-            System.out.println("🎉 [WEBHOOK] Thanh toán thành công, nâng cấp userId: " + payment.getUserId());
-            // Upgrade subscription
             subscriptionService.processSuccessfulPayment(payment.getUserId(), payment.getBundleId(), payment.getDurationCode());
         } else {
             payment.setPaymentStatus(PaymentStatus.FAILED);
@@ -110,8 +104,38 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public org.springframework.data.domain.Page<PaymentHistory> getAllPaymentHistories(org.springframework.data.domain.Pageable pageable) {
-        return paymentHistoryRepository.findAll(pageable);
+    public org.springframework.data.domain.Page<PaymentHistoryResponseDTO> getAllPaymentHistories(org.springframework.data.domain.Pageable pageable) {
+        org.springframework.data.domain.Page<PaymentHistory> page = paymentHistoryRepository.findAll(pageable);
+        return page.map(p -> {
+            String uname = p.getUserId();
+            String bname = p.getBundleId();
+            try {
+                if (p.getUserId() != null) {
+                    User u = userRepository.findById(p.getUserId()).orElse(null);
+                    if (u != null) uname = u.getUsername();
+                }
+                if (p.getBundleId() != null) {
+                    Bundle b = bundleService.getBundleById(p.getBundleId());
+                    bname = b.getName();
+                }
+            } catch (Exception e) {}
+            
+            return PaymentHistoryResponseDTO.builder()
+                    .id(p.getId())
+                    .txId(p.getTransactionId()) // Using transactionId as txId
+                    .userId(p.getUserId())
+                    .bundleId(p.getBundleId())
+                    .durationCode(p.getDurationCode())
+                    .amount(p.getAmount())
+                    .paymentStatus(p.getPaymentStatus())
+                    .transactionId(p.getTransactionId())
+                    .paidAt(p.getPaidAt())
+                    .createdAt(p.getCreatedAt())
+                    .updatedAt(p.getUpdatedAt())
+                    .username(uname)
+                    .bundleName(bname)
+                    .build();
+        });
     }
 
     @Override
@@ -120,4 +144,3 @@ public class PaymentServiceImpl implements PaymentService {
                 .orElseThrow(() -> new AppException(ErrorCode.PAYMENT_HISTORY_NOT_FOUND));
     }
 }
-
