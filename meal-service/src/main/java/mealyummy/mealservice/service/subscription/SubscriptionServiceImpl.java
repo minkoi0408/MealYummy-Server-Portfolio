@@ -14,6 +14,7 @@ import mealyummy.mealservice.model.enums.SubscriptionStatus;
 import mealyummy.mealservice.model.pojo.BundleDuration;
 import mealyummy.mealservice.model.repository.RoleRepository;
 import mealyummy.mealservice.model.repository.UserRepository;
+import mealyummy.mealservice.model.repository.subscription.BundleRepository;
 import mealyummy.mealservice.model.repository.subscription.PaymentHistoryRepository;
 import mealyummy.mealservice.model.repository.subscription.UserSubscriptionRepository;
 import mealyummy.mealservice.service.subscription.dto.MockPurchaseRequest;
@@ -36,6 +37,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private final UserSubscriptionRepository userSubscriptionRepository;
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final BundleRepository bundleRepository;
 
     private static final String ROLE_MEMBERSHIP = "ROLE_MEMBERSHIP";
     private static final String ROLE_FREE = "ROLE_FREE";
@@ -131,16 +133,24 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         return page.map(sub -> {
             String uname = sub.getUserId();
             String bname = sub.getBundleId();
+            
             try {
                 if (sub.getUserId() != null) {
                     User u = userRepository.findById(sub.getUserId()).orElse(null);
-                    if (u != null) uname = u.getUsername();
+                    if (u != null && u.getUsername() != null) uname = u.getUsername();
                 }
+            } catch (Exception e) {
+                log.error("Error finding user for ID: " + sub.getUserId(), e);
+            }
+
+            try {
                 if (sub.getBundleId() != null) {
-                    Bundle b = bundleService.getBundleById(sub.getBundleId());
-                    bname = b.getName();
+                    Bundle b = bundleRepository.findById(sub.getBundleId()).orElse(null);
+                    if (b != null && b.getName() != null) bname = b.getName();
                 }
-            } catch(Exception e) {}
+            } catch (Exception e) {
+                log.error("Error finding bundle for ID: " + sub.getBundleId(), e);
+            }
             
             return UserSubscriptionResponseDTO.builder()
                     .id(sub.getId())

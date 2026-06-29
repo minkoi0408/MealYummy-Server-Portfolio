@@ -2,6 +2,7 @@ package mealyummy.mealservice.service.subscription;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import mealyummy.mealservice.core.config.PayosConfig;
 import mealyummy.mealservice.core.exception.AppException;
 import mealyummy.mealservice.core.exception.ErrorCode;
@@ -12,6 +13,7 @@ import mealyummy.mealservice.model.enums.PaymentMethod;
 import mealyummy.mealservice.model.enums.PaymentStatus;
 import mealyummy.mealservice.model.pojo.BundleDuration;
 import mealyummy.mealservice.model.repository.UserRepository;
+import mealyummy.mealservice.model.repository.subscription.BundleRepository;
 import mealyummy.mealservice.model.repository.subscription.PaymentHistoryRepository;
 import mealyummy.mealservice.service.subscription.dto.PaymentCreateRequest;
 import mealyummy.mealservice.service.subscription.dto.PaymentCreateResponse;
@@ -25,12 +27,14 @@ import java.time.Instant;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentHistoryRepository paymentHistoryRepository;
     private final BundleService bundleService;
     private final SubscriptionService subscriptionService;
     private final UserRepository userRepository;
+    private final BundleRepository bundleRepository;
     private final PayOS payOS;
     private final PayosConfig payosConfig;
 
@@ -109,16 +113,24 @@ public class PaymentServiceImpl implements PaymentService {
         return page.map(p -> {
             String uname = p.getUserId();
             String bname = p.getBundleId();
+            
             try {
                 if (p.getUserId() != null) {
                     User u = userRepository.findById(p.getUserId()).orElse(null);
-                    if (u != null) uname = u.getUsername();
+                    if (u != null && u.getUsername() != null) uname = u.getUsername();
                 }
+            } catch (Exception e) {
+                log.error("Error finding user for ID: " + p.getUserId(), e);
+            }
+
+            try {
                 if (p.getBundleId() != null) {
-                    Bundle b = bundleService.getBundleById(p.getBundleId());
-                    bname = b.getName();
+                    Bundle b = bundleRepository.findById(p.getBundleId()).orElse(null);
+                    if (b != null && b.getName() != null) bname = b.getName();
                 }
-            } catch (Exception e) {}
+            } catch (Exception e) {
+                log.error("Error finding bundle for ID: " + p.getBundleId(), e);
+            }
             
             return PaymentHistoryResponseDTO.builder()
                     .id(p.getId())
