@@ -1,4 +1,4 @@
-﻿package mealyummy.mealservice.service.iam.token;
+package mealyummy.mealservice.service.iam.token;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
