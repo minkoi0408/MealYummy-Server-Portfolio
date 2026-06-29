@@ -8,7 +8,7 @@ import mealyummy.mealservice.model.enums.SubscriptionStatus;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
@@ -24,12 +24,17 @@ public class UserSubscription {
     @Id
     private String id;
 
-    @Indexed
     @Field("user_id")
     private String userId;
 
     @Field("role")
-    private String role; // e.g. "ROLE_MEMBERSHIP"
+    private String role;
+
+    @Field("bundle_id")
+    private String bundleId;
+
+    @Field("duration_code")
+    private String durationCode;
 
     @Field("start_date")
     private Instant startDate;
@@ -40,6 +45,10 @@ public class UserSubscription {
     @Field("status")
     private SubscriptionStatus status;
 
+    @Field("auto_renew")
+    @Builder.Default
+    private boolean autoRenew = false;
+
     @CreatedDate
     @Field("created_at")
     private Instant createdAt;
@@ -47,4 +56,10 @@ public class UserSubscription {
     @LastModifiedDate
     @Field("updated_at")
     private Instant updatedAt;
+    
+    @Transient
+    private String username;
+    
+    @Transient
+    private String bundleName;
 }
