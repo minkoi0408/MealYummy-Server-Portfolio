@@ -99,8 +99,5 @@ payment:
     cancel-url: ${APP_URL:http://localhost:8082}/api/v1/payments/payos-cancel
 
 
-resend:
-  enabled: ${RESEND_ENABLED:false}
-  api-key: ${RESEND_API_KEY:}
-  from-email: ${RESEND_FROM_EMAIL:onboarding@resend.dev}
+
 
