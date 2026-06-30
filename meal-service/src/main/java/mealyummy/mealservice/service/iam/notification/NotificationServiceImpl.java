@@ -34,6 +34,9 @@ public class NotificationServiceImpl implements NotificationService {
     @Value("${resend.enabled:false}")
     private boolean resendEnabled;
 
+    @Value("${spring.mail.username:huynhvuminhkhoi08042004@gmail.com}")
+    private String fromEmailAddress;
+
     private final OtpService otpService;
     private final AuthService authService;
     private final UserRepository userRepository;
@@ -55,7 +58,7 @@ public class NotificationServiceImpl implements NotificationService {
 
                 helper.setTo(email);
                 helper.setSubject(subJect);
-                helper.setFrom("huynhvuminhkhoi08042004@gmail.com", "MealYummy");
+                helper.setFrom(fromEmailAddress, "MealYummy");
                 helper.setText(formattedHtml, true);
                 
                 mailSender.send(message);

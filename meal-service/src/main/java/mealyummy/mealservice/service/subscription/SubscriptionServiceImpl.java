@@ -98,6 +98,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 .plus(chosenDuration.getDurationInDays(), ChronoUnit.DAYS);
 
         subscription.setEndDate(newEndDate);
+        subscription.setBundleId(bundleId);
+        subscription.setDurationCode(durationCode);
         userSubscriptionRepository.save(subscription);
 
         updateUserRole(user, ROLE_MEMBERSHIP);
