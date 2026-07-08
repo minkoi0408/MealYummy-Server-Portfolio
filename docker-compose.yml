@@ -28,7 +28,7 @@ services:
       context: ./client/client
       dockerfile: Dockerfile.frontend
       args:
-        VITE_API_URL: http://api.mealyummy.io.vn/api/v1
+        VITE_API_URL: https://api.mealyummy.io.vn/api/v1
         VITE_GOOGLE_CLIENT_ID: 75030109103-q0p7u9bihen5jrm73l8n3c4s8m6ihonj.apps.googleusercontent.com
     container_name: mealyummy_frontend
     ports:
