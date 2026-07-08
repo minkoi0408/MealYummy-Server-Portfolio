@@ -16,7 +16,7 @@ services:
       dockerfile: Dockerfile.backend
     container_name: mealyummy_backend
     ports:
-      - "8082:8082"
+      - "127.0.0.1:8082:8082"
     env_file:
       - .env
     restart: unless-stopped
@@ -29,7 +29,7 @@ services:
       dockerfile: Dockerfile.frontend
     container_name: mealyummy_frontend
     ports:
-      - "80:80"
+      - "127.0.0.1:3000:80"
     depends_on:
       - backend
     restart: unless-stopped
