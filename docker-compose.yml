@@ -12,7 +12,7 @@ services:
 
   backend:
     build:
-      context: .
+      context: ./meal-service
       dockerfile: Dockerfile.backend
     container_name: mealyummy_backend
     ports:
