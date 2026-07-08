@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import static mealyummy.mealservice.service.iam.notification.EmailFormatUtil.sendOtpInForgotPassword;
 import static mealyummy.mealservice.service.iam.notification.EmailFormatUtil.sendOtpInRegister;
+import static mealyummy.mealservice.service.iam.notification.EmailFormatUtil.sendOtpInLogin;
 
 @Service
 @RequiredArgsConstructor
@@ -106,7 +107,7 @@ public class NotificationServiceImpl implements NotificationService {
                 user.getEmail(),
                 OtpType.LOGIN,
                 "MealYummy - Xác thực OTP đăng nhập tài khoản của bạn",
-                sendOtpInForgotPassword);
+                sendOtpInLogin);
         return "Đã gởi otp đến gmail. Vui lòng kiểm tra email để nhận otp!";
     }
 }

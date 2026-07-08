@@ -31,6 +31,8 @@ public enum ErrorCode {
     ACCOUNT_INACTIVE("Tài khoản bị vô hiệu hóa", HttpStatus.FORBIDDEN),
     OTP_INVALID("Mã OTP không đúng hoặc đã hết hạn", HttpStatus.BAD_REQUEST),
     OTP_EXPIRED("Mã OTP đã hết hạn. Vui lòng yêu cầu mã mới", HttpStatus.BAD_REQUEST),
+    OTP_ATTEMPTS_EXCEEDED("Bạn đã nhập sai mã OTP quá nhiều lần. Vui lòng gửi lại mã mới", HttpStatus.TOO_MANY_REQUESTS),
+    OTP_DAILY_LIMIT_EXCEEDED("Bạn đã gửi quá giới hạn 5 mã OTP trong hôm nay. Vui lòng thử lại vào ngày mai.", HttpStatus.TOO_MANY_REQUESTS),
     EMAIL_SEND_FAILED("Không thể gửi email. Vui lòng thử lại sau", HttpStatus.INTERNAL_SERVER_ERROR),
     INVALID_TOKEN("Token không hợp lệ hoặc đã hết hạn", HttpStatus.UNAUTHORIZED),
     ROLE_NOT_FOUND("Không tìm thấy role phù hợp", HttpStatus.NOT_FOUND),
@@ -48,6 +50,7 @@ public enum ErrorCode {
 
     // Diet Roadmap errors
     USER_METRICS_NOT_FOUND("Vui lòng cập nhật chỉ số cơ thể trước khi tạo lộ trình", HttpStatus.BAD_REQUEST),
+    METRICS_NOT_UPDATED("Bạn cần cập nhật lại hồ sơ dinh dưỡng sau khi phase kết thúc để mở khóa phase tiếp theo", HttpStatus.BAD_REQUEST),
     ROADMAP_NOT_FOUND("Bạn chưa có lộ trình nào. Hãy tạo lộ trình đầu tiên!", HttpStatus.NOT_FOUND),
     AI_GENERATION_FAILED("AI không thể tạo lộ trình lúc này. Vui lòng thử lại sau.", HttpStatus.INTERNAL_SERVER_ERROR),
     ;

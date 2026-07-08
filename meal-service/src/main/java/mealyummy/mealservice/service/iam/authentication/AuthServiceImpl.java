@@ -127,7 +127,7 @@ public class AuthServiceImpl implements AuthService {
         String refreshToken = jwtUtil.generateRefreshToken(user.getUsername());
 
         tokenService.storeToken(user.getUsername(), accessToken, TokenType.ACCESS.getPrefix(), jwtUtil.getAccessTokenExpirationMs());
-        tokenService.storeToken(user.getUsername(), refreshToken, TokenType.REFRESH.getPrefix(), jwtUtil.getAccessTokenExpirationMs());
+        tokenService.storeToken(user.getUsername(), refreshToken, TokenType.REFRESH.getPrefix(), jwtUtil.getRefreshTokenExpirationMs());
 
         log.info("Đăng nhập thành công (đã qua MFA) cho user: {}", user.getUsername());
 
@@ -219,7 +219,7 @@ public class AuthServiceImpl implements AuthService {
             String refreshToken = jwtUtil.generateRefreshToken(user.getUsername());
 
             tokenService.storeToken(user.getUsername(), accessToken, TokenType.ACCESS.getPrefix(), jwtUtil.getAccessTokenExpirationMs());
-            tokenService.storeToken(user.getUsername(), refreshToken, TokenType.REFRESH.getPrefix(), jwtUtil.getAccessTokenExpirationMs());
+            tokenService.storeToken(user.getUsername(), refreshToken, TokenType.REFRESH.getPrefix(), jwtUtil.getRefreshTokenExpirationMs());
 
             log.info("Đăng nhập bằng Google thành công cho: {}", email);
 

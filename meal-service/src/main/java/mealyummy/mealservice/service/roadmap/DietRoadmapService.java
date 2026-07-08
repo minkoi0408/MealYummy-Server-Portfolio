@@ -69,19 +69,30 @@ public class DietRoadmapService {
         String bmiCategory = classifyBmi(bmi);
         String bmiLabel = bmiCategoryLabel(bmiCategory);
 
-        // 2. Lấy RAG context dựa trên bệnh lý
-        String ragContext = getRagContext(metrics.getDiseases(), metrics.getGoal());
+        // 2. Chạy song song: RAG context và Menu context
+        java.util.concurrent.CompletableFuture<String> ragFuture = java.util.concurrent.CompletableFuture
+                .supplyAsync(() -> getRagContext(metrics.getDiseases(), metrics.getGoal()));
+        java.util.concurrent.CompletableFuture<String> menuFuture = java.util.concurrent.CompletableFuture
+                .supplyAsync(this::buildMenuContext);
 
-        // 3. Lấy 15 món ăn random
-        String menuContext = buildMenuContext();
+        String ragContext;
+        String menuContext;
+        try {
+            ragContext = ragFuture.get(10, java.util.concurrent.TimeUnit.SECONDS);
+            menuContext = menuFuture.get(5, java.util.concurrent.TimeUnit.SECONDS);
+        } catch (Exception e) {
+            log.warn("Parallel fetch timeout, falling back to sequential: {}", e.getMessage());
+            ragContext = getRagContext(metrics.getDiseases(), metrics.getGoal());
+            menuContext = buildMenuContext();
+        }
 
-        // 4. Build prompt
+        // 3. Build prompt
         String prompt = buildPrompt(metrics, bmi, bmiLabel, ragContext, menuContext, request.getDurationLabel());
 
-        // 5. Gọi Gemini AI
+        // 4. Gọi Gemini AI
         String aiJson = callGemini(prompt);
 
-        // 6. Parse JSON → entity
+        // 5. Parse JSON → entity
         DietRoadmap roadmap = parseAndSave(aiJson, user.getId(), bmi, bmiCategory, bmiLabel, metrics, request.getDurationLabel());
 
         return toDTO(roadmap);
@@ -628,7 +639,12 @@ Schema bắt buộc:
 
             List<RoadmapPhase> phases = new ArrayList<>();
             JsonNode phasesNode = root.get("phases");
+            LocalDate today = LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh"));
+            DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+            LocalDate cursor = today;
+
             if (phasesNode != null && phasesNode.isArray()) {
+                int phaseIndex = 0;
                 for (JsonNode p : phasesNode) {
                     RoadmapPhase phase = new RoadmapPhase();
                     phase.setPhaseNumber(p.path("phaseNumber").asInt());
@@ -649,7 +665,22 @@ Schema bắt buộc:
                     phase.setLunchTemplate(p.path("lunchTemplate").asText());
                     phase.setDinnerTemplate(p.path("dinnerTemplate").asText());
                     phase.setSnackTemplate(p.path("snackTemplate").asText());
+
+                    // ── Tính startDate / endDate thực tế ──────────────────────
+                    int weeks = parseDurationWeeks(phase.getDurationWeeks());
+                    phase.setStartDate(cursor.format(fmt));
+                    phase.setEndDate(cursor.plusWeeks(weeks).minusDays(1).format(fmt));
+                    cursor = cursor.plusWeeks(weeks);
+
+                    // ── Chỉ Phase 1 là ACTIVE, các phase còn lại LOCKED ───────
+                    phase.setPhaseStatus(phaseIndex == 0 ? "ACTIVE" : "LOCKED");
+
+                    // ── Target cân nặng (ước tính từ goal + thời gian) ────────
+                    double weightTarget = estimateTargetWeight(metrics, weeks);
+                    phase.setTargetWeight(weightTarget);
+
                     phases.add(phase);
+                    phaseIndex++;
                 }
             }
 
@@ -674,6 +705,29 @@ Schema bắt buộc:
             log.error("Failed to parse AI JSON response: {}", e.getMessage());
             throw new AppException(ErrorCode.AI_GENERATION_FAILED);
         }
+    }
+
+    /** Phân tích số tuần từ chuỗi dạng "2 tuần", "2-3 weeks", v.v. */
+    private int parseDurationWeeks(String durationWeeks) {
+        if (durationWeeks == null || durationWeeks.isBlank()) return 2;
+        try {
+            // Lấy số đầu tiên xuất hiện trong chuỗi
+            java.util.regex.Matcher m = java.util.regex.Pattern.compile("(\\d+)").matcher(durationWeeks);
+            if (m.find()) return Integer.parseInt(m.group(1));
+        } catch (Exception ignored) {}
+        return 2;
+    }
+
+    /** Ước tính cân nặng mục tiêu sau X tuần dựa vào goal của người dùng */
+    private double estimateTargetWeight(UserMetrics metrics, int weeks) {
+        double current = metrics.getWeight();
+        String goal = metrics.getGoal() != null ? metrics.getGoal() : "maintain";
+        double weeklyChange = switch (goal) {
+            case "cut"  -> -0.5;  // giảm 0.5kg/tuần
+            case "bulk" -> +0.3;  // tăng 0.3kg/tuần
+            default     -> 0.0;
+        };
+        return Math.round((current + weeklyChange * weeks) * 10.0) / 10.0;
     }
 
     private List<String> toStringList(JsonNode node) {
@@ -703,5 +757,192 @@ Schema bắt buộc:
                 .generatedAt(r.getGeneratedAt())
                 .updatedAt(r.getUpdatedAt())
                 .build();
+    }
+
+    // ─── Phase Unlock ────────────────────────────────────────────────────────────
+
+    /**
+     * Mở khóa phase tiếp theo sau khi người dùng cập nhật chỉ số.
+     * - Nếu đạt target cân nặng  → chỉ chuyển trạng thái, giữ nguyên phase đã sinh.
+     * - Nếu chưa đạt target      → gọi AI tính lại phase kế tiếp rồi thay thế.
+     */
+    public DietRoadmapDTO unlockNextPhase(String username, String roadmapId, int currentPhaseNumber) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        DietRoadmap roadmap = dietRoadmapRepository.findById(roadmapId)
+                .orElseThrow(() -> new AppException(ErrorCode.ROADMAP_NOT_FOUND));
+
+        if (!roadmap.getUserId().equals(user.getId())) {
+            throw new AppException(ErrorCode.ROADMAP_NOT_FOUND);
+        }
+
+        List<RoadmapPhase> phases = roadmap.getPhases();
+        if (phases == null || phases.isEmpty()) throw new AppException(ErrorCode.ROADMAP_NOT_FOUND);
+
+        // Tìm phase hiện tại
+        RoadmapPhase currentPhase = phases.stream()
+                .filter(p -> p.getPhaseNumber() == currentPhaseNumber)
+                .findFirst()
+                .orElseThrow(() -> new AppException(ErrorCode.ROADMAP_NOT_FOUND));
+
+        // Lấy metrics mới nhất của user
+        UserMetrics latestMetrics = userMetricsRepository
+                .findFirstByUserIdOrderByCreatedAtDesc(user.getId())
+                .orElseThrow(() -> new AppException(ErrorCode.USER_METRICS_NOT_FOUND));
+
+        // ── BẮT BUỘC: user phải cập nhật hồ sơ trong vòng 48 giờ trước khi mở khóa ──
+        // Đảm bảo người dùng luôn chủ động nhập lại chỉ số trước khi AI đánh giá
+        Instant cutoff = Instant.now().minus(48, java.time.temporal.ChronoUnit.HOURS);
+        if (latestMetrics.getCreatedAt() == null || latestMetrics.getCreatedAt().isBefore(cutoff)) {
+            throw new AppException(ErrorCode.METRICS_NOT_UPDATED);
+        }
+
+        // So sánh cân nặng hiện tại vs target phase
+        double actualWeight = latestMetrics.getWeight();
+        double targetWeight = currentPhase.getTargetWeight();
+        boolean goalCut = "cut".equalsIgnoreCase(latestMetrics.getGoal());
+        boolean goalBulk = "bulk".equalsIgnoreCase(latestMetrics.getGoal());
+
+        // Đạt target: giảm đủ (cut) hoặc tăng đủ (bulk) hoặc duy trì (maintain)
+        boolean achieved;
+        if (goalCut)       achieved = actualWeight <= targetWeight + 0.5;  // cho phép sai số 0.5kg
+        else if (goalBulk) achieved = actualWeight >= targetWeight - 0.5;
+        else               achieved = Math.abs(actualWeight - targetWeight) <= 1.0;
+
+        log.info("Phase unlock — user: {}, phaseNumber: {}, actualWeight: {}, targetWeight: {}, achieved: {}",
+                username, currentPhaseNumber, actualWeight, targetWeight, achieved);
+
+        // Đánh dấu phase hiện tại là COMPLETED
+        currentPhase.setPhaseStatus("COMPLETED");
+
+        // Tìm phase tiếp theo
+        int nextPhaseNumber = currentPhaseNumber + 1;
+        RoadmapPhase nextPhase = phases.stream()
+                .filter(p -> p.getPhaseNumber() == nextPhaseNumber)
+                .findFirst()
+                .orElse(null);
+
+        if (nextPhase == null) {
+            // Không còn phase tiếp theo → roadmap hoàn thành
+            roadmap.setStatus("COMPLETED");
+            roadmap.setUpdatedAt(Instant.now());
+            return toDTO(dietRoadmapRepository.save(roadmap));
+        }
+
+        if (achieved) {
+            // Đạt: chỉ mở khóa phase tiếp theo
+            nextPhase.setPhaseStatus("ACTIVE");
+            log.info("Phase {} achieved — unlocking phase {} as-is", currentPhaseNumber, nextPhaseNumber);
+        } else {
+            // Chưa đạt: AI tính toán lại phase tiếp theo
+            log.info("Phase {} not achieved — recalculating phase {}", currentPhaseNumber, nextPhaseNumber);
+            RoadmapPhase recalculated = recalculatePhase(latestMetrics, nextPhase, roadmap);
+            // Thay thế trong list
+            int idx = phases.indexOf(nextPhase);
+            phases.set(idx, recalculated);
+            nextPhase = recalculated;
+            nextPhase.setPhaseStatus("ACTIVE");
+        }
+
+        roadmap.setUpdatedAt(Instant.now());
+        return toDTO(dietRoadmapRepository.save(roadmap));
+    }
+
+    /** Gọi Gemini AI tính lại một phase dựa trên chỉ số hiện tại của user */
+    private RoadmapPhase recalculatePhase(UserMetrics metrics, RoadmapPhase oldPhase, DietRoadmap roadmap) {
+        String ragContext = getRagContext(metrics.getDiseases(), metrics.getGoal());
+        String menuContext = buildMenuContext();
+
+        String prompt = """
+                Bạn là chuyên gia dinh dưỡng AI của MealYummy.
+                Người dùng chưa đạt mục tiêu phase trước trong lộ trình dinh dưỡng.
+                Hãy tính toán lại và điều chỉnh phase tiếp theo cho phù hợp hơn.
+
+                --- THÔNG TIN NGƯỜI DÙNG HIỆN TẠI ---
+                Cân nặng hiện tại: %.1f kg | Chiều cao: %.1f cm
+                Tuổi: %d | Giới tính: %s | Mục tiêu: %s
+                Bệnh lý: %s
+
+                --- PHASE CẦN ĐIỀU CHỈNH ---
+                Phase số: %d — %s
+                Thời gian: %s
+                Mục tiêu cũ: %s
+
+                --- KIẾN THỨC Y KHOA ---
+                %s
+
+                --- MENU MEALYUMMY ---
+                %s
+
+                Trả về JSON hợp lệ KHÔNG có markdown cho DUY NHẤT 1 phase. Schema:
+                {
+                  "phaseNumber": %d,
+                  "phaseName": "string",
+                  "durationWeeks": "string",
+                  "startWeek": "string",
+                  "endWeek": "string",
+                  "targetGoal": "string",
+                  "targetCaloriesPerDay": 0,
+                  "targetProteinGram": 0,
+                  "targetCarbsGram": 0,
+                  "targetFatGram": 0,
+                  "allowedFoods": ["string"],
+                  "avoidedFoods": ["string"],
+                  "recommendedMealNames": ["string"],
+                  "aiAdvice": "string",
+                  "breakfastTemplate": "string",
+                  "lunchTemplate": "string",
+                  "dinnerTemplate": "string",
+                  "snackTemplate": "string"
+                }
+                """.formatted(
+                metrics.getWeight(), metrics.getHeight(), metrics.getAge(),
+                metrics.getGender(), metrics.getGoal(),
+                metrics.getDiseases() != null ? String.join(", ", metrics.getDiseases()) : "Không có",
+                oldPhase.getPhaseNumber(), oldPhase.getPhaseName(),
+                oldPhase.getDurationWeeks(), oldPhase.getTargetGoal(),
+                ragContext.isEmpty() ? "Không có" : ragContext,
+                menuContext.isEmpty() ? "Không có" : menuContext,
+                oldPhase.getPhaseNumber()
+        );
+
+        String aiJson = callGemini(prompt);
+        String cleaned = aiJson.trim();
+        if (cleaned.startsWith("```")) {
+            cleaned = cleaned.replaceAll("^```[a-z]*\\n?", "").replaceAll("```$", "").trim();
+        }
+
+        try {
+            JsonNode node = objectMapper.readTree(cleaned);
+            RoadmapPhase newPhase = new RoadmapPhase();
+            newPhase.setPhaseNumber(node.path("phaseNumber").asInt(oldPhase.getPhaseNumber()));
+            newPhase.setPhaseName(node.path("phaseName").asText());
+            newPhase.setDurationWeeks(node.path("durationWeeks").asText(oldPhase.getDurationWeeks()));
+            newPhase.setStartWeek(node.path("startWeek").asText(oldPhase.getStartWeek()));
+            newPhase.setEndWeek(node.path("endWeek").asText(oldPhase.getEndWeek()));
+            newPhase.setTargetGoal(node.path("targetGoal").asText());
+            newPhase.setTargetCaloriesPerDay(node.path("targetCaloriesPerDay").asDouble());
+            newPhase.setTargetProteinGram(node.path("targetProteinGram").asDouble());
+            newPhase.setTargetCarbsGram(node.path("targetCarbsGram").asDouble());
+            newPhase.setTargetFatGram(node.path("targetFatGram").asDouble());
+            newPhase.setAllowedFoods(toStringList(node.get("allowedFoods")));
+            newPhase.setAvoidedFoods(toStringList(node.get("avoidedFoods")));
+            newPhase.setRecommendedMealNames(toStringList(node.get("recommendedMealNames")));
+            newPhase.setAiAdvice(node.path("aiAdvice").asText());
+            newPhase.setBreakfastTemplate(node.path("breakfastTemplate").asText());
+            newPhase.setLunchTemplate(node.path("lunchTemplate").asText());
+            newPhase.setDinnerTemplate(node.path("dinnerTemplate").asText());
+            newPhase.setSnackTemplate(node.path("snackTemplate").asText());
+            // Giữ nguyên startDate/endDate của phase cũ
+            newPhase.setStartDate(oldPhase.getStartDate());
+            newPhase.setEndDate(oldPhase.getEndDate());
+            newPhase.setTargetWeight(estimateTargetWeight(metrics, parseDurationWeeks(newPhase.getDurationWeeks())));
+            return newPhase;
+        } catch (Exception e) {
+            log.error("Failed to parse recalculated phase: {}", e.getMessage());
+            // Fallback: trả về phase cũ
+            return oldPhase;
+        }
     }
 }

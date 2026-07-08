@@ -79,4 +79,21 @@ public class DietRoadmapController {
         int created = dietRoadmapService.syncToMealPlan(username, id, days);
         return ResponseEntity.ok(BaseApiResponse.ok("Đồng bộ lộ trình vào thực đơn thành công (" + created + " món)", null));
     }
+
+    /**
+     * POST /api/v1/diet-roadmap/{id}/phases/{phaseNumber}/unlock
+     * Mở khóa phase tiếp theo sau khi user cập nhật chỉ số cơ thể.
+     * Nếu đạt target → giữ nguyên phase đã sinh sẵn.
+     * Nếu chưa đạt  → AI tính toán lại phase tiếp theo.
+     */
+    @PostMapping("/{id}/phases/{phaseNumber}/unlock")
+    public ResponseEntity<BaseApiResponse<DietRoadmapDTO>> unlockNextPhase(
+            @PathVariable String id,
+            @PathVariable int phaseNumber,
+            Authentication authentication) {
+        String username = authentication.getName();
+        DietRoadmapDTO result = dietRoadmapService.unlockNextPhase(username, id, phaseNumber);
+        return ResponseEntity.ok(BaseApiResponse.ok("Mở khóa phase thành công", result));
+    }
 }
+

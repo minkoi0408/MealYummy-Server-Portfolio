@@ -83,20 +83,43 @@ public class OtpService {
                 otp, 
                 Duration.ofMinutes(otpExpirationMinutes)
         );
+        // Reset lại bộ đếm số lần nhập sai khi gửi mã mới
+        redisTemplate.delete("otp_attempts:" + email);
         sendOtpEmail(email, otp);
     }
 
     /**
-     * Xác thực mã OTP từ Redis
+     * Xác thực mã OTP từ Redis (tối đa 5 lần thử)
      */
     public boolean verifyOtp(String email, String otp) {
         String key = "otp:" + email;
-        String savedOtp = redisTemplate.opsForValue().get(key);
+        String attemptKey = "otp_attempts:" + email;
 
-        if (savedOtp != null && savedOtp.equals(otp)) {
+        String savedOtp = redisTemplate.opsForValue().get(key);
+        if (savedOtp == null) {
+            return false;
+        }
+
+        String attemptsStr = redisTemplate.opsForValue().get(attemptKey);
+        int attempts = attemptsStr != null ? Integer.parseInt(attemptsStr) : 0;
+
+        // Giới hạn 5 lần nhập sai
+        if (attempts >= 5) {
             redisTemplate.delete(key);
+            redisTemplate.delete(attemptKey);
+            throw new mealyummy.mealservice.core.exception.AppException(mealyummy.mealservice.core.exception.ErrorCode.OTP_ATTEMPTS_EXCEEDED);
+        }
+
+        if (savedOtp.equals(otp)) {
+            redisTemplate.delete(key);
+            redisTemplate.delete(attemptKey);
             return true;
         }
+
+        // Tăng số lần thử nếu nhập sai
+        redisTemplate.opsForValue().increment(attemptKey);
+        redisTemplate.expire(attemptKey, Duration.ofMinutes(otpExpirationMinutes));
+        
         return false;
     }
 
