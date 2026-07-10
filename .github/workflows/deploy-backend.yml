@@ -7,57 +7,21 @@ on:
 
 jobs:
   deploy:
+    name: Deploy to VPS
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Set up Java 21
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-          cache: maven
-
-      - name: Build Spring Boot JAR
+      - name: Setup SSH Key
         run: |
-          cd meal-service
-          mvn clean package -DskipTests
+          mkdir -p ~/.ssh
+          printf '%s' "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
 
-      - name: Create Env File
+      - name: Deploy Backend
         run: |
-          cat << EOF > .env
-          ${{ secrets.PROD_ENV_FILE }}
-          EOF
-
-      - name: Copy Root Files to VPS
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USERNAME }}
-          password: ${{ secrets.VPS_PASSWORD }}
-          source: "docker-compose.yml,.env"
-          target: "/root/meal-yummi"
-
-      - name: Copy Service Files to VPS
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USERNAME }}
-          password: ${{ secrets.VPS_PASSWORD }}
-          source: "meal-service/target/meal-service-0.0.1-SNAPSHOT.jar,meal-service/Dockerfile.backend"
-          target: "/root/meal-yummi"
-          strip_components: 1
-
-      - name: Restart Backend Docker
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USERNAME }}
-          password: ${{ secrets.VPS_PASSWORD }}
-          script: |
-            cd /root/meal-yummi
-            # Force remove old containers if they exist from another folder
-            docker rm -f mealyummy_backend mealyummy_redis || true
-            # Restart backend and redis containers
-            docker compose up -d --build backend redis
+          VPS_HOST=$(printf '%s' "${{ secrets.VPS_HOST }}" | tr -d '[:space:]')
+          VPS_USER=$(printf '%s' "${{ secrets.VPS_USERNAME }}" | tr -d '[:space:]')
+          ssh -i ~/.ssh/deploy_key \
+            -o StrictHostKeyChecking=no \
+            -o UserKnownHostsFile=/dev/null \
+            ${VPS_USER}@${VPS_HOST} \
+            "cd ~/mealyummy-server && git pull origin main && docker compose up -d --build backend && docker image prune -f"
