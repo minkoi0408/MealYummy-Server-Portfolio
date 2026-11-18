@@ -24,19 +24,14 @@ jobs:
           cd meal-service
           mvn clean package -DskipTests
 
-      - name: Create Env File
-        run: |
-          cat << EOF > .env
-          ${{ secrets.PROD_ENV_FILE }}
-          EOF
-
+      # .env is kept on the VPS (/root/meal-yummi/.env) and never overwritten by CI
       - name: Copy Root Files to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           password: ${{ secrets.VPS_PASSWORD }}
-          source: "docker-compose.yml,.env"
+          source: "docker-compose.yml"
           target: "/root/meal-yummi"
 
       - name: Copy Service Files to VPS
