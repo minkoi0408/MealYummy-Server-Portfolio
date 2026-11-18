@@ -35,7 +35,7 @@ public class NotificationServiceImpl implements NotificationService {
     @Value("${resend.enabled:false}")
     private boolean resendEnabled;
 
-    @Value("${spring.mail.username:huynhvuminhkhoi08042004@gmail.com}")
+    @Value("${MAIL_FROM:${spring.mail.username:huynhvuminhkhoi08042004@gmail.com}}")
     private String fromEmailAddress;
 
     private final OtpService otpService;
